@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "id": "09ed82e1f92247f99ad2888f87adcffe",
+  "name": "바닥 접촉 · 실물 틱 확인 복사",
+  "unit": "motor_ticks",
+  "calibration_sha256": "8d17b947285d9640eedc7b7e0e21ca2d02622de5c1cf0f656bcda85a697f2fe5",
+  "steps": [],
+  "jig_references": {
+    "pallet": {
+      "pose": [
+        227.94490458809892,
+        -137.7048337546614,
+        67.11096224551454
+      ],
+      "symmetry_deg": 90,
+      "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+    }
+  },
+  "created_at": 1790155973.6417487,
+  "robot_id": "arm2",
+  "inspection_timing": "step_complete"
+}

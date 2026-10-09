@@ -1,0 +1,226 @@
+{
+  "schema": 1,
+  "name": "SO-101 팔로워",
+  "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+  "calibration_file": "calibration/follower.json",
+  "model_reference": {
+    "ticks": {
+      "shoulder_pan": 2047,
+      "shoulder_lift": 2047,
+      "elbow_flex": 2047,
+      "wrist_flex": 2047,
+      "wrist_roll": 2047,
+      "gripper": 2047
+    },
+    "radians": {
+      "shoulder_pan": 8.739856416340758e-06,
+      "shoulder_lift": 3.999987902844018e-06,
+      "elbow_flex": -4.242636587726078e-06,
+      "wrist_flex": 9.82706428323083e-06,
+      "wrist_roll": 0.04868213401890373,
+      "gripper": 1.5707963267948966
+    },
+    "encoder_counts_per_turn": 4096,
+    "calibration_sha256": "eaea825f770f1859a0c66e486ec3538d31280dfa16b3c7a0dc2d7e9ee89d356b",
+    "geometry_verified": false,
+    "note": "저장된 중간 틱과 CAD 조립 축을 연결한 기준. 실물 TCP 대조 미완료.",
+    "angle_mapping_sha256": "92e6a896c1c72c8c180643600a61048a5de28f9cd4faaee556565ea10886445b"
+  },
+  "camera": {
+    "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+    "width": 1280,
+    "height": 720
+  },
+  "intrinsics": {
+    "normal_spread_deg": 85.07132313914785,
+    "usable_for_metric": true,
+    "quality_note": "",
+    "K": [
+      [
+        1032.2503683943196,
+        0.0,
+        687.7723709834622
+      ],
+      [
+        0.0,
+        1032.1059987177996,
+        347.780289252618
+      ],
+      [
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "D": [
+      -0.4927825484416793,
+      0.3175725472843906,
+      0.0009627245882526294,
+      0.0006415581739380303,
+      -0.12739109971931759
+    ],
+    "size": [
+      1280,
+      720
+    ],
+    "rms_px": 0.3345732736611807,
+    "errors_px": [
+      0.23249447345733643,
+      0.1988622546195984,
+      0.22880753874778748,
+      0.2220085859298706,
+      0.22482919692993164,
+      0.21837042272090912,
+      0.20347148180007935,
+      0.18097226321697235,
+      0.1993337720632553,
+      0.2389938235282898,
+      0.17893920838832855,
+      0.2486308366060257,
+      0.22204460203647614,
+      0.2081262469291687,
+      0.19880735874176025,
+      0.21454742550849915,
+      0.20125927031040192,
+      0.4574057459831238,
+      0.5114720463752747,
+      0.7521030306816101,
+      0.5389497876167297,
+      0.36063769459724426,
+      0.49417808651924133,
+      0.5819027423858643,
+      0.3164055347442627,
+      0.210563525557518,
+      0.25723108649253845,
+      0.31445592641830444,
+      0.31573325395584106,
+      0.33514919877052307,
+      0.17703188955783844,
+      0.23043052852153778,
+      0.3805907070636749,
+      0.412645548582077,
+      0.4242311716079712
+    ],
+    "camera": {
+      "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+      "width": 1280,
+      "height": 720
+    },
+    "board": {
+      "cols": 13,
+      "rows": 9,
+      "square_mm": 20.0
+    },
+    "source_files": [
+      "Photo from 2026-09-21 14-22-19.002897.jpeg",
+      "Photo from 2026-09-21 14-22-23.603922.jpeg",
+      "Photo from 2026-09-21 14-22-27.277905.jpeg",
+      "Photo from 2026-09-21 14-22-30.754915.jpeg",
+      "Photo from 2026-09-21 14-22-34.231099.jpeg",
+      "Photo from 2026-09-21 14-22-41.698608.jpeg",
+      "Photo from 2026-09-21 14-22-55.991840.jpeg",
+      "Photo from 2026-09-21 14-23-02.367464.jpeg",
+      "Photo from 2026-09-21 14-23-07.709889.jpeg",
+      "Photo from 2026-09-21 14-23-14.268171.jpeg",
+      "Photo from 2026-09-21 14-23-20.038546.jpeg",
+      "Photo from 2026-09-21 14-23-28.527615.jpeg",
+      "Photo from 2026-09-21 14-23-31.768654.jpeg",
+      "Photo from 2026-09-21 14-23-34.924734.jpeg",
+      "Photo from 2026-09-21 14-23-44.434608.jpeg",
+      "Photo from 2026-09-21 14-23-49.117827.jpeg",
+      "Photo from 2026-09-21 14-23-54.069995.jpeg",
+      "Photo from 2026-09-21 14-47-30.456972.jpeg",
+      "Photo from 2026-09-21 14-47-37.321896.jpeg",
+      "Photo from 2026-09-21 14-47-42.473514.jpeg",
+      "Photo from 2026-09-21 14-47-49.883488.jpeg",
+      "Photo from 2026-09-21 14-47-54.635372.jpeg",
+      "Photo from 2026-09-21 14-48-02.212012.jpeg",
+      "Photo from 2026-09-21 14-48-11.209132.jpeg",
+      "Photo from 2026-09-21 14-48-16.337043.jpeg",
+      "Photo from 2026-09-21 14-59-33.967505.jpeg",
+      "Photo from 2026-09-21 14-59-39.829627.jpeg",
+      "Photo from 2026-09-21 14-59-45.155029.jpeg",
+      "Photo from 2026-09-21 14-59-55.019602.jpeg",
+      "Photo from 2026-09-21 15-00-12.849223.jpeg",
+      "Photo from 2026-09-21 15-00-23.577830.jpeg",
+      "Photo from 2026-09-21 15-00-31.274409.jpeg",
+      "Photo from 2026-09-21 15-00-38.254069.jpeg",
+      "Photo from 2026-09-21 15-00-50.713060.jpeg",
+      "Photo from 2026-09-21 15-00-57.878643.jpeg"
+    ],
+    "source_directory": "/path/to/Final_Arm/OpenCV_teach/calibration/camera_images"
+  },
+  "extrinsics": {
+    "source": "cad_estimate",
+    "verified_for_robot_motion": false,
+    "base_from_camera": [
+      [
+        8.236175720257466e-06,
+        -0.9063119925854385,
+        0.4226092427148011,
+        25.987375015717188
+      ],
+      [
+        -0.9999999999660827,
+        -7.46454482856353e-06,
+        3.4806839841220946e-06,
+        -116.04778651153569
+      ],
+      [
+        0.0,
+        -0.42260924272913486,
+        -0.9063119926161781,
+        545.6718787079634
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "intrinsics_signature": "f6fe093ef752b6f6ea89f091380059f1a0c85a73683a3cf0871c3c7aaa11523b",
+    "optical_offset_mm": 0.0,
+    "image_roll_deg": 0.0,
+    "geometry_source": "/path/to/Final_Arm/OpenCV_teach/calibration/mount_geometry/nominal_pose.json",
+    "geometry_sha256": "2b1797eff88514e9c20e5880861874c290a240145700fb1edc0fb3fe25cd2c25",
+    "lens_protrusion_mm_reference_only": 20.0,
+    "note": "User specifies optical centre at PCB plane centre (0 mm). Lens protrusion of 20 mm is not added. CAD mounting pose and image axes remain estimates; confirm with physical points.",
+    "verified": false
+  },
+  "known_issues": [
+    "손목 동일 위치 유지 이탈: 원인 미확정",
+    "이전 바닥 접촉 기록과 CAD 사이 약 21 mm 차이"
+  ],
+  "source": {
+    "calibration": "/path/to/Final_Arm/OpenCV_teach/calibration/opencv_follower_right/follower_right.json",
+    "midpoint_record": "/path/to/Final_Arm/OpenCV_teach/teaching/motor-diagnostics/calibration_recovery_follower_right_20260923_110312_826148.json",
+    "model": "/path/to/Final_Arm/OpenCV_teach/assets/so101"
+  },
+  "tcp": {
+    "mode": "model",
+    "xyz_mm": [
+      1.773409675938293,
+      0.6026567343814877,
+      6.549653899876567
+    ],
+    "rpy_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "frame": "gripper_frame_link",
+    "source_sha256": {
+      "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+      "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+    },
+    "verified": false
+  },
+  "mode": "leader",
+  "leader": {
+    "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+    "calibration_file": "calibration/leader-f89be2824a1e3bb0-abb3e75e82ce8.json",
+    "angle_mapping_sha256": "30b0338656beeca88d6f0a9d01b9a8e72f7b6a5c6aa3ef55b5ef760a7308fddc"
+  },
+  "table_z_mm": -7.4
+}

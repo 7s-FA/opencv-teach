@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "unit": "mm",
+  "origin": "Original carrier centre in XY, underside Z=0; X long side, Y short side",
+  "front_back_required": true,
+  "layout": "Latest supplied parts: upper B cap, B TPU, B base; lower A cap, A ball, A base, left to right",
+  "fixture_plate_centres_mm": [
+    [
+      -72,
+      36
+    ],
+    [
+      -72,
+      -36
+    ],
+    [
+      0,
+      36
+    ],
+    [
+      0,
+      -36
+    ],
+    [
+      72,
+      36
+    ],
+    [
+      72,
+      -36
+    ]
+  ],
+  "parts": [
+    {
+      "name": "carrier",
+      "kind": "carrier",
+      "source": "source/current/carrier.stl",
+      "translation_mm": [
+        0,
+        0,
+        0
+      ],
+      "yaw_deg": 0,
+      "source_sha256": "959603f107b9287a4e59c7a7108fac58d0f95c1df742ddcd4b31bd9aa07b8172",
+      "bounds_mm": [
+        [
+          -110.0,
+          -74.0,
+          0.0
+        ],
+        [
+          110.0,
+          74.0,
+          6.0
+        ]
+      ]
+    },
+    {
+      "name": "b_cap",
+      "product": "B",
+      "kind": "cap",
+      "source": "source/current/b_cap_jig.stl",
+      "translation_mm": [
+        -72.0,
+        36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "photo support direction",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+      "bounds_mm": [
+        [
+          -106.0,
+          2.0,
+          4.800000190734863
+        ],
+        [
+          -38.0,
+          70.0,
+          31.300000190734863
+        ]
+      ]
+    },
+    {
+      "name": "b_tpu",
+      "product": "B",
+      "kind": "tpu",
+      "source": "source/current/b_tpu_jig.stl",
+      "translation_mm": [
+        0.0,
+        36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "photo support direction",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "f9de40c0c6734c5f27a5c33846099936fd6d3f9af49f5972a2259b769102c91a",
+      "bounds_mm": [
+        [
+          -34.0,
+          2.0,
+          4.800000190734863
+        ],
+        [
+          34.0,
+          70.0,
+          19.300000190734863
+        ]
+      ]
+    },
+    {
+      "name": "b_housing",
+      "product": "B",
+      "kind": "housing",
+      "source": "source/current/b_housing_jig.stl",
+      "translation_mm": [
+        72.0,
+        36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "inferred; fixture corners partly hidden by product",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+      "bounds_mm": [
+        [
+          38.0,
+          2.0,
+          4.800000190734863
+        ],
+        [
+          106.0,
+          70.0,
+          13.300000190734863
+        ]
+      ]
+    },
+    {
+      "name": "a_cap",
+      "product": "A",
+      "kind": "cap",
+      "source": "source/current/a_cap_jig.stl",
+      "translation_mm": [
+        -72.0,
+        -36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "photo support direction",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "51fccd96be8b756e95d7a997e76a20bd2cf8bba194f1dbaa785e7c036c86926e",
+      "bounds_mm": [
+        [
+          -106.0,
+          -70.0,
+          4.800000190734863
+        ],
+        [
+          -38.0,
+          -2.0,
+          26.500000953674316
+        ]
+      ]
+    },
+    {
+      "name": "a_ball",
+      "product": "A",
+      "kind": "ball",
+      "source": "source/current/a_ball_jig.stl",
+      "translation_mm": [
+        0.0,
+        -36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "photo support direction",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "ef4d25a55ddff0b89866fa9c1e7a2bbfa9a3643ea0ca81365b10a28579774441",
+      "bounds_mm": [
+        [
+          -34.0,
+          -70.0,
+          4.800000190734863
+        ],
+        [
+          34.0,
+          -2.0,
+          19.300000190734863
+        ]
+      ]
+    },
+    {
+      "name": "a_housing",
+      "product": "A",
+      "kind": "housing",
+      "source": "source/current/a_housing_jig.stl",
+      "translation_mm": [
+        72.0,
+        -36.0,
+        4.8
+      ],
+      "yaw_deg": 90,
+      "orientation_evidence": "inferred; fixture corners partly hidden by product",
+      "contact_z_mm": 4.800000190734863,
+      "source_sha256": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d",
+      "bounds_mm": [
+        [
+          38.0,
+          -70.0,
+          4.800000190734863
+        ],
+        [
+          106.0,
+          -2.0,
+          13.300000190734863
+        ]
+      ]
+    }
+  ],
+  "products_included": false,
+  "seating": "First vertical contact from original triangle meshes; adhesive thickness not included",
+  "caution": "Housing rotation is inferred from partly occluded photo; not physically surveyed. Mesh assembly has separate touching shells, not a boolean-fused print solid.",
+  "installation": {
+    "reference": "physical_floor",
+    "platform": "TurtleBot3 Burger",
+    "detection_rim_height_mm": 199.8,
+    "nominal_detection_rim_height_mm": 200.0,
+    "carrier_rim_local_z_mm": 4.8,
+    "carrier_underside_height_mm": 195.0,
+    "table_leg_height_mm": 185.0,
+    "table_thickness_mm": 10.0,
+    "table_top_height_mm": 195.0,
+    "basis": "user-specified heights; floor-to-robot transform inferred from existing tabletop datum",
+    "app_support_height_mm": 0.0
+  },
+  "revision": "2026-10-02 B upper fixture updated"
+}

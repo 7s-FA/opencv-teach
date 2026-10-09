@@ -1,0 +1,238 @@
+{
+  "source": "Historical vision-lens/input.jpg evaluated with the currently confirmed asymmetric carrier assembly and grid detection. Crop disabled only in this offline fixture because the historical jig position differs from the live configured ROI. Not a current-camera snapshot.",
+  "jigs": {
+    "b5ebdb54807c441c8267c15d77713b6a": {
+      "id": "b5ebdb54807c441c8267c15d77713b6a",
+      "name": "운반용 지그",
+      "stl": "/path/to/Final_Arm/SO101_teach/data/jig_assets/06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514.stl",
+      "unit": "mm",
+      "shape": "rectangle",
+      "method": "grid",
+      "roi": null,
+      "manual_size_mm": [
+        70,
+        70
+      ],
+      "manual_rim_mm": 20,
+      "mesh": {
+        "assembly": {
+          "kind": "fixed_grid",
+          "fixtures": [
+            {
+              "center_mm": [
+                -72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                21.699999809265137
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                -72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                26.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                8.5
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                8.5
+              ],
+              "bottom_z_mm": 4.800000190734863
+            }
+          ],
+          "orientation_hole": {
+            "center_mm": [
+              -72.00000020833335,
+              -36.00000005208334
+            ],
+            "z_mm": 26.5,
+            "inner_radius_mm": 8.999998880810496,
+            "outer_radius_mm": 10.4999995979985
+          }
+        },
+        "sha256": "06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514",
+        "stl_path": "/path/to/Final_Arm/SO101_teach/data/jig_assets/06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514.stl",
+        "unit": "mm",
+        "low_mm": [
+          -110.0,
+          -74.0,
+          0.0
+        ],
+        "size_mm": [
+          220.0,
+          148.0,
+          31.299999237060547
+        ],
+        "rim_z_mm": 4.8,
+        "holes": [
+          {
+            "center": [
+              0.8283333333333334,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.55
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.5916666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.4533333333333333
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.4116666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.8283333333333334,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          }
+        ]
+      },
+      "support_height_mm": 0.0,
+      "physical_installation": {
+        "platform": "TurtleBot3 Burger",
+        "reference": "physical_floor",
+        "detection_rim_height_mm": 199.8,
+        "tabletop_height_mm": 195.0,
+        "carrier_underside_height_mm": 195.0,
+        "rim_height_above_tabletop_mm": 4.8,
+        "support_height_basis": "user requested 0mm relative to tabletop; carrier underside 195mm, CAD rim 4.8mm gives 199.8mm ~= 200mm",
+        "source": "user_confirmed_2026-10-02",
+        "motion_calibration_verified": false,
+        "nominal_detection_rim_height_mm": 200.0,
+        "platform_yaw_deg": -90.0,
+        "orientation_basis": "User-confirmed front camera: Burger +X points toward carrier -Y; A is the front row, B the rear row. Existing -90 degree mounting yaw retained."
+      }
+    }
+  }
+}

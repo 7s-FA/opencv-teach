@@ -1,0 +1,15 @@
+{
+  "calibration_sha256": "eaea825f770f1859a0c66e486ec3538d31280dfa16b3c7a0dc2d7e9ee89d356b",
+  "trim_ticks": {
+    "shoulder_pan": 0,
+    "shoulder_lift": 0,
+    "elbow_flex": 0,
+    "wrist_flex": 0,
+    "wrist_roll": 0,
+    "gripper": 0
+  },
+  "table_z_mm": -7.4,
+  "height_reference": "arm_origin_up",
+  "hold_seconds": 10.0,
+  "verified": false
+}

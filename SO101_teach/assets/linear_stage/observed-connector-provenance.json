@@ -1,0 +1,32 @@
+{
+  "status": "photo-derived display approximation, not a verified replacement print model",
+  "basis": "front-fixation.jpg and overhead camera; old source bracket pin at -92.5 mm does not match photo",
+  "main_plate_mm": [
+    160,
+    80,
+    5
+  ],
+  "fixture_pocket_centers_x_mm": [
+    -40,
+    40
+  ],
+  "tongue_mm": [
+    34,
+    52,
+    5
+  ],
+  "window_mm": [
+    22,
+    21
+  ],
+  "front_pin_local_mm": [
+    -118.71,
+    0,
+    7.6
+  ],
+  "pin_bore_mm": 4.5,
+  "clevis_gap_mm": 7,
+  "part_min_z_mm": 2.9,
+  "body_roll_deg": -90,
+  "physical_clearance_verified": false
+}

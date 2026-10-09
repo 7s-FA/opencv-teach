@@ -1,0 +1,72 @@
+{
+  "model": "L12-100-100-6-R",
+  "source": "https://www.actuonix.com/assets/images/datasheets/L12_STP.zip",
+  "product": "https://www.actuonix.com/l12-100-100-6-r",
+  "unit": "mm",
+  "local_axes": "rear eye center X=0, rod extends along +X; rod axis Z=0",
+  "closed_eye_distance_cad_mm": 152.5,
+  "closed_eye_distance_datasheet_mm": 152,
+  "stroke_mm": 100,
+  "parts": {
+    "l12_tube": {
+      "step_solid_indices": [
+        0,
+        7
+      ],
+      "bounds_mm": [
+        35.4974364148066,
+        -6.0025768903280605,
+        -6.002576890328046,
+        147.51346162230192,
+        6.002576890328032,
+        6.002576890328046
+      ]
+    },
+    "l12_motor_housing": {
+      "step_solid_indices": [
+        1,
+        2,
+        11
+      ],
+      "bounds_mm": [
+        -4.503495598099611,
+        -7.509886308267906,
+        -7.502576890327649,
+        41.50257689032765,
+        7.600000100003163,
+        10.50257689032765
+      ]
+    },
+    "l12_screws": {
+      "step_solid_indices": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "bounds_mm": [
+        4.598881369955054,
+        0.49404800251429104,
+        -7.401118630044947,
+        33.00111863004495,
+        7.051118630044949,
+        10.401118630044948
+      ]
+    },
+    "l12_rod": {
+      "step_solid_indices": [
+        8,
+        9,
+        10
+      ],
+      "bounds_mm": [
+        35.4984264857739,
+        -5.100349747605803,
+        -4.800294074859586,
+        156.50627486256727,
+        5.1003497476058035,
+        5.100349747605802
+      ]
+    }
+  }
+}

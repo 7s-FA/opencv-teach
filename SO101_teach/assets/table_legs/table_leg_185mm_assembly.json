@@ -1,0 +1,209 @@
+{
+  "unit": "mm",
+  "parts": [
+    {
+      "name": "extension_lower",
+      "source": "01_half_50mm_PRINT_2_PER_LEG.stl",
+      "source_sha256": "c21dbab2826cc48465a5d2d1d91434e76fc250d47ac781294b139a80e773d6e2",
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        0,
+        0,
+        0
+      ],
+      "bounds_mm": [
+        [
+          -40.0,
+          -40.0,
+          0.0
+        ],
+        [
+          40.0,
+          40.0,
+          50.0
+        ]
+      ],
+      "color": [
+        0.34,
+        0.61,
+        0.76
+      ]
+    },
+    {
+      "name": "extension_upper",
+      "source": "01_half_50mm_PRINT_2_PER_LEG.stl",
+      "source_sha256": "c21dbab2826cc48465a5d2d1d91434e76fc250d47ac781294b139a80e773d6e2",
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          -1.0
+        ]
+      ],
+      "translation_mm": [
+        0,
+        0,
+        100
+      ],
+      "bounds_mm": [
+        [
+          -40.0,
+          -40.0,
+          50.0
+        ],
+        [
+          40.0,
+          40.0,
+          100.0
+        ]
+      ],
+      "color": [
+        0.43,
+        0.7,
+        0.6
+      ]
+    },
+    {
+      "name": "internal_join_sleeve",
+      "source": "02_internal_join_sleeve_PRINT_1_PER_LEG.stl",
+      "source_sha256": "ed0d0c3ad1264c6e7c9e51e8d3786e45e4cd21c5089928e116435b55dcae188c",
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        0,
+        0,
+        42
+      ],
+      "bounds_mm": [
+        [
+          -19.399999618530273,
+          -19.399999618530273,
+          42.0
+        ],
+        [
+          19.399999618530273,
+          19.399999618530273,
+          58.0
+        ]
+      ],
+      "color": [
+        0.9,
+        0.65,
+        0.3
+      ]
+    },
+    {
+      "name": "original_85mm_leg",
+      "source": "table_leg_85mm_15t_M5_lightweight.stl",
+      "source_sha256": "8b295852e9a389979f58fd07f39f5972e26e7032699024bbfec8d83011f75313",
+      "rotation_matrix": [
+        [
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "translation_mm": [
+        0,
+        0,
+        100
+      ],
+      "bounds_mm": [
+        [
+          -40.0,
+          -40.0,
+          100.0
+        ],
+        [
+          40.0,
+          40.0,
+          185.0
+        ]
+      ],
+      "color": [
+        0.56,
+        0.62,
+        0.67
+      ]
+    }
+  ],
+  "dimensions_mm": [
+    80.0,
+    80.0,
+    185.0
+  ],
+  "components": 4,
+  "each_component_watertight": {
+    "extension_lower": true,
+    "extension_upper": true,
+    "internal_join_sleeve": true,
+    "original_85mm_leg": true
+  },
+  "stl_round_trip": true,
+  "source_geometry_preserved": true,
+  "assembly_is_separate_shells": true,
+  "extension_height_mm": 100,
+  "total_height_mm": 185,
+  "leg_count_per_table": 4,
+  "half_parts_per_table": 8,
+  "sleeves_per_table": 4,
+  "original_85mm_legs_per_table": 4,
+  "sleeve_insertion_each_side_mm": 8,
+  "sleeve_fit_clearance_each_side_mm": 0.2,
+  "tabletop_included": false,
+  "tabletop_thickness_mm": 10,
+  "tabletop_top_height_from_floor_mm": 195,
+  "four_leg_xy_positions_defined": false,
+  "load_tested": false
+}

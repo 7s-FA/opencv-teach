@@ -1,0 +1,37 @@
+{
+  "source_image": "tests/fixtures/vision-lens/input.jpg",
+  "source_sha256": "ddaa2019340d77bf05f7528b8cb46b3d085df012d2e7793a76a93a73d110f287",
+  "basis": "Known carrier normal-layout reference, not the user-arranged fault image. Hue assists CAD shape/material matching.",
+  "colors": {
+    "B_cap": {
+      "hue": 10,
+      "tolerance": 18,
+      "samples": 4802
+    },
+    "B_insert": {
+      "hue": 96,
+      "tolerance": 18,
+      "samples": 1381
+    },
+    "B_housing": {
+      "hue": 17,
+      "tolerance": 18,
+      "samples": 3327
+    },
+    "A_cap": {
+      "hue": 124,
+      "tolerance": 18,
+      "samples": 4100
+    },
+    "A_insert": {
+      "hue": 37,
+      "tolerance": 18,
+      "samples": 1477
+    },
+    "A_housing": {
+      "hue": 125,
+      "tolerance": 18,
+      "samples": 4664
+    }
+  }
+}

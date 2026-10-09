@@ -1,0 +1,16 @@
+{
+  "upstream": "https://github.com/huggingface/lerobot",
+  "installed_distribution": "0.4.4",
+  "source_files_sha256": {
+    "motors/__init__.py": "7c08c186384a43761faadc63d20b9fd0e634ce577697b8cabde77d040c627aaf",
+    "motors/motors_bus.py": "a6c1f5a560840fce7e23bed02fad016ab0e41fccdd96dd116332258a20a94e7a",
+    "motors/encoding_utils.py": "5285eb2b3f62399e95a2fa4b2fcab631bcad547124e8cc9b6a61525148bc924a",
+    "motors/feetech/__init__.py": "17b9e22b45fd71e4e04db7a072f8d32fa0a01de91e906b8b9746a1c83e7bbe8c",
+    "motors/feetech/feetech.py": "1dd81201ebd03ad39a6d46a034d99f21583dcefa81e9f099d3dc0a184dce56a8",
+    "motors/feetech/tables.py": "71f7f7beb17169781bd26a33b165ed4c5c3df7b9c477d36860f9d6011eb00428",
+    "utils/decorators.py": "4f92457a9a9e87d84b935b0b072869e92cde6be1c372f82ce485a07e7a853de2",
+    "utils/errors.py": "5bab3b68cbbc88a764daaa103c488a08dcf2d61ef5274931fa3d6013d2a2ec4a",
+    "utils/utils.py": "6d15ea2af3a80ae419af3d42d4264ff07bb769147b021a99f1a46cd51b728ac4"
+  },
+  "changes": "Import paths made package-relative; utils.py includes only the two console functions used by motors. Motor and Feetech protocol implementation unchanged."
+}

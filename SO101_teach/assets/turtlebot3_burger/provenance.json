@@ -1,0 +1,164 @@
+{
+  "source": "existing ROBOTIS TurtleBot3 description bundled in Demo/assets/factory/turtlebot3_description",
+  "license": "Apache-2.0",
+  "unit": "mm",
+  "origin": "centred over chassis, bottommost CAD vertex at Z=0",
+  "floor_shift_mm": 0.12250041961669922,
+  "parts": [
+    {
+      "name": "base_link",
+      "mesh": "base_link.stl",
+      "source": "meshes/bases/burger_base.stl",
+      "source_sha256": "7d7f3329a437b43bbcbbec59f9a2d1df1d88b59c3882c543d979baf73670f025",
+      "bounds_mm": [
+        [
+          -68.77350616455078,
+          -74.17273712158203,
+          0.0
+        ],
+        [
+          68.77350616455078,
+          74.17273712158203,
+          172.58842754364014
+        ]
+      ]
+    },
+    {
+      "name": "wheel_left_link",
+      "mesh": "wheel_left_link.stl",
+      "source": "meshes/wheels/left_tire.stl",
+      "source_sha256": "578c9452ee51c2f71e5e6723b503d784e58a6ac317fa53ee308e645f204c8d6a",
+      "bounds_mm": [
+        [
+          -0.9999809265136719,
+          70.89999961853027,
+          0.12251949310302024
+        ],
+        [
+          64.99998092651367,
+          89.10000038146973,
+          66.12248134613037
+        ]
+      ]
+    },
+    {
+      "name": "wheel_right_link",
+      "mesh": "wheel_right_link.stl",
+      "source": "meshes/wheels/right_tire.stl",
+      "source_sha256": "407aaf271ba7051c6186b220e1dc36b2a6eca688fced66a3347f49747b684596",
+      "bounds_mm": [
+        [
+          -0.9999809265136719,
+          -89.10000038146973,
+          0.12251949310302024
+        ],
+        [
+          64.99998092651367,
+          -70.89999961853027,
+          66.12248134613037
+        ]
+      ]
+    },
+    {
+      "name": "base_scan",
+      "mesh": "base_scan.stl",
+      "source": "meshes/sensors/lds.stl",
+      "source_sha256": "98f0bd7046159f83caab9509293112ef13534368535669124b91b5114c3132f6",
+      "bounds_mm": [
+        [
+          -32.9998779296875,
+          -34.38481903076172,
+          151.92249965667725
+        ],
+        [
+          60.84831619262695,
+          34.5,
+          191.1225004196167
+        ]
+      ]
+    }
+  ],
+  "top_z_mm": 191.1225004196167,
+  "carrier_underside_height_mm": 195,
+  "mount_posts": "Four hex standoffs aligned to the original carrier base M3 hole centres, transformed into the Burger frame. Cross-section reused from Burger columns; length fitted to the 195mm installation and actual deck seating surfaces. Display fit, not a measured manufacturing length.",
+  "mounting_yaw_deg": -90.0,
+  "orientation_basis": "User-confirmed front camera: Burger +X points toward carrier -Y; A is the front row, B the rear row. Mount hardware dimensions remain display estimates.",
+  "carrier_mount_standoffs": [
+    {
+      "carrier_hole_xy_mm": [
+        -64,
+        -11.8
+      ],
+      "center_xy_mm": [
+        11.8,
+        -64
+      ],
+      "deck_contact_z_mm": 151.6092480349599,
+      "carrier_contact_z_mm": 195,
+      "length_mm": 43.390751965040096,
+      "across_flats_mm": 5,
+      "source_standard_length_mm": 45,
+      "upper_surface_contact_offset_mm": 0.0,
+      "hole_diameter_mm": 3.4,
+      "counterbore_diameter_mm": 6.6,
+      "counterbore_floor_z_mm": 1.6
+    },
+    {
+      "carrier_hole_xy_mm": [
+        -64,
+        24.4
+      ],
+      "center_xy_mm": [
+        -24.4,
+        -64
+      ],
+      "deck_contact_z_mm": 151.62249755859375,
+      "carrier_contact_z_mm": 195,
+      "length_mm": 43.37750244140625,
+      "across_flats_mm": 5,
+      "source_standard_length_mm": 45,
+      "upper_surface_contact_offset_mm": 0.0,
+      "hole_diameter_mm": 3.4,
+      "counterbore_diameter_mm": 6.6,
+      "counterbore_floor_z_mm": 1.6
+    },
+    {
+      "carrier_hole_xy_mm": [
+        64,
+        -24.4
+      ],
+      "center_xy_mm": [
+        24.4,
+        64
+      ],
+      "deck_contact_z_mm": 151.62249755859375,
+      "carrier_contact_z_mm": 195,
+      "length_mm": 43.37750244140625,
+      "across_flats_mm": 5,
+      "source_standard_length_mm": 45,
+      "upper_surface_contact_offset_mm": 0.0,
+      "hole_diameter_mm": 3.4,
+      "counterbore_diameter_mm": 6.6,
+      "counterbore_floor_z_mm": 1.6
+    },
+    {
+      "carrier_hole_xy_mm": [
+        64,
+        11.8
+      ],
+      "center_xy_mm": [
+        -11.8,
+        64
+      ],
+      "deck_contact_z_mm": 151.6092480349599,
+      "carrier_contact_z_mm": 195,
+      "length_mm": 43.390751965040096,
+      "across_flats_mm": 5,
+      "source_standard_length_mm": 45,
+      "upper_surface_contact_offset_mm": 0.0,
+      "hole_diameter_mm": 3.4,
+      "counterbore_diameter_mm": 6.6,
+      "counterbore_floor_z_mm": 1.6
+    }
+  ]
+}

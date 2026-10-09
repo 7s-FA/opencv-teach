@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "recipes": {
+    "arm2": {
+      "A": {
+        "episode_id": "a03c1949d9c04ad1ba46e6267fa64c8e",
+        "name": "A 조립",
+        "timeout_seconds": 900
+      },
+      "B": {
+        "episode_id": "f4ef6e53132a47f6b7f03bcaf32d21cb",
+        "name": "B 조립",
+        "timeout_seconds": 900
+      }
+    },
+    "arm3": {
+      "A": {
+        "episode_id": "3bccfd92e95141bc823a78140ef17510",
+        "name": "A 운송",
+        "timeout_seconds": 900
+      },
+      "B": {
+        "episode_id": "ff516fcfd187458199b6dd3bcc4d59f8",
+        "name": "B 운송",
+        "timeout_seconds": 900
+      }
+    }
+  }
+}

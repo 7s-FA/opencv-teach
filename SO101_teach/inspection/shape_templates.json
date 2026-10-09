@@ -1,0 +1,1026 @@
+{
+  "schema": 1,
+  "source": "CAD exposed surfaces, insert body vertices and height edges",
+  "mm_per_pixel": 0.4,
+  "sources_sha256": {
+    "SO101_teach/inspection/roi_reference.json": "2456f902e11e2b674347becfc167a0dbdeea055efd2750f6e306b633c109b81f",
+    "SO101_teach/assets/carrier_assembly/assembly.json": "0262ace88eac9e432d592033eb529f690c12aaff801f5cbc03f0d40e61c3be13",
+    "모델링/A 제품/A 하단.stl": "95071d47457e44ed71dec36b496cb974a4c0890a7bcc03726b89c597dd75424e",
+    "모델링/A 제품/A 중단.stl": "8952dd3911060ff20081c03d35c83e52eb44f281a1f5391650c1edc7befc96e4",
+    "모델링/A 제품/A 상단.stl": "fafcaac003803228b541c3ee613d87b32bae5530560be62e26044bd547ce658e",
+    "모델링/B 제품/B 하단.stl": "5ffcfee83be6bf5de0f0f54121aaf1b0a3b629bde8f46ad1582d17d7eb8b743e",
+    "모델링/B 제품/B 중단.stl": "32a15264042e44eae846e07e54ac4cc043678a252184118349452e7d50f890ec",
+    "모델링/B 제품/B 상단.stl": "085ef80abee9a00d695124b373da644466fdaeb04f6f15fa0b87728acc03750d",
+    "SO101_teach/assets/carrier_assembly/source/current/b_cap_jig.stl": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+    "SO101_teach/assets/carrier_assembly/source/current/b_tpu_jig.stl": "f9de40c0c6734c5f27a5c33846099936fd6d3f9af49f5972a2259b769102c91a",
+    "SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+    "SO101_teach/assets/carrier_assembly/source/current/a_cap_jig.stl": "51fccd96be8b756e95d7a997e76a20bd2cf8bba194f1dbaa785e7c036c86926e",
+    "SO101_teach/assets/carrier_assembly/source/current/a_ball_jig.stl": "ef4d25a55ddff0b89866fa9c1e7a2bbfa9a3643ea0ca81365b10a28579774441",
+    "SO101_teach/assets/carrier_assembly/source/current/a_housing_jig.stl": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d",
+    "모델링/완제품 팔레트/완제품 팔레트.stl": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+  },
+  "templates": {
+    "carrier_b_cap_empty": {
+      "state": "empty",
+      "product": "B",
+      "part": "cap"
+    },
+    "carrier_b_cap_present": {
+      "state": "present",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          15.55
+        ],
+        [
+          25.0,
+          25.0,
+          26.55
+        ]
+      ]
+    },
+    "carrier_b_cap_wrong_A_housing": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          18.75000457763672
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          36.750004577636716
+        ]
+      ]
+    },
+    "carrier_b_cap_wrong_A_insert": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          18.75000457763672
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          48.750004577636716
+        ]
+      ]
+    },
+    "carrier_b_cap_wrong_A_cap": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          15.550003814697268
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          28.250003623962414
+        ]
+      ]
+    },
+    "carrier_b_cap_wrong_B_housing": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          18.75000457763672
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          39.250004577636716
+        ]
+      ]
+    },
+    "carrier_b_cap_wrong_B_insert": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          18.75000457763672
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          42.05000381469726
+        ]
+      ]
+    },
+    "carrier_b_tpu_empty": {
+      "state": "empty",
+      "product": "B",
+      "part": "insert"
+    },
+    "carrier_b_tpu_present": {
+      "state": "present",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          6.55
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          29.849999237060548
+        ]
+      ]
+    },
+    "carrier_b_tpu_wrong_A_housing": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697266
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          32.55000381469726
+        ]
+      ]
+    },
+    "carrier_b_tpu_wrong_A_insert": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          6.5500038146972654
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          36.55000381469726
+        ]
+      ]
+    },
+    "carrier_b_tpu_wrong_A_cap": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697268
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          27.250003623962414
+        ]
+      ]
+    },
+    "carrier_b_tpu_wrong_B_housing": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697266
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          35.05000381469726
+        ]
+      ]
+    },
+    "carrier_b_tpu_wrong_B_cap": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.55
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          25.550000000000008
+        ]
+      ]
+    },
+    "carrier_b_housing_empty": {
+      "state": "empty",
+      "product": "B",
+      "part": "housing"
+    },
+    "carrier_b_housing_present": {
+      "state": "present",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          24.05
+        ]
+      ]
+    },
+    "carrier_b_housing_wrong_A_housing": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972654
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          21.550003814697266
+        ]
+      ]
+    },
+    "carrier_b_housing_wrong_A_insert": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          -6.071444702148438
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          23.928555297851563
+        ]
+      ]
+    },
+    "carrier_b_housing_wrong_A_cap": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972646
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          16.25000362396241
+        ]
+      ]
+    },
+    "carrier_b_housing_wrong_B_insert": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          0.5120285034179688
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          23.812027740478516
+        ]
+      ]
+    },
+    "carrier_b_housing_wrong_B_cap": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972663
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          14.550003814697273
+        ]
+      ]
+    },
+    "carrier_a_cap_empty": {
+      "state": "empty",
+      "product": "A",
+      "part": "cap"
+    },
+    "carrier_a_cap_present": {
+      "state": "present",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          8.050000190734863
+        ],
+        [
+          25.0,
+          25.0,
+          20.750000000000004
+        ]
+      ]
+    },
+    "carrier_a_cap_wrong_A_housing": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          21.75000457763672
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          39.750004577636716
+        ]
+      ]
+    },
+    "carrier_a_cap_wrong_A_insert": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          18.747776794433594
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          48.74777679443359
+        ]
+      ]
+    },
+    "carrier_a_cap_wrong_B_housing": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          21.75000457763672
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          42.250004577636716
+        ]
+      ]
+    },
+    "carrier_a_cap_wrong_B_insert": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          21.75000457763672
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          45.05000381469726
+        ]
+      ]
+    },
+    "carrier_a_cap_wrong_B_cap": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          18.450001525878907
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          29.450001525878914
+        ]
+      ]
+    },
+    "carrier_a_ball_empty": {
+      "state": "empty",
+      "product": "A",
+      "part": "insert"
+    },
+    "carrier_a_ball_present": {
+      "state": "present",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          1.6020900000000005
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          31.60209
+        ]
+      ]
+    },
+    "carrier_a_ball_wrong_A_housing": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697266
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          32.55000381469726
+        ]
+      ]
+    },
+    "carrier_a_ball_wrong_A_cap": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697268
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          27.250003623962414
+        ]
+      ]
+    },
+    "carrier_a_ball_wrong_B_housing": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.550003814697266
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          35.05000381469726
+        ]
+      ]
+    },
+    "carrier_a_ball_wrong_B_insert": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          9.621174621582032
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          32.921173858642575
+        ]
+      ]
+    },
+    "carrier_a_ball_wrong_B_cap": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          14.55
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          25.550000000000008
+        ]
+      ]
+    },
+    "carrier_a_housing_empty": {
+      "state": "empty",
+      "product": "A",
+      "part": "housing"
+    },
+    "carrier_a_housing_present": {
+      "state": "present",
+      "product": "A",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          21.55
+        ]
+      ]
+    },
+    "carrier_a_housing_wrong_A_insert": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -14.9928560256958,
+          -14.994304656982422,
+          3.5500038146972654
+        ],
+        [
+          14.9928560256958,
+          14.997035026550293,
+          33.55000381469726
+        ]
+      ]
+    },
+    "carrier_a_housing_wrong_A_cap": {
+      "state": "wrong_part",
+      "product": "A",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972646
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          16.25000362396241
+        ]
+      ]
+    },
+    "carrier_a_housing_wrong_B_housing": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "housing",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972654
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          24.050003814697266
+        ]
+      ]
+    },
+    "carrier_a_housing_wrong_B_insert": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "insert",
+      "bounds_mm": [
+        [
+          -15.949999809265137,
+          -15.949999809265137,
+          3.5500038146972654
+        ],
+        [
+          15.949999809265137,
+          15.949999809265137,
+          26.850003051757813
+        ]
+      ]
+    },
+    "carrier_a_housing_wrong_B_cap": {
+      "state": "wrong_part",
+      "product": "B",
+      "part": "cap",
+      "bounds_mm": [
+        [
+          -25.000000000000004,
+          -25.000000000000004,
+          3.5500038146972663
+        ],
+        [
+          25.000000000000004,
+          25.000000000000004,
+          14.550003814697273
+        ]
+      ]
+    },
+    "linear_A_empty": {
+      "state": "empty",
+      "product": "A",
+      "visible": [],
+      "hidden": []
+    },
+    "linear_A_housing_seated": {
+      "state": "housing_seated",
+      "product": "A",
+      "visible": [
+        "housing"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          21.55
+        ]
+      ]
+    },
+    "linear_A_insert_added": {
+      "state": "insert_added",
+      "product": "A",
+      "visible": [
+        "housing",
+        "insert"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          36.60195
+        ]
+      ]
+    },
+    "linear_A_cap_added": {
+      "state": "cap_added",
+      "product": "A",
+      "visible": [
+        "insert",
+        "cap"
+      ],
+      "hidden": [
+        "housing"
+      ],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          36.60195
+        ]
+      ]
+    },
+    "linear_A_cap_only": {
+      "state": "cap_only",
+      "product": "A",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.5500038146972663
+        ],
+        [
+          25.0,
+          25.0,
+          16.250003623962407
+        ]
+      ]
+    },
+    "linear_B_empty": {
+      "state": "empty",
+      "product": "B",
+      "visible": [],
+      "hidden": []
+    },
+    "linear_B_housing_seated": {
+      "state": "housing_seated",
+      "product": "B",
+      "visible": [
+        "housing"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          24.05
+        ]
+      ]
+    },
+    "linear_B_insert_added": {
+      "state": "insert_added",
+      "product": "B",
+      "visible": [
+        "housing",
+        "insert"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          28.900009237060548
+        ]
+      ]
+    },
+    "linear_B_cap_added": {
+      "state": "cap_added",
+      "product": "B",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [
+        "housing",
+        "insert"
+      ],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.55
+        ],
+        [
+          25.0,
+          25.0,
+          36.65001
+        ]
+      ]
+    },
+    "linear_B_cap_only": {
+      "state": "cap_only",
+      "product": "B",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          3.5500038146972663
+        ],
+        [
+          25.0,
+          25.0,
+          14.550003814697266
+        ]
+      ]
+    },
+    "finished_A_empty": {
+      "state": "empty",
+      "product": "A",
+      "visible": [],
+      "hidden": []
+    },
+    "finished_A_housing_seated": {
+      "state": "housing_seated",
+      "product": "A",
+      "visible": [
+        "housing"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          38.05000381469726
+        ]
+      ]
+    },
+    "finished_A_insert_added": {
+      "state": "insert_added",
+      "product": "A",
+      "visible": [
+        "housing",
+        "insert"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          53.10195381469727
+        ]
+      ]
+    },
+    "finished_A_cap_added": {
+      "state": "cap_added",
+      "product": "A",
+      "visible": [
+        "insert",
+        "cap"
+      ],
+      "hidden": [
+        "housing"
+      ],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          53.10195381469727
+        ]
+      ]
+    },
+    "finished_A_cap_only": {
+      "state": "cap_only",
+      "product": "A",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697263
+        ],
+        [
+          25.0,
+          25.0,
+          32.7500036239624
+        ]
+      ]
+    },
+    "finished_B_empty": {
+      "state": "empty",
+      "product": "B",
+      "visible": [],
+      "hidden": []
+    },
+    "finished_B_housing_seated": {
+      "state": "housing_seated",
+      "product": "B",
+      "visible": [
+        "housing"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          40.55000381469726
+        ]
+      ]
+    },
+    "finished_B_insert_added": {
+      "state": "insert_added",
+      "product": "B",
+      "visible": [
+        "housing",
+        "insert"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          45.40001305175781
+        ]
+      ]
+    },
+    "finished_B_cap_added": {
+      "state": "cap_added",
+      "product": "B",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [
+        "housing",
+        "insert"
+      ],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          53.15001381469727
+        ]
+      ]
+    },
+    "finished_B_cap_only": {
+      "state": "cap_only",
+      "product": "B",
+      "visible": [
+        "cap"
+      ],
+      "hidden": [],
+      "bounds_mm": [
+        [
+          -25.0,
+          -25.0,
+          20.050003814697266
+        ],
+        [
+          25.0,
+          25.0,
+          31.050003814697266
+        ]
+      ]
+    }
+  }
+}

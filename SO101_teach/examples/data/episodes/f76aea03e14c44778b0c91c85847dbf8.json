@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "id": "f76aea03e14c44778b0c91c85847dbf8",
+  "name": "바닥 접촉 · 실물 틱 확인",
+  "unit": "motor_ticks",
+  "calibration_sha256": "8d17b947285d9640eedc7b7e0e21ca2d02622de5c1cf0f656bcda85a697f2fe5",
+  "steps": [
+    {
+      "id": "31d78e77e0b34248a64ebfa0d5a9e151",
+      "name": "일자 자세",
+      "ticks": {
+        "shoulder_pan": 2047,
+        "shoulder_lift": 2047,
+        "elbow_flex": 1028,
+        "wrist_flex": 2047,
+        "wrist_roll": 1028,
+        "gripper": 1028
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1790155961.8242643
+    }
+  ],
+  "jig_references": {
+    "pallet": {
+      "pose": [
+        227.94490458809892,
+        -137.7048337546614,
+        67.11096224551454
+      ],
+      "symmetry_deg": 90,
+      "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+    }
+  },
+  "created_at": 1790141027.872855,
+  "robot_id": "arm2",
+  "inspection_timing": "step_complete"
+}

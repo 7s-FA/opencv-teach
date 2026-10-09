@@ -1,0 +1,21 @@
+{
+  "components": 7,
+  "fixture_count": 6,
+  "dimensions_mm": [
+    220.0,
+    148.0,
+    31.300000190734863
+  ],
+  "triangles": 31512,
+  "stl_round_trip": true,
+  "seating_heights_mm": {
+    "b_cap": 4.8,
+    "b_tpu": 4.8,
+    "b_housing": 4.8,
+    "a_cap": 4.8,
+    "a_ball": 4.8,
+    "a_housing": 4.8
+  },
+  "minimum_neighbour_plate_gap_mm": 4.0,
+  "runtime_jig_configuration_changed": false
+}

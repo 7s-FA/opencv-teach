@@ -1,0 +1,10 @@
+{
+  "tool": "built-in image_gen",
+  "reference": "verification/stone-tile-floor/reference-tile.jpg",
+  "reference_sha256": "2150f5abae1025636eba37248010c03cc6f032cba02abf28b8e5258fe6632ad7",
+  "prompt": "Use case: photorealistic-natural. Asset type: seamless repeating albedo texture for a robot workcell floor in a 3D simulator. Input image 1 is a MATERIAL REFERENCE, not a scene to reproduce. Create a square, perfectly top-down orthographic 2-by-2 tile texture, seamless across opposite image edges. Closely match the reference's natural medium-grey stone tile: densely mottled grey mineral matrix, irregular small charcoal chips and slivers, pale grey and off-white mineral flecks, subtle cloudy stone veins. Preserve its subdued neutral-grey tone and realistic fine-scale surface, not carpet, not artificial evenly distributed dots, not exaggerated large terrazzo chips. Four large square tiles with extremely thin dark grey grout lines (roughly 1-2 mm at 500 mm tile size); avoid beveled edges and bold checkerboard differences. Uniform diffuse lighting, consistent exposure edge to edge, no perspective, no cast shadows or baked lighting gradients, no glossy reflections. No objects, hair, debris, writing, borders, labels, or watermark. Output only the full-frame usable repeating surface texture, preferably 1024x1024.",
+  "asset": "assets/textures/grey-stone-tiles.png",
+  "asset_sha256": "68dc850cdeb5ad531c4dae93277f6031da26dc685d6bde4aad719b151ce94234",
+  "tile_spacing": "approximately 500mm in preview; inferred, not measured",
+  "transparent_background": false
+}

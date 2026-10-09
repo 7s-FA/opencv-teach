@@ -1,0 +1,300 @@
+{
+  "schema": 1,
+  "robot_id": "arm3",
+  "display_only": true,
+  "source": "camera_visual_estimate",
+  "base_xyz_mm": [
+    236.326,
+    457.73,
+    -5.0
+  ],
+  "base_yaw_deg": -105.968,
+  "joint_angles_rad": [
+    0.0,
+    -0.1,
+    -1.0,
+    0.5,
+    0.05,
+    0.1
+  ],
+  "verified": false,
+  "camera_shared_with": "arm2",
+  "reference_frame": "arm2_base",
+  "mount_attached": false,
+  "note": "User confirmed the perforated-face outline and screw positions on 2026-10-02. Placement fixed for simulation from the two screw centers at model Z=15.1 mm and the shared table. Existing camera extrinsics are CAD estimates; no measured motion calibration. Arm3 joint posture remains illustrative, not telemetry.",
+  "evidence": "verification/arm3-camera-placement/camera-base-visible.jpg",
+  "joint_pose_source": "illustrative_not_live",
+  "model_perforated_face_z_mm": 15.1,
+  "model_bottom_z_mm": -2.4,
+  "confirmed_for_preview": true,
+  "verified_for_robot_motion": false,
+  "confirmation_date": "2026-10-02",
+  "arm2_from_arm3_mm": [
+    [
+      -0.2751004430452161,
+      0.961415490948802,
+      0,
+      236.326
+    ],
+    [
+      -0.961415490948802,
+      -0.2751004430452161,
+      0,
+      457.73
+    ],
+    [
+      0,
+      0,
+      1,
+      -5.0
+    ],
+    [
+      0,
+      0,
+      0,
+      1
+    ]
+  ],
+  "fit_screw_pixel_rms": 0.34569852382114064,
+  "camera_reference_sha256": "041842b4771709cb002fd594e5adf7185253b2e8666bda6dae8ba0d84827787e",
+  "tcp": {
+    "mode": "model",
+    "model_point": "tip",
+    "xyz_mm": [
+      1.773409675938293,
+      0.6026567343814877,
+      6.549653899876567
+    ],
+    "rpy_deg": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "frame": "gripper_frame_link",
+    "source_sha256": {
+      "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+      "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+    },
+    "verified": false,
+    "role": "arm3_display"
+  },
+  "board": {
+    "size_mm": [
+      514.2877335531805,
+      600.0
+    ],
+    "center_xy_mm": [
+      115.4030845370466,
+      234.0632359225096
+    ],
+    "yaw_deg": 120.06111845212601,
+    "top_z_mm": -7.4,
+    "corners_xy_mm": [
+      [
+        503.8599611567565,
+        161.78444769473006
+      ],
+      [
+        246.24113914980757,
+        606.8961364100671
+      ],
+      [
+        -273.0537920826634,
+        306.34202415028915
+      ],
+      [
+        -15.434970075714432,
+        -138.76966456504792
+      ]
+    ],
+    "method": "Unconstrained width fitted to user-approved image edge points; no 500mm hard constraint",
+    "source_image": "camera.jpg",
+    "unseen_near_edge": "inferred from 600 mm length",
+    "display_only": true,
+    "per_edge_rms_mm": {
+      "top": 0.5402008392222472,
+      "right": 0.3444877696434614,
+      "left": 2.207740028041006
+    },
+    "visual_thickness_mm": 10.0,
+    "thickness_measured": false,
+    "near_edge_estimated": true,
+    "thickness_source": "user_confirmed_2026-10-02",
+    "leg_assembly_height_mm": 185.0,
+    "physical_top_height_from_floor_mm": 195.0,
+    "physical_floor_z_in_robot_frame_mm": -202.4,
+    "legs": {
+      "height_mm": 185.0,
+      "centers_xy_mm": [
+        [
+          -207.14386677659024,
+          -250.0
+        ],
+        [
+          -207.14386677659024,
+          250.0
+        ],
+        [
+          207.14386677659024,
+          -250.0
+        ],
+        [
+          207.14386677659024,
+          250.0
+        ]
+      ],
+      "center_inset_mm": 50.0,
+      "position_source": "user_requested_approximate_50mm_inset",
+      "model": "assets/table_legs/table_leg_185mm_assembly.stl"
+    },
+    "enclosure": {
+      "sides": 4,
+      "panel_thickness_mm": 5.0,
+      "thickness_basis": "display assumption; user confirmed four white enclosing side panels",
+      "height_mm": 185.0
+    },
+    "backdrop": {
+      "height_mm": 400.0,
+      "width_mm": 1200.0,
+      "thickness_mm": 5.0,
+      "gap_mm": 20.0,
+      "height_reference": "physical_floor",
+      "height_basis": "user_confirmed_400mm_from_physical_floor",
+      "width_thickness_gap_basis": "display estimates based on photograph"
+    }
+  },
+  "linear_stage": {
+    "model": "L12-100-100-6-R",
+    "position_mm": [
+      145.66976233209857,
+      176.95721265119536,
+      -7.4
+    ],
+    "yaw_deg": -60.148435888849384,
+    "stroke_mm": 100.0,
+    "rail_length_mm": 300,
+    "rail_outer_width_mm": 121.2,
+    "rear_eye_x_mm": -314.15102391448306,
+    "actuator_axis_z_mm": 7.0,
+    "joint_mode": "static_display",
+    "fixture_count": 2,
+    "a_fixture_asset": "assets/carrier_assembly/source/current/b_housing_jig.stl",
+    "source": "current_camera_joint_jig_fit_with_rigid_CAD_assembly",
+    "image_observations": {
+      "rail_corners": [
+        [
+          772.0,
+          355.0
+        ],
+        [
+          883.0,
+          522.0
+        ],
+        [
+          305.0,
+          610.0
+        ]
+      ],
+      "fixture_centers_reference": "verification/linear-jig-current/final-outline-centers.png"
+    },
+    "position_verified_for_motion": false,
+    "carriage_home_x_mm": -45.65102391448304,
+    "front_pin_x_mm": -116.0,
+    "actuator_body_roll_deg": -90.0,
+    "front_connector_model": "latest_top_mount",
+    "end_stop_position_mm": [
+      156.0,
+      0.0,
+      0.0
+    ],
+    "controller_state_basis": {
+      "host": "192.0.2.10",
+      "file": "/home/ubuntu/project/linear_controller_pi5.py",
+      "user_state": "forward",
+      "commanded_mm": 100.0,
+      "pulse_us": 2000,
+      "measured_position": false,
+      "environment_file": "/home/ubuntu/project/arm3_ros_env.bash",
+      "forward_command": "linear_f",
+      "retract_command": "linear_r",
+      "retract_commanded_mm": 1.5
+    },
+    "alignment": {
+      "reference": "verification/linear-jig-current/assembly-fit.json",
+      "camera_capture": "verification/linear-jig-current/capture.json",
+      "user_outline_confirmed": true,
+      "fixture_centers_pitch_mm": 80.0,
+      "fixture_local_yaw_deg": [
+        0.0,
+        0.0
+      ],
+      "fixture_base_z_mm": 9.4,
+      "mean_abs_outline_error_px": 0.2022285362242175,
+      "p95_abs_outline_error_px": 0.4977067015919882,
+      "rail_screw_mean_error_px": 2.382464826343104,
+      "camera_projection_basis": "preview-only estimated optical center; see reference; original robot calibration unchanged",
+      "camera_optical_axis_offset_mm": 11.578175267299853,
+      "base_from_camera_for_preview": [
+        [
+          8.236175720257466e-06,
+          -0.9063119925854385,
+          0.4226092427148011,
+          30.88041889745002
+        ],
+        [
+          -0.9999999999660827,
+          -7.46454482856353e-06,
+          3.4806839841220946e-06,
+          116.01640173765227
+        ],
+        [
+          0.0,
+          -0.42260924272913486,
+          -0.9063119926161781,
+          535.1784396105975
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "absolute_robot_accuracy_verified": false
+    },
+    "front_connector_geometry": "latest supplied 03_top_mount_NO_UNDER_LIP.stl, rotated -90deg about X and translated Y=-25.5mm",
+    "actuator_rear_axis_z_mm": 7.8,
+    "fixture_source_name": "B 제품/B 제품 지그/B 하단.stl",
+    "actuator_rear_height_basis": "display estimate: rear mount fixed at 7.8mm to clear the rolled CAD housing; front pin follows the 7mm CAD bore",
+    "end_stop_position_basis": "CAD contact: stop inner face meets both rail ends at X=150mm, centered at Y=0; replaces independent photo fit.",
+    "state_source": {
+      "environment_script": "/home/ubuntu/project/arm3_ros_env.bash",
+      "domain_id": 40,
+      "topic": "/arm3/linear_state",
+      "unit": "commanded_pulse_us",
+      "read_only": true,
+      "startup_only": false
+    },
+    "endpoint_reference": {
+      "forward": {
+        "command": "linear_f",
+        "commanded_mm": 100.0,
+        "user_confirmed": true,
+        "placement_reference": "verification/linear-jig-current/assembly-fit.json",
+        "carriage_x_mm": 54.34897608551696
+      },
+      "retracted": {
+        "command": "linear_r",
+        "commanded_mm": 1.5,
+        "user_confirmed": true,
+        "placement_reference": "verification/linear-state-startup/retracted/fit.json",
+        "carriage_x_mm": -41.91585421768268,
+        "reported_end_hunting": true
+      },
+      "intermediate_positions": "Linear display interpolation between camera-confirmed endpoints; not measured position feedback."
+    }
+  },
+  "safe_pose_fallback_arm": {
+    "arm3": "arm2"
+  }
+}

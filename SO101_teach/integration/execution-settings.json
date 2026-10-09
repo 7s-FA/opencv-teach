@@ -1,0 +1,30 @@
+{
+  "arm2": {
+    "speed": 400.0,
+    "hold_seconds": 10.0,
+    "acquisition_seconds": 5.0,
+    "acquisition_attempts": 3,
+    "trim_ticks": {
+      "shoulder_pan": 0,
+      "shoulder_lift": 0,
+      "elbow_flex": 0,
+      "wrist_flex": 0,
+      "wrist_roll": 0,
+      "gripper": 0
+    }
+  },
+  "arm3": {
+    "speed": 400.0,
+    "hold_seconds": 5.0,
+    "acquisition_seconds": 5.0,
+    "acquisition_attempts": 3,
+    "trim_ticks": {
+      "shoulder_pan": 0,
+      "shoulder_lift": 0,
+      "elbow_flex": 0,
+      "wrist_flex": 0,
+      "wrist_roll": 0,
+      "gripper": 0
+    }
+  }
+}

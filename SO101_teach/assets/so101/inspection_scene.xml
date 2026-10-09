@@ -1,0 +1,36 @@
+<mujoco model="so101_teaching_preview">
+  <include file="so101_modified.xml" />
+  <statistic center="0.15 -0.025 0.25" extent="1" />
+  <visual>
+    <global offwidth="640" offheight="480" />
+    <headlight diffuse="0.35 0.35 0.35" ambient="0.32 0.32 0.32" specular="0 0 0" />
+    <quality shadowsize="2048" offsamples="4" />
+    <rgba haze="0.86 0.90 0.93 1" />
+  </visual>
+  <asset>
+    <texture type="skybox" builtin="flat" rgb1="0.86 0.90 0.93" width="128" height="768" />
+    <texture name="floor" type="2d" builtin="flat" rgb1="0.84 0.75 0.62" width="512" height="512" />
+    <material name="floor" texture="floor" texrepeat="1 1" texuniform="true" reflectance="0" specular="0" shininess="0" />
+    <mesh name="overhead_arm_base" file="../../calibration/mount_geometry/source/arm_base.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_bottom" file="../../calibration/mount_geometry/source/cam_mount_bottom.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_middle" file="../../calibration/mount_geometry/source/cam_mount_middle.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_top" file="../../calibration/mount_geometry/source/cam_mount_top.stl" scale="0.001 0.001 0.001" />
+    <mesh name="inspection_pallet" file="../jigs/pallet.stl" scale=".001 .001 .001" />
+  </asset>
+  <worldbody>
+    <light pos="0.5 -0.5 1.5" dir="-0.3 0.3 -1" diffuse="0.35 0.35 0.35" specular="0 0 0" />
+    <geom name="preview_floor" type="plane" pos="0 0 -0.0074" size="1 1 0.01" material="floor" contype="0" conaffinity="0" />
+    <geom name="overhead_arm_base" type="mesh" mesh="overhead_arm_base" pos="0.07294586152891801 -0.053430374313361124 -0.0024000000000000002" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" rgba="0.07 0.085 0.10 1" contype="0" conaffinity="0" group="1" mass="0" />
+    <geom name="overhead_cam_mount_bottom" type="mesh" mesh="overhead_cam_mount_bottom" pos="-0.020975058471081998 0.1525446636358576 -0.0074" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" rgba="0.07 0.085 0.10 1" contype="0" conaffinity="0" group="1" mass="0" />
+    <geom name="overhead_cam_mount_middle" type="mesh" mesh="overhead_cam_mount_middle" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" rgba="0.07 0.085 0.10 1" contype="0" conaffinity="0" group="1" mass="0" />
+    <geom name="overhead_cam_mount_top" type="mesh" mesh="overhead_cam_mount_top" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" rgba="0.07 0.085 0.10 1" contype="0" conaffinity="0" group="1" mass="0" />
+    <body name="overhead_camera_pcb" pos="0.025987375015717188 0.11601636143768305 0.5456718787079634" quat="-0.15304311403548485 0.6903491314792695 -0.6903434456659289 0.15304185355069563">
+      <geom name="overhead_pcb" type="box" size=".016 .016 .0008" rgba=".1 .35 .22 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="overhead_lens" type="cylinder" pos="0 0 .010" size=".006 .010" rgba=".02 .025 .03 1" contype="0" conaffinity="0" mass="0" />
+      <site name="overhead_optical_center" size=".0015" rgba="1 .6 .1 1" />
+    </body>
+    <body name="observed_pallet" mocap="true" pos="0 0 -10">
+      <geom name="observed_pallet_visual" type="mesh" mesh="inspection_pallet" rgba=".7 .9 .9 1" contype="0" conaffinity="0" mass="0" />
+    </body>
+  </worldbody>
+</mujoco>

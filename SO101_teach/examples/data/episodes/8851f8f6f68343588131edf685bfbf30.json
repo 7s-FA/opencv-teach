@@ -1,0 +1,307 @@
+{
+  "robot_id": "arm3",
+  "schema": 1,
+  "id": "8851f8f6f68343588131edf685bfbf30",
+  "name": "B 운송",
+  "unit": "motor_ticks",
+  "calibration_sha256": "0452094291f83e3b3a0494dacfd72d938a3c7f05cdee8a7c04c28cfd364cac78",
+  "steps": [
+    {
+      "id": "426a6e65307647d685a69b94f41f0a77",
+      "name": "시작 · 안전 자세",
+      "ticks": {
+        "shoulder_pan": 2047,
+        "shoulder_lift": 1500,
+        "elbow_flex": 1650,
+        "wrist_flex": 2000,
+        "wrist_roll": 2047,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791270783.1759055,
+      "safe_boundary": "start"
+    },
+    {
+      "id": "82d49d6d2765442b90da09087faa1949",
+      "name": "대기 위치",
+      "ticks": {
+        "shoulder_pan": 2090,
+        "shoulder_lift": 1800,
+        "elbow_flex": 1800,
+        "wrist_flex": 2750,
+        "wrist_roll": 2047,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791270764.7458196
+    },
+    {
+      "id": "afc2095b9c7f433ebc1cd8c6cde016d5",
+      "name": "완제품 : 잡기 위치",
+      "ticks": {
+        "shoulder_pan": 2125,
+        "shoulder_lift": 2075,
+        "elbow_flex": 1980,
+        "wrist_flex": 2915,
+        "wrist_roll": 2660,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791274539.709521
+    },
+    {
+      "id": "7e485053a7f24a8085e09998a53ed66e",
+      "name": "완제품 : 잡기 대기",
+      "ticks": {
+        "shoulder_pan": 2125,
+        "shoulder_lift": 2350,
+        "elbow_flex": 1770,
+        "wrist_flex": 3020,
+        "wrist_roll": 2660,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791272125.219022
+    },
+    {
+      "id": "e0ad2e1dbd294412ba6b4bcaeddaaada",
+      "name": "완제품 : 잡기",
+      "ticks": {
+        "shoulder_pan": 2100,
+        "shoulder_lift": 2350,
+        "elbow_flex": 1770,
+        "wrist_flex": 3000,
+        "wrist_roll": 2650,
+        "gripper": 2200
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791274588.921806
+    },
+    {
+      "id": "8226ff67046842d58678d82e7c7db980",
+      "name": "완제품 : 잡고 들기",
+      "ticks": {
+        "shoulder_pan": 2120,
+        "shoulder_lift": 2240,
+        "elbow_flex": 1810,
+        "wrist_flex": 3000,
+        "wrist_roll": 2660,
+        "gripper": 2200
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791274802.2549603
+    },
+    {
+      "id": "882f319a71e34b2496e70bd2c0b4aa18",
+      "name": "완제품 : 놓기 위치",
+      "ticks": {
+        "shoulder_pan": 1275,
+        "shoulder_lift": 2040,
+        "elbow_flex": 2000,
+        "wrist_flex": 3065,
+        "wrist_roll": 1810,
+        "gripper": 2200
+      },
+      "jig_id": "pallet",
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791275887.439233,
+      "jig_reference": {
+        "pose": [
+          128.41987227748677,
+          193.51395912771852,
+          45.36838345936564
+        ],
+        "symmetry_deg": 90,
+        "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+      },
+      "inspection": {
+        "station": "linear",
+        "target": "2",
+        "expected": "empty",
+        "timeout_seconds": 10.0
+      }
+    },
+    {
+      "id": "980b7d6eccb34addb39f3c51d3aa860a",
+      "name": "완제품 : 놓기 대기",
+      "ticks": {
+        "shoulder_pan": 1275,
+        "shoulder_lift": 2060,
+        "elbow_flex": 2130,
+        "wrist_flex": 2930,
+        "wrist_roll": 1810,
+        "gripper": 2200
+      },
+      "jig_id": "pallet",
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791275839.1149676,
+      "jig_reference": {
+        "pose": [
+          128.41987227748677,
+          193.51395912771852,
+          45.36838345936564
+        ],
+        "symmetry_deg": 90,
+        "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+      }
+    },
+    {
+      "id": "351c1e09a109475c9d3764639c121946",
+      "name": "완제품 : 놓기",
+      "ticks": {
+        "shoulder_pan": 1275,
+        "shoulder_lift": 2060,
+        "elbow_flex": 2130,
+        "wrist_flex": 2940,
+        "wrist_roll": 1810,
+        "gripper": 2400
+      },
+      "jig_id": "pallet",
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791276280.747094,
+      "jig_reference": {
+        "pose": [
+          128.41987227748677,
+          193.51395912771852,
+          45.36838345936564
+        ],
+        "symmetry_deg": 90,
+        "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+      }
+    },
+    {
+      "id": "8e27b38111bd4cdaaa8bbde144ae4cc6",
+      "name": "완제품 : 놓고 들기",
+      "ticks": {
+        "shoulder_pan": 1275,
+        "shoulder_lift": 1950,
+        "elbow_flex": 2110,
+        "wrist_flex": 3060,
+        "wrist_roll": 1810,
+        "gripper": 2500
+      },
+      "jig_id": "pallet",
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791276005.3431892,
+      "jig_reference": {
+        "pose": [
+          128.41987227748677,
+          193.51395912771852,
+          45.36838345936564
+        ],
+        "symmetry_deg": 90,
+        "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+      }
+    },
+    {
+      "id": "66d723e3db094677b4372200ca078201",
+      "name": "복귀 위치",
+      "ticks": {
+        "shoulder_pan": 1500,
+        "shoulder_lift": 1800,
+        "elbow_flex": 1800,
+        "wrist_flex": 2750,
+        "wrist_roll": 2047,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791276085.1691735,
+      "inspection": {
+        "station": "finished",
+        "target": "pallet",
+        "expected": "cap_added",
+        "timeout_seconds": 10.0
+      }
+    },
+    {
+      "id": "0e7b1334bf3641d38ce87f7b4a65eeaa",
+      "name": "종료 · 안전 자세",
+      "ticks": {
+        "shoulder_pan": 2047,
+        "shoulder_lift": 1500,
+        "elbow_flex": 1650,
+        "wrist_flex": 2000,
+        "wrist_roll": 2047,
+        "gripper": 2500
+      },
+      "jig_id": null,
+      "source": {
+        "kind": "edited"
+      },
+      "saved_at": 1791270783.1759176,
+      "safe_boundary": "end"
+    }
+  ],
+  "jig_references": {
+    "pallet": {
+      "pose": [
+        128.41987227748677,
+        193.51395912771852,
+        45.36838345936564
+      ],
+      "symmetry_deg": 90,
+      "stl_sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6"
+    }
+  },
+  "created_at": 1791265855.0705225,
+  "product_type": "B",
+  "pi_execution_settings": {
+    "speed": 400.0,
+    "hold_seconds": 5.0,
+    "acquisition_seconds": 4.0,
+    "acquisition_attempts": 5
+  },
+  "pi_timeout_seconds": 120.0,
+  "startup_inspections": [
+    {
+      "station": "linear",
+      "target": "2",
+      "expected": "cap_added",
+      "timeout_seconds": 10.0
+    },
+    {
+      "station": "finished",
+      "target": "pallet",
+      "expected": "empty",
+      "timeout_seconds": 10.0
+    }
+  ],
+  "pi_export": {
+    "source_episode_id": "ff516fcfd187458199b6dd3bcc4d59f8",
+    "source_sha256": "adfe280f4b3bc58010b11b0b4d9208b5cc1f543337d852c0feaa434163555101"
+  },
+  "completion_events": {
+    "PICK": "882f319a71e34b2496e70bd2c0b4aa18",
+    "PLACE": "66d723e3db094677b4372200ca078201"
+  },
+  "inspection_timing": "step_complete"
+}

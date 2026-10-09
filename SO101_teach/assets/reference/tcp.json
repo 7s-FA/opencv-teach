@@ -1,0 +1,19 @@
+{
+  "mode": "model",
+  "xyz_mm": [
+    1.773409675938293,
+    0.6026567343814877,
+    6.549653899876567
+  ],
+  "rpy_deg": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "frame": "gripper_frame_link",
+  "source_sha256": {
+    "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+    "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+  },
+  "verified": false
+}

@@ -1,0 +1,3211 @@
+{
+  "profile": {
+    "schema": 1,
+    "name": "로봇팔2",
+    "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+    "calibration_file": "calibration/follower-eaea825f770f1859-a701f6c38b0a1.json",
+    "model_reference": {
+      "ticks": {
+        "shoulder_pan": 2047,
+        "shoulder_lift": 2047,
+        "elbow_flex": 2047,
+        "wrist_flex": 2047,
+        "wrist_roll": 2047,
+        "gripper": 2047
+      },
+      "radians": {
+        "shoulder_pan": 8.739856416340758e-06,
+        "shoulder_lift": 3.999987902844018e-06,
+        "elbow_flex": -4.242636587726078e-06,
+        "wrist_flex": 9.82706428323083e-06,
+        "wrist_roll": 0.04868213401890373,
+        "gripper": 1.5707963267948966
+      },
+      "encoder_counts_per_turn": 4096,
+      "calibration_sha256": "eaea825f770f1859a0c66e486ec3538d31280dfa16b3c7a0dc2d7e9ee89d356b",
+      "geometry_verified": false,
+      "note": "저장된 중간 틱과 CAD 조립 축을 연결한 기준. 실물 TCP 대조 미완료.",
+      "angle_mapping_sha256": "92e6a896c1c72c8c180643600a61048a5de28f9cd4faaee556565ea10886445b"
+    },
+    "camera": {
+      "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+      "width": 1280,
+      "height": 720
+    },
+    "intrinsics": {
+      "normal_spread_deg": 85.07132313914785,
+      "usable_for_metric": true,
+      "quality_note": "",
+      "K": [
+        [
+          1032.2503683943196,
+          0.0,
+          687.7723709834622
+        ],
+        [
+          0.0,
+          1032.1059987177996,
+          347.780289252618
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "D": [
+        -0.4927825484416793,
+        0.3175725472843906,
+        0.0009627245882526294,
+        0.0006415581739380303,
+        -0.12739109971931759
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "rms_px": 0.3345732736611807,
+      "errors_px": [
+        0.23249447345733643,
+        0.1988622546195984,
+        0.22880753874778748,
+        0.2220085859298706,
+        0.22482919692993164,
+        0.21837042272090912,
+        0.20347148180007935,
+        0.18097226321697235,
+        0.1993337720632553,
+        0.2389938235282898,
+        0.17893920838832855,
+        0.2486308366060257,
+        0.22204460203647614,
+        0.2081262469291687,
+        0.19880735874176025,
+        0.21454742550849915,
+        0.20125927031040192,
+        0.4574057459831238,
+        0.5114720463752747,
+        0.7521030306816101,
+        0.5389497876167297,
+        0.36063769459724426,
+        0.49417808651924133,
+        0.5819027423858643,
+        0.3164055347442627,
+        0.210563525557518,
+        0.25723108649253845,
+        0.31445592641830444,
+        0.31573325395584106,
+        0.33514919877052307,
+        0.17703188955783844,
+        0.23043052852153778,
+        0.3805907070636749,
+        0.412645548582077,
+        0.4242311716079712
+      ],
+      "camera": {
+        "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+        "width": 1280,
+        "height": 720
+      },
+      "board": {
+        "cols": 13,
+        "rows": 9,
+        "square_mm": 20.0
+      },
+      "source_files": [
+        "Photo from 2026-09-21 14-22-19.002897.jpeg",
+        "Photo from 2026-09-21 14-22-23.603922.jpeg",
+        "Photo from 2026-09-21 14-22-27.277905.jpeg",
+        "Photo from 2026-09-21 14-22-30.754915.jpeg",
+        "Photo from 2026-09-21 14-22-34.231099.jpeg",
+        "Photo from 2026-09-21 14-22-41.698608.jpeg",
+        "Photo from 2026-09-21 14-22-55.991840.jpeg",
+        "Photo from 2026-09-21 14-23-02.367464.jpeg",
+        "Photo from 2026-09-21 14-23-07.709889.jpeg",
+        "Photo from 2026-09-21 14-23-14.268171.jpeg",
+        "Photo from 2026-09-21 14-23-20.038546.jpeg",
+        "Photo from 2026-09-21 14-23-28.527615.jpeg",
+        "Photo from 2026-09-21 14-23-31.768654.jpeg",
+        "Photo from 2026-09-21 14-23-34.924734.jpeg",
+        "Photo from 2026-09-21 14-23-44.434608.jpeg",
+        "Photo from 2026-09-21 14-23-49.117827.jpeg",
+        "Photo from 2026-09-21 14-23-54.069995.jpeg",
+        "Photo from 2026-09-21 14-47-30.456972.jpeg",
+        "Photo from 2026-09-21 14-47-37.321896.jpeg",
+        "Photo from 2026-09-21 14-47-42.473514.jpeg",
+        "Photo from 2026-09-21 14-47-49.883488.jpeg",
+        "Photo from 2026-09-21 14-47-54.635372.jpeg",
+        "Photo from 2026-09-21 14-48-02.212012.jpeg",
+        "Photo from 2026-09-21 14-48-11.209132.jpeg",
+        "Photo from 2026-09-21 14-48-16.337043.jpeg",
+        "Photo from 2026-09-21 14-59-33.967505.jpeg",
+        "Photo from 2026-09-21 14-59-39.829627.jpeg",
+        "Photo from 2026-09-21 14-59-45.155029.jpeg",
+        "Photo from 2026-09-21 14-59-55.019602.jpeg",
+        "Photo from 2026-09-21 15-00-12.849223.jpeg",
+        "Photo from 2026-09-21 15-00-23.577830.jpeg",
+        "Photo from 2026-09-21 15-00-31.274409.jpeg",
+        "Photo from 2026-09-21 15-00-38.254069.jpeg",
+        "Photo from 2026-09-21 15-00-50.713060.jpeg",
+        "Photo from 2026-09-21 15-00-57.878643.jpeg"
+      ],
+      "source_directory": "/path/to/Final_Arm/OpenCV_teach/calibration/camera_images"
+    },
+    "extrinsics": {
+      "source": "cad_estimate",
+      "verified_for_robot_motion": false,
+      "base_from_camera": [
+        [
+          8.236175720257466e-06,
+          -0.9063119925854385,
+          0.4226092427148011,
+          25.987375015717188
+        ],
+        [
+          -0.9999999999660827,
+          -7.46454482856353e-06,
+          3.4806839841220946e-06,
+          116.01636143768306
+        ],
+        [
+          0.0,
+          -0.42260924272913486,
+          -0.9063119926161781,
+          545.6718787079634
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "intrinsics_signature": "f6fe093ef752b6f6ea89f091380059f1a0c85a73683a3cf0871c3c7aaa11523b",
+      "optical_offset_mm": 0.0,
+      "image_roll_deg": 0.0,
+      "geometry_source": "calibration/mount_geometry/left_nominal_pose.json",
+      "geometry_sha256": "894bd412a4780aaa458ff5f51aba27620dd5ca671343a019ec861b2a3a68bb3b",
+      "lens_protrusion_mm_reference_only": 20.0,
+      "note": "Stock 32x32 module on left-side mast. Opposite socket CAD translation; optical offset 0 mm and existing image axes retained. Not a measured camera pose.",
+      "verified": false,
+      "mount_side": "left",
+      "mount_socket_pitch_mm": 232.06414794921875
+    },
+    "known_issues": [
+      "손목 동일 위치 유지 이탈: 원인 미확정",
+      "이전 바닥 접촉 기록과 CAD 사이 약 21 mm 차이"
+    ],
+    "source": {
+      "calibration": "/path/to/Final_Arm/OpenCV_teach/calibration/opencv_follower_right/follower_right.json",
+      "midpoint_record": "/path/to/Final_Arm/OpenCV_teach/teaching/motor-diagnostics/calibration_recovery_follower_right_20260923_110312_826148.json",
+      "model": "/path/to/Final_Arm/OpenCV_teach/assets/so101"
+    },
+    "tcp": {
+      "mode": "model",
+      "model_point": "tip",
+      "xyz_mm": [
+        1.773409675938293,
+        0.6026567343814877,
+        6.549653899876567
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "frame": "gripper_frame_link",
+      "source_sha256": {
+        "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+        "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+      },
+      "verified": false
+    },
+    "mode": "follower",
+    "leader": {
+      "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+      "calibration_file": "calibration/leader-f89be2824a1e3bb0-abb3e75e82ce8.json",
+      "angle_mapping_sha256": "30b0338656beeca88d6f0a9d01b9a8e72f7b6a5c6aa3ef55b5ef760a7308fddc"
+    },
+    "table_z_mm": -7.4,
+    "grip_contact_load": 70,
+    "robot_id": "arm2",
+    "calibration_status": "ready",
+    "world_from_base": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "preview_joint_angles_rad": [
+      8.739856416340758e-06,
+      3.999987902844018e-06,
+      -4.242636587726078e-06,
+      9.82706428323083e-06,
+      0.04868213401890373,
+      0.0
+    ]
+  },
+  "catalog": {
+    "pallet": {
+      "id": "pallet",
+      "name": "완제품 팔레트",
+      "stl": "/path/to/Final_Arm/SO101_teach/data/jig_assets/89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6.stl",
+      "unit": "mm",
+      "shape": "ring",
+      "method": "edges",
+      "roi": [
+        [
+          0.5692108631134033,
+          0.2988505681355794
+        ],
+        [
+          0.472186279296875,
+          0.07586206860012479
+        ],
+        [
+          0.45278139114379884,
+          0.07816092173258464
+        ],
+        [
+          0.4489003658294678,
+          0.0827586226993137
+        ],
+        [
+          0.4307891368865967,
+          0.0850574705335829
+        ],
+        [
+          0.4307891368865967,
+          0.08735632366604275
+        ],
+        [
+          0.40620956420898435,
+          0.09195401933458117
+        ],
+        [
+          0.40620956420898435,
+          0.09425287246704102
+        ],
+        [
+          0.38939197063446046,
+          0.09885057873196072
+        ],
+        [
+          0.3764553785324097,
+          0.1103448232014974
+        ],
+        [
+          0.3557567834854126,
+          0.11954022513495552
+        ],
+        [
+          0.35316946506500246,
+          0.12413793139987522
+        ],
+        [
+          0.3441138505935669,
+          0.12643678453233506
+        ],
+        [
+          0.34282019138336184,
+          0.1310344802008735
+        ],
+        [
+          0.3260025978088379,
+          0.1402298821343316
+        ],
+        [
+          0.3182406187057495,
+          0.14712644153171114
+        ],
+        [
+          0.3169469594955444,
+          0.15172413720024958
+        ],
+        [
+          0.310478663444519,
+          0.15402299033270941
+        ],
+        [
+          0.30918500423431394,
+          0.15862068600124782
+        ],
+        [
+          0.3027166843414307,
+          0.16091953913370768
+        ],
+        [
+          0.3027166843414307,
+          0.1655172453986274
+        ],
+        [
+          0.27943079471588134,
+          0.18160919613308377
+        ],
+        [
+          0.27813713550567626,
+          0.18620690239800347
+        ],
+        [
+          0.27296247482299807,
+          0.18850574493408204
+        ],
+        [
+          0.271668815612793,
+          0.19310345119900174
+        ],
+        [
+          0.2600258827209473,
+          0.20689654880099825
+        ],
+        [
+          0.2561448812484741,
+          0.20689654880099825
+        ],
+        [
+          0.2522639036178589,
+          0.21379309760199652
+        ],
+        [
+          0.24708926677703857,
+          0.21609196133083766
+        ],
+        [
+          0.24708926677703857,
+          0.2206896464029948
+        ],
+        [
+          0.2393272876739502,
+          0.22758621639675564
+        ],
+        [
+          0.2328589916229248,
+          0.24137931399875218
+        ],
+        [
+          0.22509703636169434,
+          0.24827586279975045
+        ],
+        [
+          0.2082794189453125,
+          0.2781609217325846
+        ],
+        [
+          0.20569210052490233,
+          0.2781609217325846
+        ],
+        [
+          0.19922380447387694,
+          0.29195401933458115
+        ],
+        [
+          0.19663648605346679,
+          0.29195401933458115
+        ],
+        [
+          0.19663648605346679,
+          0.2965517255995009
+        ],
+        [
+          0.1875808596611023,
+          0.3057471169365777
+        ],
+        [
+          0.18111255168914794,
+          0.3241379208034939
+        ],
+        [
+          0.17464424371719361,
+          0.3333333333333333
+        ],
+        [
+          0.16946959495544434,
+          0.349425294664171
+        ],
+        [
+          0.16946959495544434,
+          0.3586207071940104
+        ],
+        [
+          0.16688227653503418,
+          0.36551725599500867
+        ],
+        [
+          0.16688227653503418,
+          0.40919541252983943
+        ],
+        [
+          0.16946959495544434,
+          0.4137930976019965
+        ],
+        [
+          0.17076325416564941,
+          0.42758619520399305
+        ],
+        [
+          0.18628718852996826,
+          0.4551724327935113
+        ],
+        [
+          0.19793014526367186,
+          0.4850574917263455
+        ],
+        [
+          0.20569210052490233,
+          0.5310344696044922
+        ],
+        [
+          0.2082794189453125,
+          0.5333333333333333
+        ],
+        [
+          0.2082794189453125,
+          0.5402298821343317
+        ],
+        [
+          0.21216042041778566,
+          0.5471264309353299
+        ],
+        [
+          0.21345407962799073,
+          0.5586207071940105
+        ],
+        [
+          0.21992237567901612,
+          0.574712626139323
+        ],
+        [
+          0.23544631004333497,
+          0.5816091749403212
+        ],
+        [
+          0.271668815612793,
+          0.5793103535970052
+        ],
+        [
+          0.32729625701904297,
+          0.5586207071940105
+        ],
+        [
+          0.34023284912109375,
+          0.5471264309353299
+        ],
+        [
+          0.35963778495788573,
+          0.5379310184054904
+        ],
+        [
+          0.3609314441680908,
+          0.5333333333333333
+        ],
+        [
+          0.3868046522140503,
+          0.5103448232014974
+        ],
+        [
+          0.4036222457885742,
+          0.48275862799750435
+        ],
+        [
+          0.41138420104980467,
+          0.4758620791965061
+        ],
+        [
+          0.41138420104980467,
+          0.4712643517388238
+        ],
+        [
+          0.4139715194702148,
+          0.4712643517388238
+        ],
+        [
+          0.4294954776763916,
+          0.450574705335829
+        ],
+        [
+          0.4489003658294678,
+          0.4344827440049913
+        ],
+        [
+          0.4566623687744141,
+          0.4206896464029948
+        ],
+        [
+          0.4670116424560547,
+          0.40919541252983943
+        ],
+        [
+          0.4734799385070801,
+          0.40689654880099824
+        ],
+        [
+          0.4851229190826416,
+          0.39310345119900175
+        ],
+        [
+          0.508408784866333,
+          0.37471262613932294
+        ],
+        [
+          0.5122897624969482,
+          0.36781607733832467
+        ],
+        [
+          0.5407503128051758,
+          0.3448275883992513
+        ],
+        [
+          0.5472186088562012,
+          0.3333333333333333
+        ],
+        [
+          0.5510996341705322,
+          0.3310344907972548
+        ],
+        [
+          0.5601552486419678,
+          0.31264368693033856
+        ],
+        [
+          0.5653298854827881,
+          0.3103448232014974
+        ],
+        [
+          0.5692108631134033,
+          0.30344827440049915
+        ]
+      ],
+      "manual_size_mm": [
+        70,
+        70
+      ],
+      "manual_rim_mm": 20,
+      "mesh": {
+        "sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6",
+        "stl_path": "/path/to/Final_Arm/SO101_teach/data/jig_assets/89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6.stl",
+        "unit": "mm",
+        "low_mm": [
+          -35.0,
+          -35.0,
+          0.0
+        ],
+        "size_mm": [
+          70.0,
+          70.0,
+          25.0
+        ],
+        "rim_z_mm": 20.0,
+        "holes": [
+          {
+            "center": [
+              0.5016666666666667,
+              0.5016666666666667
+            ],
+            "size": [
+              0.4033333333333333,
+              0.4033333333333333
+            ]
+          }
+        ]
+      },
+      "support_height_mm": 0.0
+    },
+    "b5ebdb54807c441c8267c15d77713b6a": {
+      "id": "b5ebdb54807c441c8267c15d77713b6a",
+      "name": "운반용 지그",
+      "stl": "/path/to/Final_Arm/SO101_teach/data/jig_assets/06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514.stl",
+      "unit": "mm",
+      "shape": "rectangle",
+      "method": "grid",
+      "roi": [
+        [
+          0.6313066005706787,
+          0.46436780293782554
+        ],
+        [
+          0.6442431926727294,
+          0.5126436869303386
+        ],
+        [
+          0.6468305110931396,
+          0.5126436869303386
+        ],
+        [
+          0.6494178295135498,
+          0.524137920803494
+        ],
+        [
+          0.6545925140380859,
+          0.5333333333333333
+        ],
+        [
+          0.6545925140380859,
+          0.5379310184054904
+        ],
+        [
+          0.6584734916687012,
+          0.5425287458631728
+        ],
+        [
+          0.6584734916687012,
+          0.5471264309353299
+        ],
+        [
+          0.6623544692993164,
+          0.5517241583930121
+        ],
+        [
+          0.6623544692993164,
+          0.5563218434651692
+        ],
+        [
+          0.6662354469299316,
+          0.5632183922661675
+        ],
+        [
+          0.6675291061401367,
+          0.574712626139323
+        ],
+        [
+          0.6701164245605469,
+          0.5770114898681641
+        ],
+        [
+          0.6752910614013672,
+          0.6045976850721572
+        ],
+        [
+          0.6791720390319824,
+          0.6137930976019965
+        ],
+        [
+          0.6791720390319824,
+          0.6206896464029948
+        ],
+        [
+          0.6856403827667237,
+          0.6344827440049913
+        ],
+        [
+          0.6856403827667237,
+          0.6413792928059896
+        ],
+        [
+          0.6946959972381592,
+          0.6574712541368273
+        ],
+        [
+          0.6946959972381592,
+          0.6620689815945096
+        ],
+        [
+          0.6998706340789795,
+          0.6712643517388238
+        ],
+        [
+          0.7050452709197998,
+          0.6896551767985026
+        ],
+        [
+          0.7102199077606202,
+          0.698850589328342
+        ],
+        [
+          0.7128072261810303,
+          0.698850589328342
+        ],
+        [
+          0.7128072261810303,
+          0.7034482744004992
+        ],
+        [
+          0.7179819107055664,
+          0.7126436869303385
+        ],
+        [
+          0.7218628883361816,
+          0.7149425082736545
+        ],
+        [
+          0.7296248435974121,
+          0.7494252522786459
+        ],
+        [
+          0.7425614356994629,
+          0.7862069023980035
+        ],
+        [
+          0.7477360725402832,
+          0.7954022725423177
+        ],
+        [
+          0.7529107570648194,
+          0.8160919189453125
+        ],
+        [
+          0.7554980754852295,
+          0.8160919189453125
+        ],
+        [
+          0.7567917346954346,
+          0.8252873738606771
+        ],
+        [
+          0.7593790531158447,
+          0.827586195203993
+        ],
+        [
+          0.7606727123260498,
+          0.8367816501193577
+        ],
+        [
+          0.7645536899566651,
+          0.8436781989203559
+        ],
+        [
+          0.7865459442138671,
+          0.9218390570746527
+        ],
+        [
+          0.7878396034240722,
+          0.9356321546766493
+        ],
+        [
+          0.7956015586853027,
+          0.9609195285373264
+        ],
+        [
+          0.8020698547363281,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.678160900539822
+        ],
+        [
+          0.8460543632507325,
+          0.262068960401747
+        ],
+        [
+          0.8266493797302246,
+          0.2712643729315864
+        ],
+        [
+          0.8253557205200195,
+          0.27586207919650607
+        ],
+        [
+          0.8214747428894043,
+          0.27586207919650607
+        ],
+        [
+          0.8111254692077636,
+          0.2850574705335829
+        ],
+        [
+          0.8072444915771484,
+          0.29195401933458115
+        ],
+        [
+          0.8033635139465332,
+          0.29195401933458115
+        ],
+        [
+          0.7930142402648925,
+          0.30344827440049915
+        ],
+        [
+          0.7852522850036621,
+          0.3057471169365777
+        ],
+        [
+          0.783958625793457,
+          0.3103448232014974
+        ],
+        [
+          0.7761966228485108,
+          0.31264368693033856
+        ],
+        [
+          0.7736093044281006,
+          0.31724137200249564
+        ],
+        [
+          0.7671410083770752,
+          0.31954023573133683
+        ],
+        [
+          0.743855094909668,
+          0.3402298821343316
+        ],
+        [
+          0.7360931396484375,
+          0.3517241372002496
+        ],
+        [
+          0.7296248435974121,
+          0.3540229797363281
+        ],
+        [
+          0.7296248435974121,
+          0.3586207071940104
+        ],
+        [
+          0.7270375251770019,
+          0.3586207071940104
+        ],
+        [
+          0.7205692291259765,
+          0.3701149410671658
+        ],
+        [
+          0.7063389301300049,
+          0.3816091749403212
+        ],
+        [
+          0.6985769748687745,
+          0.39310345119900175
+        ],
+        [
+          0.6934023380279541,
+          0.3954023149278429
+        ],
+        [
+          0.6934023380279541,
+          0.4
+        ],
+        [
+          0.6882277011871338,
+          0.40229886372884116
+        ],
+        [
+          0.6856403827667237,
+          0.40919541252983943
+        ],
+        [
+          0.6701164245605469,
+          0.4229885101318359
+        ],
+        [
+          0.6662354469299316,
+          0.4229885101318359
+        ],
+        [
+          0.6584734916687012,
+          0.4344827440049913
+        ],
+        [
+          0.6520051956176758,
+          0.43678160773383246
+        ],
+        [
+          0.6520051956176758,
+          0.4413792928059896
+        ],
+        [
+          0.6403622150421142,
+          0.450574705335829
+        ]
+      ],
+      "manual_size_mm": [
+        70,
+        70
+      ],
+      "manual_rim_mm": 20,
+      "mesh": {
+        "assembly": {
+          "kind": "fixed_grid",
+          "fixtures": [
+            {
+              "center_mm": [
+                -72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                21.699999809265137
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                -72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                26.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                8.5
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                8.5
+              ],
+              "bottom_z_mm": 4.800000190734863
+            }
+          ],
+          "orientation_hole": {
+            "center_mm": [
+              -72.00000020833335,
+              -36.00000005208334
+            ],
+            "z_mm": 26.5,
+            "inner_radius_mm": 8.999998880810496,
+            "outer_radius_mm": 10.4999995979985
+          }
+        },
+        "sha256": "06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514",
+        "stl_path": "/path/to/Final_Arm/SO101_teach/data/jig_assets/06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514.stl",
+        "unit": "mm",
+        "low_mm": [
+          -110.0,
+          -74.0,
+          0.0
+        ],
+        "size_mm": [
+          220.0,
+          148.0,
+          31.299999237060547
+        ],
+        "rim_z_mm": 4.8,
+        "holes": [
+          {
+            "center": [
+              0.8283333333333334,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.55
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.5916666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.4533333333333333
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.4116666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.8283333333333334,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          }
+        ]
+      },
+      "support_height_mm": 0.0,
+      "physical_installation": {
+        "platform": "TurtleBot3 Burger",
+        "reference": "physical_floor",
+        "detection_rim_height_mm": 199.8,
+        "tabletop_height_mm": 195.0,
+        "carrier_underside_height_mm": 195.0,
+        "rim_height_above_tabletop_mm": 4.8,
+        "support_height_basis": "user requested 0mm relative to tabletop; carrier underside 195mm, CAD rim 4.8mm gives 199.8mm ~= 200mm",
+        "source": "user_confirmed_2026-10-02",
+        "motion_calibration_verified": false,
+        "nominal_detection_rim_height_mm": 200.0,
+        "platform_yaw_deg": -90.0,
+        "orientation_basis": "User-confirmed front camera: Burger +X points toward carrier -Y; A is the front row, B the rear row. Existing -90 degree mounting yaw retained."
+      }
+    }
+  },
+  "placement": {
+    "schema": 1,
+    "robot_id": "arm3",
+    "display_only": true,
+    "source": "camera_visual_estimate",
+    "base_xyz_mm": [
+      236.326,
+      457.73,
+      -5.0
+    ],
+    "base_yaw_deg": -105.968,
+    "joint_angles_rad": [
+      0.0,
+      -0.1,
+      -1.0,
+      0.5,
+      0.05,
+      0.1
+    ],
+    "verified": false,
+    "camera_shared_with": "arm2",
+    "reference_frame": "arm2_base",
+    "mount_attached": false,
+    "note": "User confirmed the perforated-face outline and screw positions on 2026-10-02. Placement fixed for simulation from the two screw centers at model Z=15.1 mm and the shared table. Existing camera extrinsics are CAD estimates; no measured motion calibration. Arm3 joint posture remains illustrative, not telemetry.",
+    "evidence": "verification/arm3-camera-placement/camera-base-visible.jpg",
+    "joint_pose_source": "illustrative_not_live",
+    "model_perforated_face_z_mm": 15.1,
+    "model_bottom_z_mm": -2.4,
+    "confirmed_for_preview": true,
+    "verified_for_robot_motion": false,
+    "confirmation_date": "2026-10-02",
+    "arm2_from_arm3_mm": [
+      [
+        -0.2751004430452161,
+        0.961415490948802,
+        0,
+        236.326
+      ],
+      [
+        -0.961415490948802,
+        -0.2751004430452161,
+        0,
+        457.73
+      ],
+      [
+        0,
+        0,
+        1,
+        -5.0
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "fit_screw_pixel_rms": 0.34569852382114064,
+    "camera_reference_sha256": "041842b4771709cb002fd594e5adf7185253b2e8666bda6dae8ba0d84827787e",
+    "tcp": {
+      "mode": "model",
+      "model_point": "tip",
+      "xyz_mm": [
+        1.773409675938293,
+        0.6026567343814877,
+        6.549653899876567
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "frame": "gripper_frame_link",
+      "source_sha256": {
+        "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+        "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+      },
+      "verified": false,
+      "role": "arm3_display"
+    },
+    "board": {
+      "size_mm": [
+        514.2877335531805,
+        600.0
+      ],
+      "center_xy_mm": [
+        115.4030845370466,
+        234.0632359225096
+      ],
+      "yaw_deg": 120.06111845212601,
+      "top_z_mm": -7.4,
+      "corners_xy_mm": [
+        [
+          503.8599611567565,
+          161.78444769473006
+        ],
+        [
+          246.24113914980757,
+          606.8961364100671
+        ],
+        [
+          -273.0537920826634,
+          306.34202415028915
+        ],
+        [
+          -15.434970075714432,
+          -138.76966456504792
+        ]
+      ],
+      "method": "Unconstrained width fitted to user-approved image edge points; no 500mm hard constraint",
+      "source_image": "camera.jpg",
+      "unseen_near_edge": "inferred from 600 mm length",
+      "display_only": true,
+      "per_edge_rms_mm": {
+        "top": 0.5402008392222472,
+        "right": 0.3444877696434614,
+        "left": 2.207740028041006
+      },
+      "visual_thickness_mm": 10.0,
+      "thickness_measured": false,
+      "near_edge_estimated": true,
+      "thickness_source": "user_confirmed_2026-10-02",
+      "leg_assembly_height_mm": 185.0,
+      "physical_top_height_from_floor_mm": 195.0,
+      "physical_floor_z_in_robot_frame_mm": -202.4,
+      "legs": {
+        "height_mm": 185.0,
+        "centers_xy_mm": [
+          [
+            -207.14386677659024,
+            -250.0
+          ],
+          [
+            -207.14386677659024,
+            250.0
+          ],
+          [
+            207.14386677659024,
+            -250.0
+          ],
+          [
+            207.14386677659024,
+            250.0
+          ]
+        ],
+        "center_inset_mm": 50.0,
+        "position_source": "user_requested_approximate_50mm_inset",
+        "model": "assets/table_legs/table_leg_185mm_assembly.stl"
+      },
+      "enclosure": {
+        "sides": 4,
+        "panel_thickness_mm": 5.0,
+        "thickness_basis": "display assumption; user confirmed four white enclosing side panels",
+        "height_mm": 185.0
+      },
+      "backdrop": {
+        "height_mm": 400.0,
+        "width_mm": 1200.0,
+        "thickness_mm": 5.0,
+        "gap_mm": 20.0,
+        "height_reference": "physical_floor",
+        "height_basis": "user_confirmed_400mm_from_physical_floor",
+        "width_thickness_gap_basis": "display estimates based on photograph"
+      }
+    },
+    "linear_stage": {
+      "model": "L12-100-100-6-R",
+      "position_mm": [
+        145.66976233209857,
+        176.95721265119536,
+        -7.4
+      ],
+      "yaw_deg": -60.148435888849384,
+      "stroke_mm": 100.0,
+      "rail_length_mm": 300,
+      "rail_outer_width_mm": 121.2,
+      "rear_eye_x_mm": -314.15102391448306,
+      "actuator_axis_z_mm": 7.0,
+      "joint_mode": "static_display",
+      "fixture_count": 2,
+      "a_fixture_asset": "assets/carrier_assembly/source/current/b_housing_jig.stl",
+      "source": "current_camera_joint_jig_fit_with_rigid_CAD_assembly",
+      "image_observations": {
+        "rail_corners": [
+          [
+            772.0,
+            355.0
+          ],
+          [
+            883.0,
+            522.0
+          ],
+          [
+            305.0,
+            610.0
+          ]
+        ],
+        "fixture_centers_reference": "verification/linear-jig-current/final-outline-centers.png"
+      },
+      "position_verified_for_motion": false,
+      "carriage_home_x_mm": -45.65102391448304,
+      "front_pin_x_mm": -116.0,
+      "actuator_body_roll_deg": -90.0,
+      "front_connector_model": "latest_top_mount",
+      "end_stop_position_mm": [
+        156.0,
+        0.0,
+        0.0
+      ],
+      "controller_state_basis": {
+        "host": "192.0.2.10",
+        "file": "/home/ubuntu/project/linear_controller_pi5.py",
+        "user_state": "forward",
+        "commanded_mm": 100.0,
+        "pulse_us": 2000,
+        "measured_position": false,
+        "environment_file": "/home/ubuntu/project/arm3_ros_env.bash",
+        "forward_command": "linear_f",
+        "retract_command": "linear_r",
+        "retract_commanded_mm": 1.5
+      },
+      "alignment": {
+        "reference": "verification/linear-jig-current/assembly-fit.json",
+        "camera_capture": "verification/linear-jig-current/capture.json",
+        "user_outline_confirmed": true,
+        "fixture_centers_pitch_mm": 80.0,
+        "fixture_local_yaw_deg": [
+          0.0,
+          0.0
+        ],
+        "fixture_base_z_mm": 9.4,
+        "mean_abs_outline_error_px": 0.2022285362242175,
+        "p95_abs_outline_error_px": 0.4977067015919882,
+        "rail_screw_mean_error_px": 2.382464826343104,
+        "camera_projection_basis": "preview-only estimated optical center; see reference; original robot calibration unchanged",
+        "camera_optical_axis_offset_mm": 11.578175267299853,
+        "base_from_camera_for_preview": [
+          [
+            8.236175720257466e-06,
+            -0.9063119925854385,
+            0.4226092427148011,
+            30.88041889745002
+          ],
+          [
+            -0.9999999999660827,
+            -7.46454482856353e-06,
+            3.4806839841220946e-06,
+            116.01640173765227
+          ],
+          [
+            0.0,
+            -0.42260924272913486,
+            -0.9063119926161781,
+            535.1784396105975
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "absolute_robot_accuracy_verified": false
+      },
+      "front_connector_geometry": "latest supplied 03_top_mount_NO_UNDER_LIP.stl, rotated -90deg about X and translated Y=-25.5mm",
+      "actuator_rear_axis_z_mm": 7.8,
+      "fixture_source_name": "B 제품/B 제품 지그/B 하단.stl",
+      "actuator_rear_height_basis": "display estimate: rear mount fixed at 7.8mm to clear the rolled CAD housing; front pin follows the 7mm CAD bore",
+      "end_stop_position_basis": "CAD contact: stop inner face meets both rail ends at X=150mm, centered at Y=0; replaces independent photo fit.",
+      "state_source": {
+        "environment_script": "/home/ubuntu/project/arm3_ros_env.bash",
+        "domain_id": 40,
+        "topic": "/arm3/linear_state",
+        "unit": "commanded_pulse_us",
+        "read_only": true,
+        "startup_only": false
+      },
+      "endpoint_reference": {
+        "forward": {
+          "command": "linear_f",
+          "commanded_mm": 100.0,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-jig-current/assembly-fit.json",
+          "carriage_x_mm": 54.34897608551696
+        },
+        "retracted": {
+          "command": "linear_r",
+          "commanded_mm": 1.5,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-state-startup/retracted/fit.json",
+          "carriage_x_mm": -41.91585421768268,
+          "reported_end_hunting": true
+        },
+        "intermediate_positions": "Linear display interpolation between camera-confirmed endpoints; not measured position feedback."
+      },
+      "startup_state": {
+        "known": true,
+        "commanded_mm": 1.5,
+        "measured": false
+      }
+    },
+    "safe_pose_fallback_arm": {
+      "arm3": "arm2"
+    }
+  },
+  "reference": {
+    "schema": 1,
+    "units": {
+      "length": "mm",
+      "angle": "deg"
+    },
+    "inspection_enabled": false,
+    "status": "CAD_REFERENCE_REQUIRES_IMAGE_VALIDATION",
+    "coordinates": {
+      "xy": "right-handed local jig frame; +Z upward; positive yaw CCW viewed from +Z",
+      "carrier_origin": "plate centre XY / underside Z=0",
+      "linear_origin": "carriage centre XY; fixture origins at (-40,0,9.4), (40,0,9.4)",
+      "finished_origin": "70x70 pallet centre XY / underside Z=0"
+    },
+    "search_margin_mm": 3.0,
+    "search_margin_is_acceptance_tolerance": false,
+    "live_pixel_rois": null,
+    "requires_live_camera_registration": true,
+    "simulation_offsets_applied_to_real_roi": false,
+    "stations": {
+      "carrier": {
+        "anchor": "detected_jig_pose",
+        "jig_id": "b5ebdb54807c441c8267c15d77713b6a",
+        "requires_full_heading_resolution": true,
+        "detector_to_mesh_yaw": "apply mesh_yaw_offset_deg from the confirmed detection; never omit or apply twice",
+        "reference_detection_mesh_yaw_offset_deg": 180.0,
+        "size_xy_mm": [
+          220,
+          148
+        ],
+        "rois": [
+          {
+            "id": "b_cap",
+            "product": "B",
+            "part": "cap",
+            "fixture_center_xyz_mm": [
+              -72.0,
+              36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "RL-confirmed cap inversion",
+            "roll_deg": 180,
+            "rotation_equivalence_deg": 90,
+            "part_origin_xyz_mm": [
+              -72.0,
+              36.0,
+              31.35
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                1.0,
+                0.0,
+                -72.0
+              ],
+              [
+                1.0,
+                -0.0,
+                -0.0,
+                36.0
+              ],
+              [
+                0.0,
+                0.0,
+                -1.0,
+                31.35
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 90,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -97.0,
+              11.0,
+              -47.0,
+              61.0
+            ],
+            "search_roi_xy_mm": [
+              -100.0,
+              8.0,
+              -44.0,
+              64.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              -72.0,
+              36.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              20.35,
+              31.35
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          {
+            "id": "b_tpu",
+            "product": "B",
+            "part": "insert",
+            "fixture_center_xyz_mm": [
+              0.0,
+              36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "CAD nominal; real sample required",
+            "roll_deg": 0,
+            "rotation_equivalence_deg": 90,
+            "part_origin_xyz_mm": [
+              0.0,
+              36.0,
+              11.35
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                -1.0,
+                0.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0,
+                36.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                11.35
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 90,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -15.95,
+              20.05,
+              15.95,
+              51.95
+            ],
+            "search_roi_xy_mm": [
+              -18.95,
+              17.05,
+              18.95,
+              54.95
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              36.0
+            ],
+            "search_roi_size_mm": [
+              37.9,
+              37.9
+            ],
+            "part_z_range_mm": [
+              11.35,
+              34.65
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          {
+            "id": "b_housing",
+            "product": "B",
+            "part": "housing",
+            "fixture_center_xyz_mm": [
+              72.0,
+              36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "CAD nominal; real sample required",
+            "roll_deg": 0,
+            "rotation_equivalence_deg": 90,
+            "part_origin_xyz_mm": [
+              72.0,
+              36.0,
+              8.35
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                -1.0,
+                0.0,
+                72.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0,
+                36.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                8.35
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 90,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              47.0,
+              11.0,
+              97.0,
+              61.0
+            ],
+            "search_roi_xy_mm": [
+              44.0,
+              8.0,
+              100.0,
+              64.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              72.0,
+              36.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              8.35,
+              28.85
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          {
+            "id": "a_cap",
+            "product": "A",
+            "part": "cap",
+            "fixture_center_xyz_mm": [
+              -72.0,
+              -36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "CAD nominal; real sample required",
+            "roll_deg": 180,
+            "rotation_equivalence_deg": 90,
+            "part_origin_xyz_mm": [
+              -72.0,
+              -36.0,
+              25.55
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                1.0,
+                0.0,
+                -72.0
+              ],
+              [
+                1.0,
+                -0.0,
+                -0.0,
+                -36.0
+              ],
+              [
+                0.0,
+                0.0,
+                -1.0,
+                25.55
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 90,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -97.0,
+              -61.0,
+              -47.0,
+              -11.0
+            ],
+            "search_roi_xy_mm": [
+              -100.0,
+              -64.0,
+              -44.0,
+              -8.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              -72.0,
+              -36.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              12.85,
+              25.55
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          {
+            "id": "a_ball",
+            "product": "A",
+            "part": "insert",
+            "fixture_center_xyz_mm": [
+              0.0,
+              -36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "CAD nominal; real sample required",
+            "roll_deg": 0,
+            "rotation_equivalence_deg": null,
+            "part_origin_xyz_mm": [
+              0.0,
+              -36.0,
+              6.40209
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                -1.0,
+                0.0,
+                0.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0,
+                -36.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                6.40209
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": null,
+            "yaw_observable": false,
+            "footprint_bbox_xy_mm": [
+              -14.99286,
+              -50.9943,
+              14.99286,
+              -21.00296
+            ],
+            "search_roi_xy_mm": [
+              -17.99286,
+              -53.9943,
+              17.99286,
+              -18.00296
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              -35.99863
+            ],
+            "search_roi_size_mm": [
+              35.98571,
+              35.99134
+            ],
+            "part_z_range_mm": [
+              6.40209,
+              36.40209
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          {
+            "id": "a_housing",
+            "product": "A",
+            "part": "housing",
+            "fixture_center_xyz_mm": [
+              72.0,
+              -36.0,
+              4.8
+            ],
+            "fixture_yaw_deg": 90,
+            "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+            "orientation_basis": "CAD nominal; real sample required",
+            "roll_deg": 0,
+            "rotation_equivalence_deg": 90,
+            "part_origin_xyz_mm": [
+              72.0,
+              -36.0,
+              8.35
+            ],
+            "part_transform_local_mm": [
+              [
+                0.0,
+                -1.0,
+                0.0,
+                72.0
+              ],
+              [
+                1.0,
+                0.0,
+                0.0,
+                -36.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                8.35
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 90,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              47.0,
+              -61.0,
+              97.0,
+              -11.0
+            ],
+            "search_roi_xy_mm": [
+              44.0,
+              -64.0,
+              100.0,
+              -8.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              72.0,
+              -36.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              8.35,
+              26.35
+            ],
+            "camera_projection_requires_part_height": true
+          }
+        ]
+      },
+      "linear_assembly": {
+        "anchor": "fixed_image_registration_at_confirmed_endpoint",
+        "fixture_centers_carriage_mm": [
+          [
+            -40,
+            0,
+            9.4
+          ],
+          [
+            40,
+            0,
+            9.4
+          ]
+        ],
+        "fixture_yaw_deg": [
+          0,
+          0
+        ],
+        "active_fixture_index": null,
+        "rl_example_fixture_index": 1,
+        "active_fixture_basis": "Select after real image/teaching registration; RL B reference uses motor-far fixture (index 1)",
+        "endpoint_pixel_rois": {
+          "build": null,
+          "load": null
+        },
+        "fixed_pixel_roi_must_not_follow_a_moving_carriage": true,
+        "profile_refs": {
+          "A": "assembly_profiles.A",
+          "B": "assembly_profiles.B"
+        },
+        "readiness": [
+          "linear initial command completed",
+          "fixture reference edges in registered ROI",
+          "gripper outside inspection region"
+        ]
+      },
+      "finished_pallet": {
+        "anchor": "detected_jig_pose",
+        "jig_id": "pallet",
+        "size_xy_mm": [
+          70,
+          70
+        ],
+        "slot_count": 1,
+        "slot_center_xy_mm": [
+          0,
+          0
+        ],
+        "symmetry_deg": 90,
+        "rois": {
+          "A": {
+            "expected_product": "A",
+            "nominal_yaw_deg": 0,
+            "yaw_policy": "90-degree-equivalent outer square; use a distinguishing feature for unique direction",
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              16.5
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                16.5
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              20.05,
+              53.10195
+            ],
+            "camera_projection_requires_part_height": true,
+            "prior_assembly_pass_required": true,
+            "inspection_after_gripper_clear": true,
+            "hidden_internal_parts_not_reinspected": true
+          },
+          "B": {
+            "expected_product": "B",
+            "nominal_yaw_deg": 0,
+            "yaw_policy": "90-degree-equivalent outer square; use a distinguishing feature for unique direction",
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              16.5
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                16.5
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              20.05,
+              53.15001
+            ],
+            "camera_projection_requires_part_height": true,
+            "prior_assembly_pass_required": true,
+            "inspection_after_gripper_clear": true,
+            "hidden_internal_parts_not_reinspected": true
+          }
+        }
+      }
+    },
+    "assembly_profiles": {
+      "A": {
+        "basis": "B: matching RL CAD; A: CAD-derived candidate, not an RL-validated assembly",
+        "part_poses": {
+          "housing": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              3.55
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                3.55
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              3.55,
+              21.55
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          "insert": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              6.60195
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                6.60195
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": null,
+            "yaw_observable": false,
+            "footprint_bbox_xy_mm": [
+              -14.9943,
+              -14.99286,
+              14.99704,
+              14.99286
+            ],
+            "search_roi_xy_mm": [
+              -17.9943,
+              -17.99286,
+              17.99704,
+              17.99286
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.00137,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              35.99134,
+              35.98571
+            ],
+            "part_z_range_mm": [
+              6.60195,
+              36.60195
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          "cap": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              31.60001
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                -1.0,
+                -0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                -1.0,
+                31.60001
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              18.90001,
+              31.60001
+            ],
+            "camera_projection_requires_part_height": true
+          }
+        },
+        "housing_seat_z_mm": 3.55,
+        "insert_bottom_relative_to_housing_mm": 3.05195,
+        "cap_bottom_relative_to_housing_mm": 15.35,
+        "cap_bottom_minus_housing_rim_mm": -2.65,
+        "sim_only_candidate_tolerances": {
+          "xy_mm": {
+            "housing": 2.0,
+            "insert": 1.5,
+            "cap": 1.5
+          },
+          "housing_yaw_deg": 5.0,
+          "measured": false,
+          "apply_to_real_pass_fail": false
+        },
+        "stages": [
+          {
+            "id": "empty",
+            "expected_parts": [],
+            "new_part": null,
+            "requires_previous_pass": null,
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -28,
+              -28,
+              28,
+              28
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 3846.24,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/A_empty_labels.png",
+            "label_mapping": {
+              "1": "fixture"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "housing_seated",
+            "expected_parts": [
+              "housing"
+            ],
+            "new_part": "housing",
+            "requires_previous_pass": "empty",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "housing"
+            ],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 2492.8,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/A_housing_seated_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "insert_added",
+            "expected_parts": [
+              "housing",
+              "insert"
+            ],
+            "new_part": "insert",
+            "requires_previous_pass": "housing_seated",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "housing",
+              "insert"
+            ],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -17.9943,
+              -17.99286,
+              17.99704,
+              17.99286
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 1786.56,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              },
+              "insert": {
+                "visible_area_mm2": 706.24,
+                "visible_bbox_xy_mm": [
+                  -15.0,
+                  -15.0,
+                  15.0,
+                  15.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/A_insert_added_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing",
+              "3": "insert"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "cap_added",
+            "expected_parts": [
+              "housing",
+              "insert",
+              "cap"
+            ],
+            "new_part": "cap",
+            "requires_previous_pass": "insert_added",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "insert",
+              "cap"
+            ],
+            "occluded_parts_requiring_history": [
+              "housing"
+            ],
+            "new_part_search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 0.0,
+                "visible_bbox_xy_mm": null
+              },
+              "insert": {
+                "visible_area_mm2": 530.56,
+                "visible_bbox_xy_mm": [
+                  -13.0,
+                  -13.0,
+                  13.0,
+                  13.0
+                ]
+              },
+              "cap": {
+                "visible_area_mm2": 1962.24,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/A_cap_added_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing",
+              "3": "insert",
+              "4": "cap"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          }
+        ]
+      },
+      "B": {
+        "basis": "B: matching RL CAD; A: CAD-derived candidate, not an RL-validated assembly",
+        "part_poses": {
+          "housing": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              3.55
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                3.55
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              3.55,
+              24.05
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          "insert": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              5.60001
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                1.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                1.0,
+                5.60001
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -15.95,
+              -15.95,
+              15.95,
+              15.95
+            ],
+            "search_roi_xy_mm": [
+              -18.95,
+              -18.95,
+              18.95,
+              18.95
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              37.9,
+              37.9
+            ],
+            "part_z_range_mm": [
+              5.60001,
+              28.90001
+            ],
+            "camera_projection_requires_part_height": true
+          },
+          "cap": {
+            "part_origin_xyz_mm": [
+              0.0,
+              0.0,
+              36.65001
+            ],
+            "part_transform_local_mm": [
+              [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              [
+                0.0,
+                -1.0,
+                -0.0,
+                0.0
+              ],
+              [
+                0.0,
+                0.0,
+                -1.0,
+                36.65001
+              ],
+              [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ]
+            ],
+            "expected_yaw_deg": 0,
+            "yaw_observable": true,
+            "footprint_bbox_xy_mm": [
+              -25.0,
+              -25.0,
+              25.0,
+              25.0
+            ],
+            "search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "search_margin_mm": 3.0,
+            "search_margin_measured": false,
+            "search_roi_center_xy_mm": [
+              0.0,
+              0.0
+            ],
+            "search_roi_size_mm": [
+              56.0,
+              56.0
+            ],
+            "part_z_range_mm": [
+              25.65001,
+              36.65001
+            ],
+            "camera_projection_requires_part_height": true
+          }
+        },
+        "housing_seat_z_mm": 3.55,
+        "insert_bottom_relative_to_housing_mm": 2.05,
+        "cap_bottom_relative_to_housing_mm": 22.1,
+        "cap_bottom_minus_housing_rim_mm": 1.6,
+        "sim_only_candidate_tolerances": {
+          "xy_mm": {
+            "housing": 2.0,
+            "insert": 1.5,
+            "cap": 1.5
+          },
+          "housing_yaw_deg": 5.0,
+          "measured": false,
+          "apply_to_real_pass_fail": false
+        },
+        "stages": [
+          {
+            "id": "empty",
+            "expected_parts": [],
+            "new_part": null,
+            "requires_previous_pass": null,
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -28,
+              -28,
+              28,
+              28
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 3846.24,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/B_empty_labels.png",
+            "label_mapping": {
+              "1": "fixture"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "housing_seated",
+            "expected_parts": [
+              "housing"
+            ],
+            "new_part": "housing",
+            "requires_previous_pass": "empty",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "housing"
+            ],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 2492.8,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/B_housing_seated_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "insert_added",
+            "expected_parts": [
+              "housing",
+              "insert"
+            ],
+            "new_part": "insert",
+            "requires_previous_pass": "housing_seated",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "housing",
+              "insert"
+            ],
+            "occluded_parts_requiring_history": [],
+            "new_part_search_roi_xy_mm": [
+              -18.95,
+              -18.95,
+              18.95,
+              18.95
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 1693.76,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              },
+              "insert": {
+                "visible_area_mm2": 799.04,
+                "visible_bbox_xy_mm": [
+                  -16.0,
+                  -16.0,
+                  16.0,
+                  16.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/B_insert_added_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing",
+              "3": "insert"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          },
+          {
+            "id": "cap_added",
+            "expected_parts": [
+              "housing",
+              "insert",
+              "cap"
+            ],
+            "new_part": "cap",
+            "requires_previous_pass": "insert_added",
+            "history_binding_keys": [
+              "run_id",
+              "product_id",
+              "fixture_id",
+              "product_type"
+            ],
+            "expected_visible_parts": [
+              "cap"
+            ],
+            "occluded_parts_requiring_history": [
+              "housing",
+              "insert"
+            ],
+            "new_part_search_roi_xy_mm": [
+              -28.0,
+              -28.0,
+              28.0,
+              28.0
+            ],
+            "requires_frame_after_stage_start": true,
+            "visible_geometry": {
+              "fixture": {
+                "visible_area_mm2": 2124.0,
+                "visible_bbox_xy_mm": [
+                  -34.0,
+                  -34.0,
+                  34.0,
+                  34.0
+                ]
+              },
+              "housing": {
+                "visible_area_mm2": 0.0,
+                "visible_bbox_xy_mm": null
+              },
+              "insert": {
+                "visible_area_mm2": 0.0,
+                "visible_bbox_xy_mm": null
+              },
+              "cap": {
+                "visible_area_mm2": 2492.8,
+                "visible_bbox_xy_mm": [
+                  -25.0,
+                  -25.0,
+                  25.0,
+                  25.0
+                ]
+              }
+            },
+            "top_view_label_mask": "previews/B_cap_added_labels.png",
+            "label_mapping": {
+              "1": "fixture",
+              "2": "housing",
+              "3": "insert",
+              "4": "cap"
+            },
+            "mask_grid": {
+              "mm_per_pixel": 0.2,
+              "top_left_xy_mm": [
+                -35,
+                35
+              ],
+              "y_direction": "down"
+            },
+            "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+            "runtime_checks": [
+              "correct stage order",
+              "fresh stable unobstructed image",
+              "new part presence + relative pose",
+              "remaining visible earlier parts"
+            ],
+            "cannot_prove_from_top_view": [
+              "hidden internal seating",
+              "physical contact depth",
+              "magnet engagement strength"
+            ]
+          }
+        ]
+      }
+    },
+    "simulation_reference_only": {
+      "source": "SO101_rl/outputs/assembly_current_12/scene.json",
+      "carrier_global_offsets": {
+        "cad_offset_mm": [
+          16.66,
+          -2.55,
+          0.0
+        ],
+        "cad_yaw_deg": -8.0,
+        "cad_tilt_deg": [
+          0.0,
+          0.0
+        ]
+      },
+      "nest_offsets_mm": {
+        "housing": [
+          -5.5,
+          1.5,
+          3
+        ],
+        "tpu": [
+          -3,
+          8.45,
+          3.15
+        ],
+        "cap": {
+          "offset_mm": [
+            -8.5,
+            16.5,
+            10.3
+          ],
+          "rotation_deg": [
+            0,
+            0,
+            2.5
+          ]
+        }
+      },
+      "receiver_offset_mm": [
+        7.7,
+        3.0,
+        -8.0
+      ],
+      "reason_not_applied": "These are simulation registration candidates, not measured real jig offsets."
+    },
+    "sources_sha256": {
+      "SO101_teach/assets/carrier_assembly/assembly.json": "0262ace88eac9e432d592033eb529f690c12aaff801f5cbc03f0d40e61c3be13",
+      "SO101_teach/assets/linear_stage/assembly-provenance.json": "e9e667f89d58a9ea1579118ebf2fd114100b08c41b5d75a8220bf68521d2c924",
+      "SO101_rl/outputs/assembly_current_12/scene.json": "4ad50caa10f378750048517e095143b34c50bf657505cb8ddcc487232dd6ec93",
+      "SO101_rl/config/assembly.json": "94fb74a4f463d86a1fa995f9a5afddcf411de51bac5eb7bbe177d76995e36f72",
+      "SO101_rl/config/cad_alignment.json": "a4b2d36b1565c8ad157994f868a4b6c0906a2bb18330145e91a86425b7662a38",
+      "모델링/A 제품/A 하단.stl": "95071d47457e44ed71dec36b496cb974a4c0890a7bcc03726b89c597dd75424e",
+      "모델링/A 제품/A 중단.stl": "8952dd3911060ff20081c03d35c83e52eb44f281a1f5391650c1edc7befc96e4",
+      "모델링/A 제품/A 상단.stl": "fafcaac003803228b541c3ee613d87b32bae5530560be62e26044bd547ce658e",
+      "모델링/B 제품/B 하단.stl": "5ffcfee83be6bf5de0f0f54121aaf1b0a3b629bde8f46ad1582d17d7eb8b743e",
+      "모델링/B 제품/B 중단.stl": "32a15264042e44eae846e07e54ac4cc043678a252184118349452e7d50f890ec",
+      "모델링/B 제품/B 상단.stl": "085ef80abee9a00d695124b373da644466fdaeb04f6f15fa0b87728acc03750d",
+      "모델링/완제품 팔레트/완제품 팔레트.stl": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6",
+      "SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+      "SO101_teach/assets/carrier_assembly/source/current/b_cap_jig.stl": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+      "SO101_teach/assets/carrier_assembly/source/current/b_tpu_jig.stl": "f9de40c0c6734c5f27a5c33846099936fd6d3f9af49f5972a2259b769102c91a",
+      "SO101_teach/assets/carrier_assembly/source/current/a_cap_jig.stl": "51fccd96be8b756e95d7a997e76a20bd2cf8bba194f1dbaa785e7c036c86926e",
+      "SO101_teach/assets/carrier_assembly/source/current/a_ball_jig.stl": "ef4d25a55ddff0b89866fa9c1e7a2bbfa9a3643ea0ca81365b10a28579774441",
+      "SO101_teach/assets/carrier_assembly/source/current/a_housing_jig.stl": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d"
+    }
+  },
+  "source": "Read-only current camera snapshots. User intentionally arranged faults: incomplete B on finished pallet, A housing in B housing carrier slot, angled A cap/linear A."
+}

@@ -1,0 +1,308 @@
+{
+  "source": "Running camera snapshot, 2026-10-07; user confirmed both fixtures contain housing + insert, no cap. Earlier frame has A cap on fixture 1 and empty fixture 2. Command geometry: retracted endpoint; not measured actuator feedback. User additionally confirmed the linear is retracted.",
+  "profile": {
+    "intrinsics": {
+      "normal_spread_deg": 85.07132313914785,
+      "usable_for_metric": true,
+      "quality_note": "",
+      "K": [
+        [
+          1032.2503683943196,
+          0.0,
+          687.7723709834622
+        ],
+        [
+          0.0,
+          1032.1059987177996,
+          347.780289252618
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "D": [
+        -0.4927825484416793,
+        0.3175725472843906,
+        0.0009627245882526294,
+        0.0006415581739380303,
+        -0.12739109971931759
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "rms_px": 0.3345732736611807,
+      "errors_px": [
+        0.23249447345733643,
+        0.1988622546195984,
+        0.22880753874778748,
+        0.2220085859298706,
+        0.22482919692993164,
+        0.21837042272090912,
+        0.20347148180007935,
+        0.18097226321697235,
+        0.1993337720632553,
+        0.2389938235282898,
+        0.17893920838832855,
+        0.2486308366060257,
+        0.22204460203647614,
+        0.2081262469291687,
+        0.19880735874176025,
+        0.21454742550849915,
+        0.20125927031040192,
+        0.4574057459831238,
+        0.5114720463752747,
+        0.7521030306816101,
+        0.5389497876167297,
+        0.36063769459724426,
+        0.49417808651924133,
+        0.5819027423858643,
+        0.3164055347442627,
+        0.210563525557518,
+        0.25723108649253845,
+        0.31445592641830444,
+        0.31573325395584106,
+        0.33514919877052307,
+        0.17703188955783844,
+        0.23043052852153778,
+        0.3805907070636749,
+        0.412645548582077,
+        0.4242311716079712
+      ],
+      "camera": {
+        "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+        "width": 1280,
+        "height": 720
+      },
+      "board": {
+        "cols": 13,
+        "rows": 9,
+        "square_mm": 20.0
+      },
+      "source_files": [
+        "Photo from 2026-09-21 14-22-19.002897.jpeg",
+        "Photo from 2026-09-21 14-22-23.603922.jpeg",
+        "Photo from 2026-09-21 14-22-27.277905.jpeg",
+        "Photo from 2026-09-21 14-22-30.754915.jpeg",
+        "Photo from 2026-09-21 14-22-34.231099.jpeg",
+        "Photo from 2026-09-21 14-22-41.698608.jpeg",
+        "Photo from 2026-09-21 14-22-55.991840.jpeg",
+        "Photo from 2026-09-21 14-23-02.367464.jpeg",
+        "Photo from 2026-09-21 14-23-07.709889.jpeg",
+        "Photo from 2026-09-21 14-23-14.268171.jpeg",
+        "Photo from 2026-09-21 14-23-20.038546.jpeg",
+        "Photo from 2026-09-21 14-23-28.527615.jpeg",
+        "Photo from 2026-09-21 14-23-31.768654.jpeg",
+        "Photo from 2026-09-21 14-23-34.924734.jpeg",
+        "Photo from 2026-09-21 14-23-44.434608.jpeg",
+        "Photo from 2026-09-21 14-23-49.117827.jpeg",
+        "Photo from 2026-09-21 14-23-54.069995.jpeg",
+        "Photo from 2026-09-21 14-47-30.456972.jpeg",
+        "Photo from 2026-09-21 14-47-37.321896.jpeg",
+        "Photo from 2026-09-21 14-47-42.473514.jpeg",
+        "Photo from 2026-09-21 14-47-49.883488.jpeg",
+        "Photo from 2026-09-21 14-47-54.635372.jpeg",
+        "Photo from 2026-09-21 14-48-02.212012.jpeg",
+        "Photo from 2026-09-21 14-48-11.209132.jpeg",
+        "Photo from 2026-09-21 14-48-16.337043.jpeg",
+        "Photo from 2026-09-21 14-59-33.967505.jpeg",
+        "Photo from 2026-09-21 14-59-39.829627.jpeg",
+        "Photo from 2026-09-21 14-59-45.155029.jpeg",
+        "Photo from 2026-09-21 14-59-55.019602.jpeg",
+        "Photo from 2026-09-21 15-00-12.849223.jpeg",
+        "Photo from 2026-09-21 15-00-23.577830.jpeg",
+        "Photo from 2026-09-21 15-00-31.274409.jpeg",
+        "Photo from 2026-09-21 15-00-38.254069.jpeg",
+        "Photo from 2026-09-21 15-00-50.713060.jpeg",
+        "Photo from 2026-09-21 15-00-57.878643.jpeg"
+      ],
+      "source_directory": "/path/to/Final_Arm/OpenCV_teach/calibration/camera_images"
+    },
+    "extrinsics": {
+      "source": "cad_estimate",
+      "verified_for_robot_motion": false,
+      "base_from_camera": [
+        [
+          8.236175720257466e-06,
+          -0.9063119925854385,
+          0.4226092427148011,
+          25.987375015717188
+        ],
+        [
+          -0.9999999999660827,
+          -7.46454482856353e-06,
+          3.4806839841220946e-06,
+          116.01636143768306
+        ],
+        [
+          0.0,
+          -0.42260924272913486,
+          -0.9063119926161781,
+          545.6718787079634
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "intrinsics_signature": "f6fe093ef752b6f6ea89f091380059f1a0c85a73683a3cf0871c3c7aaa11523b",
+      "optical_offset_mm": 0.0,
+      "image_roll_deg": 0.0,
+      "geometry_source": "calibration/mount_geometry/left_nominal_pose.json",
+      "geometry_sha256": "894bd412a4780aaa458ff5f51aba27620dd5ca671343a019ec861b2a3a68bb3b",
+      "lens_protrusion_mm_reference_only": 20.0,
+      "note": "Stock 32x32 module on left-side mast. Opposite socket CAD translation; optical offset 0 mm and existing image axes retained. Not a measured camera pose.",
+      "verified": false,
+      "mount_side": "left",
+      "mount_socket_pitch_mm": 232.06414794921875
+    },
+    "camera": {
+      "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+      "width": 1280,
+      "height": 720
+    },
+    "table_z_mm": -7.4
+  },
+  "placement": {
+    "linear_stage": {
+      "model": "L12-100-100-6-R",
+      "position_mm": [
+        145.66976233209857,
+        176.95721265119536,
+        -7.4
+      ],
+      "yaw_deg": -60.148435888849384,
+      "stroke_mm": 100.0,
+      "rail_length_mm": 300,
+      "rail_outer_width_mm": 121.2,
+      "rear_eye_x_mm": -314.15102391448306,
+      "actuator_axis_z_mm": 7.0,
+      "joint_mode": "static_display",
+      "fixture_count": 2,
+      "a_fixture_asset": "assets/carrier_assembly/source/current/b_housing_jig.stl",
+      "source": "current_camera_joint_jig_fit_with_rigid_CAD_assembly",
+      "image_observations": {
+        "rail_corners": [
+          [
+            772.0,
+            355.0
+          ],
+          [
+            883.0,
+            522.0
+          ],
+          [
+            305.0,
+            610.0
+          ]
+        ],
+        "fixture_centers_reference": "verification/linear-jig-current/final-outline-centers.png"
+      },
+      "position_verified_for_motion": false,
+      "carriage_home_x_mm": -45.65102391448304,
+      "front_pin_x_mm": -116.0,
+      "actuator_body_roll_deg": -90.0,
+      "front_connector_model": "latest_top_mount",
+      "end_stop_position_mm": [
+        156.0,
+        0.0,
+        0.0
+      ],
+      "controller_state_basis": {
+        "host": "192.0.2.10",
+        "file": "/home/ubuntu/project/linear_controller_pi5.py",
+        "user_state": "forward",
+        "commanded_mm": 100.0,
+        "pulse_us": 2000,
+        "measured_position": false,
+        "environment_file": "/home/ubuntu/project/arm3_ros_env.bash",
+        "forward_command": "linear_f",
+        "retract_command": "linear_r",
+        "retract_commanded_mm": 1.5
+      },
+      "alignment": {
+        "reference": "verification/linear-jig-current/assembly-fit.json",
+        "camera_capture": "verification/linear-jig-current/capture.json",
+        "user_outline_confirmed": true,
+        "fixture_centers_pitch_mm": 80.0,
+        "fixture_local_yaw_deg": [
+          0.0,
+          0.0
+        ],
+        "fixture_base_z_mm": 9.4,
+        "mean_abs_outline_error_px": 0.2022285362242175,
+        "p95_abs_outline_error_px": 0.4977067015919882,
+        "rail_screw_mean_error_px": 2.382464826343104,
+        "camera_projection_basis": "preview-only estimated optical center; see reference; original robot calibration unchanged",
+        "camera_optical_axis_offset_mm": 11.578175267299853,
+        "base_from_camera_for_preview": [
+          [
+            8.236175720257466e-06,
+            -0.9063119925854385,
+            0.4226092427148011,
+            30.88041889745002
+          ],
+          [
+            -0.9999999999660827,
+            -7.46454482856353e-06,
+            3.4806839841220946e-06,
+            116.01640173765227
+          ],
+          [
+            0.0,
+            -0.42260924272913486,
+            -0.9063119926161781,
+            535.1784396105975
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "absolute_robot_accuracy_verified": false
+      },
+      "front_connector_geometry": "latest supplied 03_top_mount_NO_UNDER_LIP.stl, rotated -90deg about X and translated Y=-25.5mm",
+      "actuator_rear_axis_z_mm": 7.8,
+      "fixture_source_name": "B 제품/B 제품 지그/B 하단.stl",
+      "actuator_rear_height_basis": "display estimate: rear mount fixed at 7.8mm to clear the rolled CAD housing; front pin follows the 7mm CAD bore",
+      "end_stop_position_basis": "CAD contact: stop inner face meets both rail ends at X=150mm, centered at Y=0; replaces independent photo fit.",
+      "state_source": {
+        "environment_script": "/home/ubuntu/project/arm3_ros_env.bash",
+        "domain_id": 40,
+        "topic": "/arm3/linear_state",
+        "unit": "commanded_pulse_us",
+        "read_only": true,
+        "startup_only": false
+      },
+      "endpoint_reference": {
+        "forward": {
+          "command": "linear_f",
+          "commanded_mm": 100.0,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-jig-current/assembly-fit.json",
+          "carriage_x_mm": 54.34897608551696
+        },
+        "retracted": {
+          "command": "linear_r",
+          "commanded_mm": 1.5,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-state-startup/retracted/fit.json",
+          "carriage_x_mm": -41.91585421768268,
+          "reported_end_hunting": true
+        },
+        "intermediate_positions": "Linear display interpolation between camera-confirmed endpoints; not measured position feedback."
+      },
+      "startup_state": {
+        "known": true,
+        "commanded_mm": 1.5,
+        "measured": false
+      }
+    }
+  }
+}

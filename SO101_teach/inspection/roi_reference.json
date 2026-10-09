@@ -1,0 +1,1745 @@
+{
+  "schema": 1,
+  "units": {
+    "length": "mm",
+    "angle": "deg"
+  },
+  "inspection_enabled": false,
+  "status": "CAD_REFERENCE_REQUIRES_IMAGE_VALIDATION",
+  "coordinates": {
+    "xy": "right-handed local jig frame; +Z upward; positive yaw CCW viewed from +Z",
+    "carrier_origin": "plate centre XY / underside Z=0",
+    "linear_origin": "carriage centre XY; fixture origins at (-40,0,9.4), (40,0,9.4)",
+    "finished_origin": "70x70 pallet centre XY / underside Z=0"
+  },
+  "search_margin_mm": 3.0,
+  "search_margin_is_acceptance_tolerance": false,
+  "live_pixel_rois": null,
+  "requires_live_camera_registration": true,
+  "simulation_offsets_applied_to_real_roi": false,
+  "stations": {
+    "carrier": {
+      "anchor": "detected_jig_pose",
+      "jig_id": "b5ebdb54807c441c8267c15d77713b6a",
+      "requires_full_heading_resolution": true,
+      "detector_to_mesh_yaw": "apply mesh_yaw_offset_deg from the confirmed detection; never omit or apply twice",
+      "reference_detection_mesh_yaw_offset_deg": 180.0,
+      "size_xy_mm": [
+        220,
+        148
+      ],
+      "rois": [
+        {
+          "id": "b_cap",
+          "product": "B",
+          "part": "cap",
+          "fixture_center_xyz_mm": [
+            -72.0,
+            36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "RL-confirmed cap inversion",
+          "roll_deg": 180,
+          "rotation_equivalence_deg": 90,
+          "part_origin_xyz_mm": [
+            -72.0,
+            36.0,
+            31.35
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              1.0,
+              0.0,
+              -72.0
+            ],
+            [
+              1.0,
+              -0.0,
+              -0.0,
+              36.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              31.35
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 90,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -97.0,
+            11.0,
+            -47.0,
+            61.0
+          ],
+          "search_roi_xy_mm": [
+            -100.0,
+            8.0,
+            -44.0,
+            64.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            -72.0,
+            36.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            20.35,
+            31.35
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        {
+          "id": "b_tpu",
+          "product": "B",
+          "part": "insert",
+          "fixture_center_xyz_mm": [
+            0.0,
+            36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "CAD nominal; real sample required",
+          "roll_deg": 0,
+          "rotation_equivalence_deg": 90,
+          "part_origin_xyz_mm": [
+            0.0,
+            36.0,
+            11.35
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              0.0,
+              0.0,
+              36.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              11.35
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 90,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -15.95,
+            20.05,
+            15.95,
+            51.95
+          ],
+          "search_roi_xy_mm": [
+            -18.95,
+            17.05,
+            18.95,
+            54.95
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            36.0
+          ],
+          "search_roi_size_mm": [
+            37.9,
+            37.9
+          ],
+          "part_z_range_mm": [
+            11.35,
+            34.65
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        {
+          "id": "b_housing",
+          "product": "B",
+          "part": "housing",
+          "fixture_center_xyz_mm": [
+            72.0,
+            36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "CAD nominal; real sample required",
+          "roll_deg": 0,
+          "rotation_equivalence_deg": 90,
+          "part_origin_xyz_mm": [
+            72.0,
+            36.0,
+            8.35
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              -1.0,
+              0.0,
+              72.0
+            ],
+            [
+              1.0,
+              0.0,
+              0.0,
+              36.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              8.35
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 90,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            47.0,
+            11.0,
+            97.0,
+            61.0
+          ],
+          "search_roi_xy_mm": [
+            44.0,
+            8.0,
+            100.0,
+            64.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            72.0,
+            36.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            8.35,
+            28.85
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        {
+          "id": "a_cap",
+          "product": "A",
+          "part": "cap",
+          "fixture_center_xyz_mm": [
+            -72.0,
+            -36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "CAD nominal; real sample required",
+          "roll_deg": 180,
+          "rotation_equivalence_deg": 90,
+          "part_origin_xyz_mm": [
+            -72.0,
+            -36.0,
+            25.55
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              1.0,
+              0.0,
+              -72.0
+            ],
+            [
+              1.0,
+              -0.0,
+              -0.0,
+              -36.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              25.55
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 90,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -97.0,
+            -61.0,
+            -47.0,
+            -11.0
+          ],
+          "search_roi_xy_mm": [
+            -100.0,
+            -64.0,
+            -44.0,
+            -8.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            -72.0,
+            -36.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            12.85,
+            25.55
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        {
+          "id": "a_ball",
+          "product": "A",
+          "part": "insert",
+          "fixture_center_xyz_mm": [
+            0.0,
+            -36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "CAD nominal; real sample required",
+          "roll_deg": 0,
+          "rotation_equivalence_deg": null,
+          "part_origin_xyz_mm": [
+            0.0,
+            -36.0,
+            6.40209
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              -1.0,
+              0.0,
+              0.0
+            ],
+            [
+              1.0,
+              0.0,
+              0.0,
+              -36.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.40209
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": null,
+          "yaw_observable": false,
+          "footprint_bbox_xy_mm": [
+            -14.99286,
+            -50.9943,
+            14.99286,
+            -21.00296
+          ],
+          "search_roi_xy_mm": [
+            -17.99286,
+            -53.9943,
+            17.99286,
+            -18.00296
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            -35.99863
+          ],
+          "search_roi_size_mm": [
+            35.98571,
+            35.99134
+          ],
+          "part_z_range_mm": [
+            6.40209,
+            36.40209
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        {
+          "id": "a_housing",
+          "product": "A",
+          "part": "housing",
+          "fixture_center_xyz_mm": [
+            72.0,
+            -36.0,
+            4.8
+          ],
+          "fixture_yaw_deg": 90,
+          "pose_basis": "nominal CAD fixture + first-contact seating; simulation tuning excluded",
+          "orientation_basis": "CAD nominal; real sample required",
+          "roll_deg": 0,
+          "rotation_equivalence_deg": 90,
+          "part_origin_xyz_mm": [
+            72.0,
+            -36.0,
+            8.35
+          ],
+          "part_transform_local_mm": [
+            [
+              0.0,
+              -1.0,
+              0.0,
+              72.0
+            ],
+            [
+              1.0,
+              0.0,
+              0.0,
+              -36.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              8.35
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 90,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            47.0,
+            -61.0,
+            97.0,
+            -11.0
+          ],
+          "search_roi_xy_mm": [
+            44.0,
+            -64.0,
+            100.0,
+            -8.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            72.0,
+            -36.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            8.35,
+            26.35
+          ],
+          "camera_projection_requires_part_height": true
+        }
+      ]
+    },
+    "linear_assembly": {
+      "anchor": "fixed_image_registration_at_confirmed_endpoint",
+      "fixture_centers_carriage_mm": [
+        [
+          -40,
+          0,
+          9.4
+        ],
+        [
+          40,
+          0,
+          9.4
+        ]
+      ],
+      "fixture_yaw_deg": [
+        0,
+        0
+      ],
+      "active_fixture_index": null,
+      "rl_example_fixture_index": 1,
+      "active_fixture_basis": "Select after real image/teaching registration; RL B reference uses motor-far fixture (index 1)",
+      "endpoint_pixel_rois": {
+        "build": null,
+        "load": null
+      },
+      "fixed_pixel_roi_must_not_follow_a_moving_carriage": true,
+      "profile_refs": {
+        "A": "assembly_profiles.A",
+        "B": "assembly_profiles.B"
+      },
+      "readiness": [
+        "linear initial command completed",
+        "fixture reference edges in registered ROI",
+        "gripper outside inspection region"
+      ]
+    },
+    "finished_pallet": {
+      "anchor": "detected_jig_pose",
+      "jig_id": "pallet",
+      "size_xy_mm": [
+        70,
+        70
+      ],
+      "slot_count": 1,
+      "slot_center_xy_mm": [
+        0,
+        0
+      ],
+      "symmetry_deg": 90,
+      "rois": {
+        "A": {
+          "expected_product": "A",
+          "nominal_yaw_deg": 0,
+          "yaw_policy": "90-degree-equivalent outer square; use a distinguishing feature for unique direction",
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            16.5
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              16.5
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            20.05,
+            53.10195
+          ],
+          "camera_projection_requires_part_height": true,
+          "prior_assembly_pass_required": true,
+          "inspection_after_gripper_clear": true,
+          "hidden_internal_parts_not_reinspected": true
+        },
+        "B": {
+          "expected_product": "B",
+          "nominal_yaw_deg": 0,
+          "yaw_policy": "90-degree-equivalent outer square; use a distinguishing feature for unique direction",
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            16.5
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              16.5
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            20.05,
+            53.15001
+          ],
+          "camera_projection_requires_part_height": true,
+          "prior_assembly_pass_required": true,
+          "inspection_after_gripper_clear": true,
+          "hidden_internal_parts_not_reinspected": true
+        }
+      }
+    }
+  },
+  "assembly_profiles": {
+    "A": {
+      "basis": "B: matching RL CAD; A: CAD-derived candidate, not an RL-validated assembly",
+      "part_poses": {
+        "housing": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            3.55
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.55
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            3.55,
+            21.55
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        "insert": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            6.60195
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              6.60195
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": null,
+          "yaw_observable": false,
+          "footprint_bbox_xy_mm": [
+            -14.9943,
+            -14.99286,
+            14.99704,
+            14.99286
+          ],
+          "search_roi_xy_mm": [
+            -17.9943,
+            -17.99286,
+            17.99704,
+            17.99286
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.00137,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            35.99134,
+            35.98571
+          ],
+          "part_z_range_mm": [
+            6.60195,
+            36.60195
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        "cap": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            31.60001
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              -1.0,
+              -0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              31.60001
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            18.90001,
+            31.60001
+          ],
+          "camera_projection_requires_part_height": true
+        }
+      },
+      "housing_seat_z_mm": 3.55,
+      "insert_bottom_relative_to_housing_mm": 3.05195,
+      "cap_bottom_relative_to_housing_mm": 15.35,
+      "cap_bottom_minus_housing_rim_mm": -2.65,
+      "sim_only_candidate_tolerances": {
+        "xy_mm": {
+          "housing": 2.0,
+          "insert": 1.5,
+          "cap": 1.5
+        },
+        "housing_yaw_deg": 5.0,
+        "measured": false,
+        "apply_to_real_pass_fail": false
+      },
+      "stages": [
+        {
+          "id": "empty",
+          "expected_parts": [],
+          "new_part": null,
+          "requires_previous_pass": null,
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -28,
+            -28,
+            28,
+            28
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 3846.24,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/A_empty_labels.png",
+          "label_mapping": {
+            "1": "fixture"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "housing_seated",
+          "expected_parts": [
+            "housing"
+          ],
+          "new_part": "housing",
+          "requires_previous_pass": "empty",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "housing"
+          ],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 2492.8,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/A_housing_seated_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "insert_added",
+          "expected_parts": [
+            "housing",
+            "insert"
+          ],
+          "new_part": "insert",
+          "requires_previous_pass": "housing_seated",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "housing",
+            "insert"
+          ],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -17.9943,
+            -17.99286,
+            17.99704,
+            17.99286
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 1786.56,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            },
+            "insert": {
+              "visible_area_mm2": 706.24,
+              "visible_bbox_xy_mm": [
+                -15.0,
+                -15.0,
+                15.0,
+                15.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/A_insert_added_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing",
+            "3": "insert"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "cap_added",
+          "expected_parts": [
+            "housing",
+            "insert",
+            "cap"
+          ],
+          "new_part": "cap",
+          "requires_previous_pass": "insert_added",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "insert",
+            "cap"
+          ],
+          "occluded_parts_requiring_history": [
+            "housing"
+          ],
+          "new_part_search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 0.0,
+              "visible_bbox_xy_mm": null
+            },
+            "insert": {
+              "visible_area_mm2": 530.56,
+              "visible_bbox_xy_mm": [
+                -13.0,
+                -13.0,
+                13.0,
+                13.0
+              ]
+            },
+            "cap": {
+              "visible_area_mm2": 1962.24,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/A_cap_added_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing",
+            "3": "insert",
+            "4": "cap"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        }
+      ]
+    },
+    "B": {
+      "basis": "B: matching RL CAD; A: CAD-derived candidate, not an RL-validated assembly",
+      "part_poses": {
+        "housing": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            3.55
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              3.55
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            3.55,
+            24.05
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        "insert": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            5.60001
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              1.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              1.0,
+              5.60001
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -15.95,
+            -15.95,
+            15.95,
+            15.95
+          ],
+          "search_roi_xy_mm": [
+            -18.95,
+            -18.95,
+            18.95,
+            18.95
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            37.9,
+            37.9
+          ],
+          "part_z_range_mm": [
+            5.60001,
+            28.90001
+          ],
+          "camera_projection_requires_part_height": true
+        },
+        "cap": {
+          "part_origin_xyz_mm": [
+            0.0,
+            0.0,
+            36.65001
+          ],
+          "part_transform_local_mm": [
+            [
+              1.0,
+              0.0,
+              0.0,
+              0.0
+            ],
+            [
+              0.0,
+              -1.0,
+              -0.0,
+              0.0
+            ],
+            [
+              0.0,
+              0.0,
+              -1.0,
+              36.65001
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "expected_yaw_deg": 0,
+          "yaw_observable": true,
+          "footprint_bbox_xy_mm": [
+            -25.0,
+            -25.0,
+            25.0,
+            25.0
+          ],
+          "search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "search_margin_mm": 3.0,
+          "search_margin_measured": false,
+          "search_roi_center_xy_mm": [
+            0.0,
+            0.0
+          ],
+          "search_roi_size_mm": [
+            56.0,
+            56.0
+          ],
+          "part_z_range_mm": [
+            25.65001,
+            36.65001
+          ],
+          "camera_projection_requires_part_height": true
+        }
+      },
+      "housing_seat_z_mm": 3.55,
+      "insert_bottom_relative_to_housing_mm": 2.05,
+      "cap_bottom_relative_to_housing_mm": 22.1,
+      "cap_bottom_minus_housing_rim_mm": 1.6,
+      "sim_only_candidate_tolerances": {
+        "xy_mm": {
+          "housing": 2.0,
+          "insert": 1.5,
+          "cap": 1.5
+        },
+        "housing_yaw_deg": 5.0,
+        "measured": false,
+        "apply_to_real_pass_fail": false
+      },
+      "stages": [
+        {
+          "id": "empty",
+          "expected_parts": [],
+          "new_part": null,
+          "requires_previous_pass": null,
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -28,
+            -28,
+            28,
+            28
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 3846.24,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/B_empty_labels.png",
+          "label_mapping": {
+            "1": "fixture"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "housing_seated",
+          "expected_parts": [
+            "housing"
+          ],
+          "new_part": "housing",
+          "requires_previous_pass": "empty",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "housing"
+          ],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 2492.8,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/B_housing_seated_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "insert_added",
+          "expected_parts": [
+            "housing",
+            "insert"
+          ],
+          "new_part": "insert",
+          "requires_previous_pass": "housing_seated",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "housing",
+            "insert"
+          ],
+          "occluded_parts_requiring_history": [],
+          "new_part_search_roi_xy_mm": [
+            -18.95,
+            -18.95,
+            18.95,
+            18.95
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 1693.76,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            },
+            "insert": {
+              "visible_area_mm2": 799.04,
+              "visible_bbox_xy_mm": [
+                -16.0,
+                -16.0,
+                16.0,
+                16.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/B_insert_added_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing",
+            "3": "insert"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        },
+        {
+          "id": "cap_added",
+          "expected_parts": [
+            "housing",
+            "insert",
+            "cap"
+          ],
+          "new_part": "cap",
+          "requires_previous_pass": "insert_added",
+          "history_binding_keys": [
+            "run_id",
+            "product_id",
+            "fixture_id",
+            "product_type"
+          ],
+          "expected_visible_parts": [
+            "cap"
+          ],
+          "occluded_parts_requiring_history": [
+            "housing",
+            "insert"
+          ],
+          "new_part_search_roi_xy_mm": [
+            -28.0,
+            -28.0,
+            28.0,
+            28.0
+          ],
+          "requires_frame_after_stage_start": true,
+          "visible_geometry": {
+            "fixture": {
+              "visible_area_mm2": 2124.0,
+              "visible_bbox_xy_mm": [
+                -34.0,
+                -34.0,
+                34.0,
+                34.0
+              ]
+            },
+            "housing": {
+              "visible_area_mm2": 0.0,
+              "visible_bbox_xy_mm": null
+            },
+            "insert": {
+              "visible_area_mm2": 0.0,
+              "visible_bbox_xy_mm": null
+            },
+            "cap": {
+              "visible_area_mm2": 2492.8,
+              "visible_bbox_xy_mm": [
+                -25.0,
+                -25.0,
+                25.0,
+                25.0
+              ]
+            }
+          },
+          "top_view_label_mask": "previews/B_cap_added_labels.png",
+          "label_mapping": {
+            "1": "fixture",
+            "2": "housing",
+            "3": "insert",
+            "4": "cap"
+          },
+          "mask_grid": {
+            "mm_per_pixel": 0.2,
+            "top_left_xy_mm": [
+              -35,
+              35
+            ],
+            "y_direction": "down"
+          },
+          "hidden_parts_policy": "require previous-stage PASS; never classify occluded pixels as missing",
+          "runtime_checks": [
+            "correct stage order",
+            "fresh stable unobstructed image",
+            "new part presence + relative pose",
+            "remaining visible earlier parts"
+          ],
+          "cannot_prove_from_top_view": [
+            "hidden internal seating",
+            "physical contact depth",
+            "magnet engagement strength"
+          ]
+        }
+      ]
+    }
+  },
+  "simulation_reference_only": {
+    "source": "SO101_rl/outputs/assembly_current_12/scene.json",
+    "carrier_global_offsets": {
+      "cad_offset_mm": [
+        16.66,
+        -2.55,
+        0.0
+      ],
+      "cad_yaw_deg": -8.0,
+      "cad_tilt_deg": [
+        0.0,
+        0.0
+      ]
+    },
+    "nest_offsets_mm": {
+      "housing": [
+        -5.5,
+        1.5,
+        3
+      ],
+      "tpu": [
+        -3,
+        8.45,
+        3.15
+      ],
+      "cap": {
+        "offset_mm": [
+          -8.5,
+          16.5,
+          10.3
+        ],
+        "rotation_deg": [
+          0,
+          0,
+          2.5
+        ]
+      }
+    },
+    "receiver_offset_mm": [
+      7.7,
+      3.0,
+      -8.0
+    ],
+    "reason_not_applied": "These are simulation registration candidates, not measured real jig offsets."
+  },
+  "sources_sha256": {
+    "SO101_teach/assets/carrier_assembly/assembly.json": "0262ace88eac9e432d592033eb529f690c12aaff801f5cbc03f0d40e61c3be13",
+    "SO101_teach/assets/linear_stage/assembly-provenance.json": "e9e667f89d58a9ea1579118ebf2fd114100b08c41b5d75a8220bf68521d2c924",
+    "SO101_rl/outputs/assembly_current_12/scene.json": "4ad50caa10f378750048517e095143b34c50bf657505cb8ddcc487232dd6ec93",
+    "SO101_rl/config/assembly.json": "94fb74a4f463d86a1fa995f9a5afddcf411de51bac5eb7bbe177d76995e36f72",
+    "SO101_rl/config/cad_alignment.json": "a4b2d36b1565c8ad157994f868a4b6c0906a2bb18330145e91a86425b7662a38",
+    "모델링/A 제품/A 하단.stl": "95071d47457e44ed71dec36b496cb974a4c0890a7bcc03726b89c597dd75424e",
+    "모델링/A 제품/A 중단.stl": "8952dd3911060ff20081c03d35c83e52eb44f281a1f5391650c1edc7befc96e4",
+    "모델링/A 제품/A 상단.stl": "fafcaac003803228b541c3ee613d87b32bae5530560be62e26044bd547ce658e",
+    "모델링/B 제품/B 하단.stl": "5ffcfee83be6bf5de0f0f54121aaf1b0a3b629bde8f46ad1582d17d7eb8b743e",
+    "모델링/B 제품/B 중단.stl": "32a15264042e44eae846e07e54ac4cc043678a252184118349452e7d50f890ec",
+    "모델링/B 제품/B 상단.stl": "085ef80abee9a00d695124b373da644466fdaeb04f6f15fa0b87728acc03750d",
+    "모델링/완제품 팔레트/완제품 팔레트.stl": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6",
+    "SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+    "SO101_teach/assets/carrier_assembly/source/current/b_cap_jig.stl": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+    "SO101_teach/assets/carrier_assembly/source/current/b_tpu_jig.stl": "f9de40c0c6734c5f27a5c33846099936fd6d3f9af49f5972a2259b769102c91a",
+    "SO101_teach/assets/carrier_assembly/source/current/a_cap_jig.stl": "51fccd96be8b756e95d7a997e76a20bd2cf8bba194f1dbaa785e7c036c86926e",
+    "SO101_teach/assets/carrier_assembly/source/current/a_ball_jig.stl": "ef4d25a55ddff0b89866fa9c1e7a2bbfa9a3643ea0ca81365b10a28579774441",
+    "SO101_teach/assets/carrier_assembly/source/current/a_housing_jig.stl": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d"
+  }
+}

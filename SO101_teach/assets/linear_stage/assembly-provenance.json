@@ -1,0 +1,61 @@
+{
+  "unit": "mm",
+  "printed_parts_source": "/home/fresh/Downloads/모델링/리니어 슬라이더",
+  "source_files": {
+    "01_carriage_2jigs.stl": "d8b336089b583f28396cb08645cd61f1de2066d36d6e358ec285964a1e132be0",
+    "02_rail_segment_150mm_PRINT_4.stl": "54545ffd298fe81ea71cff0600a18350a9fda4520a4c760bfb0e31df9bcf412a",
+    "05_end_stop_PRINT_2.stl": "ebd928f34cd3fc13130be6dd6273af6c6c34bca678e901901b135c83c241c3d1",
+    "03_top_mount_NO_UNDER_LIP.stl": "e2791e74c43cb6588b3fb3622409ef607baa01407d239d915cae3ef8628c0b8a"
+  },
+  "assembly_reference": "Latest 03_top_mount_NO_UNDER_LIP.stl plus photographed installation; old source/build.py refers to the superseded ear design",
+  "rail_segments": 4,
+  "rails_total_length_each_mm": 300,
+  "rail_flange_center_y_mm": [
+    -55.6,
+    55.6
+  ],
+  "carriage_bottom_z_mm": 4.4,
+  "fixture_base_z_mm": 9.4,
+  "fixture_centers_local_mm": [
+    [
+      -40,
+      0,
+      9.4
+    ],
+    [
+      40,
+      0,
+      9.4
+    ]
+  ],
+  "fixture_source": "assets/carrier_assembly/source/current/b_housing_jig.stl",
+  "fixture_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+  "ear_rotation_from_print_deg": [
+    -90,
+    0,
+    0
+  ],
+  "negative_side_meshes": "Y reflection with triangle winding reversed",
+  "actuator_source": "actuator-provenance.json",
+  "rear_eye_x_mm": -313.6153520770029,
+  "actuator_axis_height_mm": 7,
+  "no_physical_motion_verified": true,
+  "front_mount_model": "top_mount_assembled.stl",
+  "front_mount_rotation_deg": [
+    -90,
+    0,
+    0
+  ],
+  "front_mount_translation_mm": [
+    0,
+    -25.5,
+    0
+  ],
+  "front_pin_center_local_mm": [
+    -116,
+    0,
+    7
+  ],
+  "actuator_rear_axis_height_mm": 7.8,
+  "rear_height_estimated": true
+}

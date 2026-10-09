@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "calibration_sha256": "0452094291f83e3b3a0494dacfd72d938a3c7f05cdee8a7c04c28cfd364cac78",
+  "joints": {
+    "shoulder_pan": {
+      "zero": {
+        "degrees": 0.0,
+        "ticks": 2047
+      },
+      "negative": {
+        "degrees": -90.0,
+        "ticks": 1023
+      },
+      "positive": {
+        "degrees": 90.0,
+        "ticks": 3092
+      }
+    },
+    "shoulder_lift": {
+      "zero": {
+        "degrees": 0.0,
+        "ticks": 2047
+      },
+      "negative": {
+        "degrees": -90.0,
+        "ticks": 1022
+      },
+      "positive": {
+        "degrees": 90.0,
+        "ticks": 3067
+      }
+    },
+    "elbow_flex": {
+      "zero": {
+        "degrees": 0.0,
+        "ticks": 2047
+      },
+      "negative": {
+        "degrees": -90.0,
+        "ticks": 1030
+      },
+      "positive": {
+        "degrees": 90.0,
+        "ticks": 3059
+      }
+    },
+    "wrist_flex": {
+      "zero": {
+        "degrees": 0.0,
+        "ticks": 2047
+      },
+      "negative": {
+        "degrees": -90.0,
+        "ticks": 1018
+      },
+      "positive": {
+        "degrees": 90.0,
+        "ticks": 3057
+      }
+    },
+    "wrist_roll": {
+      "zero": {
+        "degrees": 0.0,
+        "ticks": 2047
+      },
+      "negative": {
+        "degrees": -90.0,
+        "ticks": 1023
+      },
+      "positive": {
+        "degrees": 90.0,
+        "ticks": 3070
+      }
+    },
+    "gripper": {
+      "zero": {
+        "degrees": -90.0,
+        "ticks": 2047
+      },
+      "kind": "gripper_range",
+      "closed": {
+        "ticks": 1911
+      },
+      "open": {
+        "ticks": 3350
+      }
+    }
+  },
+  "verification": {}
+}

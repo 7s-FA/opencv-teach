@@ -1,0 +1,41 @@
+{
+  "01_carriage_2jigs": {
+    "size_mm": [
+      183.0,
+      80.0,
+      7.0
+    ],
+    "watertight": true
+  },
+  "02_rail_segment_150mm_PRINT_4": {
+    "size_mm": [
+      150.0,
+      24.0,
+      13.0
+    ],
+    "watertight": true
+  },
+  "03_low_pin_ear_PRINT_2": {
+    "size_mm": [
+      22.0,
+      10.5,
+      22.0
+    ],
+    "watertight": true
+  },
+  "05_end_stop_PRINT_2": {
+    "size_mm": [
+      12.0,
+      120.0,
+      10.0
+    ],
+    "watertight": true
+  },
+  "pin_center_from_bed_mm": 7.0,
+  "ear_gap_adjustment_mm": [
+    4,
+    12
+  ],
+  "travel_mm": 100,
+  "rail_total_length_mm": 300
+}
