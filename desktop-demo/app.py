@@ -14,6 +14,8 @@ def main():
     data=prepare_data(ROOT,args.data_dir or default_data())
     from offline import install
     install()
+    from image_io import install as install_image_io
+    install_image_io()
     import tkinter as tk
     from tkinter import ttk
     import cv2

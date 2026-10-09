@@ -10,7 +10,9 @@ def run_smoke(root,manager,output,errors,change_photo,case):
         try:ImageGrab.grab().save(output.parent/(label+'.png'))
         except Exception as exc:checks[label+'_screenshot_error']=str(exc)
     def finish(error=None):
-        if error:errors.append(str(error))
+        if error:
+            errors.append(str(error));snapshot('failure')
+        checks['final_message']=manager.apps[manager.active].message.get()
         output.write_text(json.dumps({'passed':not errors,'checks':checks,'errors':errors},ensure_ascii=False,indent=2),encoding='utf-8')
         manager.close()
         root.after(10000,root.destroy)
@@ -41,6 +43,10 @@ def run_smoke(root,manager,output,errors,change_photo,case):
                 if len(live)==2 and len(adopted)==2 and all(v.get('selected') for v in live.values()) and all(v.get('selected') and v.get('pose_held') for v in adopted.values()):
                     checks['both_jigs_detected']={k:v['status'] for k,v in live.items()}
                     checks['both_jigs_adopted']=True;root.update_idletasks();snapshot('camera')
+                    saved=app.save_camera()
+                    import cv2
+                    assert cv2.imread(str(saved)) is not None
+                    checks['korean_capture_path']=True
                     change_photo('오안착 사진');stage=3;checks['camera_switch_at']=time.monotonic()
             elif stage==3 and time.monotonic()-checks['camera_switch_at']>4 and app.camera and app.camera.observation:
                 live=app.camera.observation[1].get('live_by_jig',{})

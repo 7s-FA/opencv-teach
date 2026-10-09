@@ -32,6 +32,19 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb libgl1 libegl1 libxkbcommon-x11-0 fonts-noto-cjk
       - run: python -m pip install -r desktop-demo/requirements-build.txt
       - run: pyinstaller --clean --noconfirm desktop-demo/demo.spec
+      # Hosted Windows runners have no graphics driver suitable for MuJoCo.
+      # Use pinned Mesa only during verification; do not ship these DLLs.
+      - if: runner.os == 'Windows'
+        name: Prepare software OpenGL for CI
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP 'mesa.7z'
+          $mesa = Join-Path $env:RUNNER_TEMP 'mesa'
+          Invoke-WebRequest 'https://github.com/pal1000/mesa-dist-win/releases/download/26.2.4/mesa3d-26.2.4-release-msvc.7z' -OutFile $archive
+          if ((Get-FileHash $archive -Algorithm SHA256).Hash.ToLower() -ne '351fc8c8b695878ffb3eaa044b3ead08672a48b1a045e3c3e3975811df0f6695') { throw 'Mesa checksum mismatch' }
+          7z x $archive "-o$mesa" 'x64/opengl32.dll' 'x64/libgallium_wgl.dll' -y
+          if ($LASTEXITCODE -ne 0) { throw 'Mesa extraction failed' }
+          Copy-Item "$mesa/x64/*.dll" dist/SO101-Teach-Demo/
       - if: runner.os == 'Linux'
         run: xvfb-run -a -s '-screen 0 1920x1080x24' dist/SO101-Teach-Demo/SO101-Teach-Demo --data-dir "$RUNNER_TEMP/한글 demo" --smoke-test verification/report.json
         env:
@@ -40,7 +53,9 @@ jobs:
         shell: pwsh
         run: |
           $process = Start-Process -FilePath dist/SO101-Teach-Demo/SO101-Teach-Demo.exe -ArgumentList '--data-dir "verification/한글 demo" --smoke-test verification/report.json' -Wait -PassThru
-          if ($process.ExitCode -ne 0) { throw "GUI smoke test failed: $($process.ExitCode)" }
+          if ($process.ExitCode -ne 0) { Get-Content verification/report.json; throw "GUI smoke test failed: $($process.ExitCode)" }
+        env:
+          GALLIUM_DRIVER: llvmpipe
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -48,6 +63,10 @@ jobs:
           path: |
             verification/
             build/SO101-Teach-Demo/warn-*.txt
+      - if: runner.os == 'Windows'
+        name: Remove CI graphics driver
+        shell: pwsh
+        run: Remove-Item dist/SO101-Teach-Demo/opengl32.dll, dist/SO101-Teach-Demo/libgallium_wgl.dll
       - run: python desktop-demo/package.py
       - uses: actions/upload-artifact@v4
         with:

@@ -1,6 +1,6 @@
 # SO-101 Teach 다운로드 데모
 
-원본 Python/Tk GUI, 3D 작업대와 로봇팔, 티칭 편집·저장, OpenCV 지그 검출을 포함한 오프라인 데모입니다. Python을 별도로 설치하지 않아도 됩니다. 실제 모터·카메라·Pi에는 연결하지 않습니다.
+원본 Python/Tk GUI, 3D 작업대와 로봇팔, 티칭 편집·저장, OpenCV 지그 검출을 포함한 오프라인 데모입니다. Python을 별도로 설치하지 않아도 됩니다. 실제 모터·카메라·Pi에는 연결하지 않습니다. 3D 표시에는 OpenGL을 지원하는 그래픽 드라이버가 필요합니다.
 
 ## 실행
 
@@ -20,6 +20,6 @@
 
 ## 개발·검증
 
-Python 3.12 환경에서 `pip install -r desktop-demo/requirements-build.txt`, `pyinstaller --clean --noconfirm desktop-demo/demo.spec`로 빌드합니다. 각 OS에서 별도로 빌드해야 합니다. 생성된 실행 파일의 `--smoke-test report.json --data-dir 임시폴더` 옵션은 실제 Tk GUI·양쪽 팔 3D·지그 2개 검출·사진 변경·저장 유지·실장치 연결 차단을 검증하고 종료합니다.
+Python 3.12 환경에서 `pip install -r desktop-demo/requirements-build.txt`, `pyinstaller --clean --noconfirm desktop-demo/demo.spec`로 빌드합니다. 각 OS에서 별도로 빌드해야 합니다. 생성된 실행 파일의 `--smoke-test report.json --data-dir 임시폴더` 옵션은 실제 Tk GUI·양쪽 팔 3D·지그 2개 검출·사진 변경·저장 유지·실장치 연결 차단을 검증하고 종료합니다. Windows CI의 GPU 없는 가상 머신에서는 테스트할 때만 Mesa 소프트웨어 렌더러를 사용하며 배포 파일에는 포함하지 않습니다.
 
 포함된 외부 라이브러리와 모델의 라이선스는 `third-party-licenses/`를 참고하세요. 프로젝트 소유 코드에 새 라이선스를 부여하지 않습니다.
