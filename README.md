@@ -17,6 +17,10 @@
 
 웹 데모와 Codespaces 실행은 사용하지 않습니다. 운영체제 요구사항·데이터 위치·실행 오류 안내는 [다운로드 데모 설명](desktop-demo/README.md)을 확인하세요.
 
+![다운로드 데모의 원본 3D 티칭 화면](docs/desktop-teaching.png)
+
+[두 지그를 검출한 카메라 화면](docs/desktop-camera.png)
+
 ## 핵심 흐름
 
 1. 자세와 지그 기준을 함께 저장합니다.
