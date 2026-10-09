@@ -99,5 +99,8 @@ if __name__=='__main__':
             import tkinter as tk
             from tkinter import messagebox
             root=tk.Tk();root.withdraw();messagebox.showerror('SO-101 데모 시작 실패',error+'\n기록: '+str(folder));root.destroy()
-        else:print(error,file=sys.stderr)
+        else:
+            output=Path(sys.argv[sys.argv.index('--smoke-test')+1]);output.parent.mkdir(parents=True,exist_ok=True)
+            output.write_text(json.dumps({'passed':False,'errors':[error]},ensure_ascii=False,indent=2),encoding='utf-8')
+            if sys.stderr:print(error,file=sys.stderr)
         raise SystemExit(1)
