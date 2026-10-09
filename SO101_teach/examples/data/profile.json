@@ -200,7 +200,7 @@
     "model": "/path/to/Final_Arm/OpenCV_teach/assets/so101"
   },
   "tcp": {
-    "mode": "demo",
+    "mode": "model",
     "model_point": "tip",
     "xyz_mm": [
       1.773409675938293,

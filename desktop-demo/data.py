@@ -19,7 +19,6 @@ def prepare_data(source,destination):
     def normalize(value,key=''):
         if isinstance(value,dict):return {k:normalize(v,k) for k,v in value.items()}
         if isinstance(value,list):return [normalize(v,key) for v in value]
-        if key=='mode':return 'demo'
         if key=='device_host':return 'local'
         if key in ('token','password','identity_file'):return ''
         if key=='port' and isinstance(value,str):return 'DEMO'
@@ -32,6 +31,10 @@ def prepare_data(source,destination):
         return value
     for name in ('profile.json','robot_profiles.json','preferences.json','jigs.json'):
         file=destination/name;value=normalize(json.loads(file.read_text(encoding='utf-8')))
+        if name in ('profile.json','robot_profiles.json'):
+            for profile in (value.values() if name=='robot_profiles.json' else [value]):
+                profile['mode']='demo'
+                if profile.get('tcp',{}).get('mode')=='demo':profile['tcp']['mode']='model'
         if name=='preferences.json':value['device_host']='local'
         file.write_text(json.dumps(value,ensure_ascii=False,indent=2),encoding='utf-8')
     location.write_text(json.dumps({'source':source.as_posix(),'data':destination.as_posix()}),encoding='utf-8')
