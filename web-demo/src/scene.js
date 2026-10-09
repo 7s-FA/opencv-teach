@@ -45,7 +45,8 @@ export async function makeScene(host,data) {
     const originals=[],copies=[];robot.traverse(n=>originals.push(n));copy.traverse(n=>copies.push(n));
     robots[arm]={copy,joints:Object.fromEntries(Object.entries(joints).map(([name,j])=>[name,{node:copies[originals.indexOf(j.node)],axis:j.axis}]))};
   }
-  const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();});observer.observe(host);
-  let stopped=false;function frame(){if(stopped)return;requestAnimationFrame(frame);controls.update();renderer.render(scene,camera);}frame();
-  return {setPose(arm,ticks){const angles=jointAngles(ticks,data.arms[arm]);data.joints.forEach((name,i)=>robots[arm].joints[name]?.node.quaternion.setFromAxisAngle(robots[arm].joints[name].axis,angles[i]));},reset,dispose(){stopped=true;observer.disconnect();controls.dispose();renderer.dispose();}};
+  let dirty=true;controls.addEventListener('change',()=>{dirty=true;});
+  const observer=new ResizeObserver(()=>{const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h);camera.aspect=w/h;camera.updateProjectionMatrix();dirty=true;});observer.observe(host);
+  let stopped=false;function frame(){if(stopped)return;requestAnimationFrame(frame);if(!host.offsetParent)return;controls.update();if(dirty){renderer.render(scene,camera);dirty=false;}}frame();
+  return {setPose(arm,ticks){dirty=true;const angles=jointAngles(ticks,data.arms[arm]);data.joints.forEach((name,i)=>robots[arm].joints[name]?.node.quaternion.setFromAxisAngle(robots[arm].joints[name].axis,angles[i]));},reset,dispose(){stopped=true;observer.disconnect();controls.dispose();renderer.dispose();}};
 }
