@@ -2,8 +2,11 @@ name: Build downloadable desktop demo
 on:
   push:
     branches: [main]
-    paths: ['desktop-demo/**', 'SO101_teach/**', '.github/workflows/desktop-demo.yml']
+    paths: ['.gitattributes', 'desktop-demo/**', 'SO101_teach/**', '.github/workflows/desktop-demo.yml']
   workflow_dispatch:
+concurrency:
+  group: desktop-demo-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: read
 jobs:
