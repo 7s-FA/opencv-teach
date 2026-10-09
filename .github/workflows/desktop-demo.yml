@@ -31,6 +31,7 @@ jobs:
       - if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb libgl1 libegl1 libxkbcommon-x11-0 fonts-noto-cjk
       - run: python -m pip install -r desktop-demo/requirements-build.txt
+      - run: python desktop-demo/test_assets.py
       - run: pyinstaller --clean --noconfirm desktop-demo/demo.spec
       # Hosted Windows runners have no graphics driver suitable for MuJoCo.
       # Use pinned Mesa only during verification; do not ship these DLLs.
@@ -45,6 +46,7 @@ jobs:
           7z x $archive "-o$mesa" 'x64/opengl32.dll' 'x64/libgallium_wgl.dll' -y
           if ($LASTEXITCODE -ne 0) { throw 'Mesa extraction failed' }
           Copy-Item "$mesa/x64/*.dll" dist/SO101-Teach-Demo/
+          if (Get-Command Set-DisplayResolution -ErrorAction SilentlyContinue) { Set-DisplayResolution -Width 1920 -Height 1080 -Force }
       - if: runner.os == 'Linux'
         run: xvfb-run -a -s '-screen 0 1920x1080x24' dist/SO101-Teach-Demo/SO101-Teach-Demo --data-dir "$RUNNER_TEMP/한글 demo" --smoke-test verification/report.json
         env:

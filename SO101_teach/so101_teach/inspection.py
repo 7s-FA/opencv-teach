@@ -5,6 +5,7 @@ import math,queue,time,xml.etree.ElementTree as ET
 import numpy as np
 from scipy.spatial.transform import Rotation
 from .domain import ROOT
+from .mujoco_assets import load_model
 from .configuration import tcp_matrix,model_tcp,tcp_label
 from .preview import latest,FRAME_SECONDS
 
@@ -130,7 +131,7 @@ def inspection_worker(commands,frames,stop):
                 key=json.dumps(spec,sort_keys=True)
                 if key!=signature:
                     xml,blobs,markers,info=build_scene(spec)
-                    model=mujoco.MjModel.from_xml_string(xml,assets=blobs);data=mujoco.MjData(model);mujoco.mj_forward(model,data)
+                    model=load_model(xml=xml,assets=blobs);data=mujoco.MjData(model);mujoco.mj_forward(model,data)
                     if renderer:renderer.close()
                     renderer=mujoco.Renderer(model,height=600,width=800);signature=key
                 actual_view=info['detail_view' if view=='detail' else 'whole_view'] if isinstance(view,str) else view

@@ -3,6 +3,7 @@ import multiprocessing as mp
 import queue
 import time
 from .domain import ROOT,JOINTS
+from .mujoco_assets import load_model
 SCENE=ROOT/'assets/so101/preview_scene.xml'
 PREVIEW_SIZE=(960,540)
 PREVIEW_FPS=30
@@ -107,7 +108,7 @@ def apply_arm_visibility(model,groups,placement):
 
 def model_data(angles):
     import mujoco
-    m=mujoco.MjModel.from_xml_path(str(SCENE));d=mujoco.MjData(m)
+    m=load_model(SCENE);d=mujoco.MjData(m)
     for name,a in zip(JOINTS,angles):d.qpos[m.joint(name).qposadr[0]]=a
     mujoco.mj_forward(m,d)
     return m,d
@@ -129,7 +130,7 @@ def worker(commands,frames,stop):
     try:
         import mujoco,cv2
         from .preview_materials import apply_preview_materials
-        m=mujoco.MjModel.from_xml_path(str(SCENE.with_name('inspection_scene.xml')));d=mujoco.MjData(m)
+        m=load_model(SCENE.with_name('inspection_scene.xml'));d=mujoco.MjData(m)
         apply_preview_materials(m)
         m.vis.global_.offwidth=PREVIEW_SIZE[0];m.vis.global_.offheight=PREVIEW_SIZE[1]
         renderer=mujoco.Renderer(m,height=PREVIEW_SIZE[1],width=PREVIEW_SIZE[0])
@@ -147,7 +148,7 @@ def worker(commands,frames,stop):
             if config:
                 signature=scene_signature(config)
                 if signature!=compiled_signature:
-                    renderer.close();m=mujoco.MjModel.from_xml_string(configured_scene(config['jigs'],config.get('tcp'),workcell=config.get('workcell')));d=mujoco.MjData(m)
+                    renderer.close();m=load_model(xml=configured_scene(config['jigs'],config.get('tcp'),workcell=config.get('workcell')));d=mujoco.MjData(m)
                     apply_preview_materials(m)
                     m.vis.global_.offwidth=PREVIEW_SIZE[0];m.vis.global_.offheight=PREVIEW_SIZE[1];renderer=mujoco.Renderer(m,height=PREVIEW_SIZE[1],width=PREVIEW_SIZE[0]);compiled_signature=signature;visibility=arm_visibility(m)
                 for i,item in enumerate(config['jigs']):
