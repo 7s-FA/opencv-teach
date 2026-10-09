@@ -10,4 +10,4 @@ if [[ -f /opt/ros/jazzy/setup.bash ]]; then
 fi
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-40}"
 export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1
-exec "${SO101_EPISODE_PYTHON:-/home/ubuntu/so101-player/.venv/bin/python}" -B integration/episode_cli.py "$@"
+exec "${SO101_EPISODE_PYTHON:-python3}" -B integration/episode_cli.py "$@"

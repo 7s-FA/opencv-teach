@@ -4,6 +4,8 @@
 
 **[웹 데모 열기](https://7s-fa.github.io/opencv-teach/)** · [이전 SO-101 작업](https://github.com/7s-FA/so101-workbench)
 
+![기존 티칭 GUI 구조를 따르는 웹 데모](docs/web-demo.png)
+
 ## 핵심 흐름
 
 1. 자세와 지그 기준을 함께 저장합니다.

@@ -19,4 +19,4 @@ trap cleanup EXIT
 cd "$SO101_TEST_ROOT"
 unset PYTHONPATH PYTHONHOME
 if [[ $# -eq 0 ]]; then set -- discover -s tests -t .; fi
-/path/to/venv/bin/python tools/test_runner.py "$@" -v
+"${SO101_TEACH_PYTHON:-python3}" tools/test_runner.py "$@" -v
