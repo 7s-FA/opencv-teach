@@ -135,6 +135,6 @@ def main():
     app=web.Application();app.cleanup_ctx.append(start_desktop)
     app.router.add_get('/',index);app.router.add_get('/health',health);app.router.add_post('/camera',set_camera);app.router.add_get('/websockify',websocket)
     app.router.add_static('/novnc/',HERE/'node_modules/@novnc/novnc',show_index=False)
-    try:web.run_app(app,host='127.0.0.1',port=int(os.environ.get('PORT','6080')),access_log=None)
+    try:web.run_app(app,host='127.0.0.1',port=int(os.environ.get('PORT','6080')),access_log=None,shutdown_timeout=2)
     finally:stop_processes()
 if __name__=='__main__':main()
