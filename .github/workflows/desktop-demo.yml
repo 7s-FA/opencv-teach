@@ -1,0 +1,56 @@
+name: Build downloadable desktop demo
+on:
+  push:
+    branches: [main]
+    paths: ['desktop-demo/**', 'SO101_teach/**', '.github/workflows/desktop-demo.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      PYTHONUTF8: '1'
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: desktop-demo/requirements-build.txt
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y python3-tk xvfb libgl1 libegl1 libxkbcommon-x11-0 fonts-noto-cjk
+      - run: python -m pip install -r desktop-demo/requirements-build.txt
+      - run: pyinstaller --clean --noconfirm desktop-demo/demo.spec
+      - if: runner.os == 'Linux'
+        run: xvfb-run -a -s '-screen 0 1920x1080x24' dist/SO101-Teach-Demo/SO101-Teach-Demo --data-dir "$RUNNER_TEMP/한글 demo" --smoke-test verification/report.json
+        env:
+          LIBGL_ALWAYS_SOFTWARE: '1'
+      - if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath dist/SO101-Teach-Demo/SO101-Teach-Demo.exe -ArgumentList '--data-dir "verification/한글 demo" --smoke-test verification/report.json' -Wait -PassThru
+          if ($process.ExitCode -ne 0) { throw "GUI smoke test failed: $($process.ExitCode)" }
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-${{ runner.os }}
+          path: |
+            verification/
+            build/SO101-Teach-Demo/warn-*.txt
+      - run: python desktop-demo/package.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-${{ runner.os }}
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*.sha256
+          retention-days: 7

@@ -1,6 +1,5 @@
 """Read-only V4L2 discovery: never start a stream or change device settings."""
 import errno
-import fcntl
 import os
 from pathlib import Path
 import struct
@@ -8,6 +7,7 @@ import struct
 COLOR_FORMATS={'YUYV','UYVY','MJPG','JPEG','RGB3','BGR3','NV12','NV21','YU12','YV12','RGB4','BGR4'}
 
 def probe(device):
+    import fcntl
     # Linux videodev2.h: v4l2_capability (104 bytes), v4l2_fmtdesc (64).
     fd=os.open(device,os.O_RDONLY|os.O_NONBLOCK)
     try:
@@ -31,6 +31,7 @@ def probe(device):
     finally:os.close(fd)
 
 def camera_inventory(dev_root='/dev'):
+    if os.name=='nt':return []
     root=Path(dev_root);aliases={}
     for directory in ('v4l/by-id','v4l/by-path'):
         for path in sorted((root/directory).glob('*')):

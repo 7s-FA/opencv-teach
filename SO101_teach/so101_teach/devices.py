@@ -2,11 +2,9 @@
 from collections import Counter,deque
 from copy import deepcopy
 from pathlib import Path
-import fcntl
 import os
 import queue
 import subprocess
-import termios
 import threading
 import time
 from .domain import JOINTS, LABELS, Snapshot, atomic_json
@@ -44,6 +42,9 @@ def ensure_available(port):
     if result.returncode!=1:raise RuntimeError('시리얼 포트 사용 상태를 확인할 수 없습니다.')
 
 def new_bus(port,calibration,counts,*,gate_installer=install_read_gate):
+    # Hardware serial ownership is Linux-only; the offline GUI also runs on Windows.
+    import fcntl
+    import termios
     from .motor_backend import motor_backend
     FeetechMotorsBus,Motor,MotorCalibration,MotorNormMode=motor_backend()
     bus=FeetechMotorsBus(port,{n:Motor(m.id,'sts3215',MotorNormMode.DEGREES) for n,m in calibration.motors.items()},
