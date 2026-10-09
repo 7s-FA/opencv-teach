@@ -37,9 +37,10 @@ def run_smoke(root,manager,output,errors,change_photo,case):
             elif stage==2 and app.camera and app.camera.observation:
                 if app.camera.error:raise RuntimeError(app.camera.error)
                 data=app.camera.observation[1];live=data.get('live_by_jig',{})
-                if len(live)==2 and all(v.get('selected') for v in live.values()) and all(v.get('selected') for v in data.get('by_jig',{}).values()):
+                adopted=data.get('by_jig',{})
+                if len(live)==2 and len(adopted)==2 and all(v.get('selected') for v in live.values()) and all(v.get('selected') and v.get('pose_held') for v in adopted.values()):
                     checks['both_jigs_detected']={k:v['status'] for k,v in live.items()}
-                    checks['both_jigs_adopted']=True;snapshot('camera')
+                    checks['both_jigs_adopted']=True;root.update_idletasks();snapshot('camera')
                     change_photo('오안착 사진');stage=3;checks['camera_switch_at']=time.monotonic()
             elif stage==3 and time.monotonic()-checks['camera_switch_at']>4 and app.camera and app.camera.observation:
                 live=app.camera.observation[1].get('live_by_jig',{})

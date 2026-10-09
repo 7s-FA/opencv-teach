@@ -3,6 +3,9 @@ import hashlib,importlib.metadata,json,os,shutil,sys
 from pathlib import Path
 root=Path(__file__).resolve().parents[1];dist=root/'dist/SO101-Teach-Demo'
 licenses=dist/'third-party-licenses';shutil.copytree(root/'third-party-licenses',licenses,dirs_exist_ok=True)
+for candidate in (Path(sys.base_prefix)/'LICENSE.txt',Path(sys.base_prefix)/f'lib/python{sys.version_info.major}.{sys.version_info.minor}/LICENSE.txt'):
+    if candidate.exists():shutil.copy2(candidate,licenses/'Python-LICENSE.txt');break
+else:raise RuntimeError('Python license was not found in the build runtime')
 records=[]
 for package in importlib.metadata.distributions():
     name=package.metadata['Name'];records.append({'name':name,'version':package.version,'license':package.metadata.get('License-Expression') or package.metadata.get('License')})
