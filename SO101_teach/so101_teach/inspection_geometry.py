@@ -33,14 +33,14 @@ def anchors_for(frame,results,adopted,catalog,profile,reference,station,product,
     try:
         if station=='리니어 조립':
             stage=(placement or {}).get('linear_stage',{});endpoints=stage.get('endpoint_reference',{})
-            if not all('carriage_x_mm' in endpoints.get(k,{}) for k in ('forward','retracted')):return [],'리니어 전후진 고정 좌표 없음'
+            if not all('carriage_x_mm' in endpoints.get(k,{}) for k in ('forward','retracted')):return [],'리니어 조립·하차 위치 고정 좌표 없음'
             base_camera=stage.get('alignment',{}).get('base_from_camera_for_preview')
             if base_camera is None:return [],'리니어 카메라 기준 없음'
             camera_base=np.linalg.inv(np.asarray(base_camera,float))
             state=stage.get('startup_state',{})
             command=state.get('commanded_mm') if state.get('known') else state.get('last_commanded_mm')
             manual=endpoint!='명령 위치'
-            if manual:command=endpoints['forward' if endpoint=='전진 목표' else 'retracted']['commanded_mm']
+            if manual:command=endpoints['forward' if endpoint in ('조립 위치','전진 목표') else 'retracted']['commanded_mm']
             commands=[command] if command is not None else [endpoints[k]['commanded_mm'] for k in ('forward','retracted')]
             for mm in commands:
                 name=direction_label(stage,mm)
@@ -88,7 +88,7 @@ def all_anchors(frame,results,adopted,catalog,profile,reference,placement,endpoi
         if station=='리니어 조립' and len(rows)>2 and not any(r['inspection_allowed'] for r in rows):
             rows=rows[:2]
             for row in rows:row['pending_position']=True
-            message='리니어 명령 위치 미확인 · 전후진 목표 선택 가능'
+            message='리니어 명령 위치 미확인 · 조립·하차 위치 선택 가능'
         for row in rows:row['station']=station
         anchors.extend(rows);messages[station]=message
     return anchors,messages

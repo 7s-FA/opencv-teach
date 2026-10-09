@@ -27,7 +27,7 @@ class CameraInspectionPanel(ttk.Frame):
         choice=self.mode_choice=ttk.Combobox(bar,textvariable=self.mode,values=('카메라 영상','CAD 설명'),width=12,state='readonly');choice.grid(row=0,column=0,sticky='ns');choice.bind('<<ComboboxSelected>>',self.change)
         ttk.Label(bar,text='운반 · 리니어 · 완성품 동시 검사').grid(row=0,column=1,sticky='w',padx=16)
         ttk.Label(bar,text='리니어 위치').grid(row=0,column=3,sticky='e',padx=(16,8))
-        self.endpoint_choice=ttk.Combobox(bar,textvariable=self.endpoint,values=('명령 위치','전진 목표','후진 목표'),width=11,state='readonly');self.endpoint_choice.grid(row=0,column=4,sticky='ns');self.endpoint_choice.bind('<<ComboboxSelected>>',self.change)
+        self.endpoint_choice=ttk.Combobox(bar,textvariable=self.endpoint,values=('명령 위치','조립 위치','하차 위치'),width=11,state='readonly');self.endpoint_choice.grid(row=0,column=4,sticky='ns');self.endpoint_choice.bind('<<ComboboxSelected>>',self.change)
         self.connect_button=app.button(bar,'카메라 연결',app.start_camera);self.connect_button.grid(row=0,column=5,sticky='ns',padx=(16,0))
         self.capture_snapshot=None
         self.save_button=app.button(bar,'영상 저장',self.save_capture);self.save_button.grid(row=0,column=6,sticky='ns',padx=(8,0));self.save_button.state(['disabled'])

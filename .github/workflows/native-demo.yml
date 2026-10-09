@@ -1,0 +1,25 @@
+name: Check original GUI startup
+on:
+  push:
+    paths: ['native-demo/**', 'SO101_teach/**', '.devcontainer/**', '.github/workflows/native-demo.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: bash native-demo/setup.sh
+      - run: .native-venv/bin/python native-demo/test_server.py
+      - run: bash native-demo/start.sh --background
+      - run: .native-venv/bin/python native-demo/check.py
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: native-runtime-log
+          path: ~/.cache/so101-native-demo/**/*.log

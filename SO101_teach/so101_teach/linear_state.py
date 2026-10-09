@@ -202,5 +202,5 @@ def state_label(placement):
 
 def direction_label(stage,mm):
     endpoints=stage.get('endpoint_reference',{})
-    name='전진' if mm==endpoints.get('forward',{}).get('commanded_mm',100) else '후진' if mm==endpoints.get('retracted',{}).get('commanded_mm',1.5) else f'{mm:g}mm'
+    name='조립 위치' if mm==endpoints.get('forward',{}).get('commanded_mm',100) else '하차 위치' if mm==endpoints.get('retracted',{}).get('commanded_mm',1.5) else f'{mm:g}mm'
     return name

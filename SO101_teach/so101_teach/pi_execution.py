@@ -1,6 +1,7 @@
 """GUI launch/observation of the same Pi episode runner used by work_watch."""
 from copy import deepcopy
 import json
+import re
 from pathlib import Path
 import queue
 import shlex
@@ -86,8 +87,12 @@ def status_text(line):
     if prefix not in ('A','B','GUI','SLIDE'):return line
     kind,_,value=detail.partition(':')
     if kind=='STAGE_DONE':return STAGES.get(value,value)+' 완료'
-    if kind in ('LINEAR_STARTED','LINEAR_READY'):
-        return ('리니어 이동 중 · ' if kind=='LINEAR_STARTED' else '리니어 위치 준비 완료 · ')+value
+    if kind in ('LINEAR_CHECK','LINEAR_STARTED','LINEAR_READY','LINEAR_DONE'):
+        from .linear_state import direction_label
+        target=re.search(r'target_mm=([0-9.]+)',value)
+        label=direction_label({},float(target[1])) if target else '목표 위치'
+        stage={'LINEAR_CHECK':'확인 중','LINEAR_STARTED':'이동 중','LINEAR_READY':'구동 완료 확인','LINEAR_DONE':'구동 시간 완료'}[kind]
+        return '리니어 '+label+' · '+stage+(' · 위치 미측정' if kind in ('LINEAR_READY','LINEAR_DONE') else '')
     if kind=='STEP_DONE':return '스텝 완료 · '+value
     return LABELS.get(kind,kind)+(' · '+value if value else '')
 

@@ -47,7 +47,7 @@ def reference_text(data, product=None):
         lines.extend(pose_text(f'{r["product"]} {PARTS[r["part"]]}', r) for r in stations['carrier']['rois'])
         lines.extend(['', '리니어 위 조립 팔레트 · 캐리지 중심 기준',
                       '팔레트 중심 XYZ: ' + ' ; '.join(numbers(p) + ' mm' for p in stations['linear_assembly']['fixture_centers_carriage_mm']),
-                      '영상 검사에서는 두 팔레트를 모두 표시하며 수신한 전후진 명령의 고정 좌표를 사용합니다.',
+                      '영상 검사에서는 두 팔레트를 모두 표시하며 수신한 조립·하차 위치 명령의 고정 좌표를 사용합니다.',
                       '', '완성품 팔레트 · 팔레트 중심 XY / 밑면 Z=0 기준'])
         lines.extend(pose_text(product + ' 완성품', roi) for product, roi in stations['finished_pallet']['rois'].items())
         lines.extend(['이전 조립 PASS를 유지하고, 그리퍼가 빠진 뒤 외곽과 위치를 확인합니다.',

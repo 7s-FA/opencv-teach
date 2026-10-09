@@ -19,3 +19,5 @@ SO101_teach/data/
 **/ros_ws/install/
 **/ros_ws/log/
 .playwright-cli/
+
+.native-venv/

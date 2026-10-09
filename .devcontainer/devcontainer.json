@@ -1,0 +1,11 @@
+{
+  "name": "SO-101 Teach — original GUI",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "hostRequirements": {"cpus": 2, "memory": "8gb"},
+  "forwardPorts": [6080],
+  "portsAttributes": {"6080": {"label": "SO-101 Teach 원본 앱", "onAutoForward": "openBrowser", "protocol": "http"}},
+  "otherPortsAttributes": {"onAutoForward": "ignore"},
+  "postCreateCommand": "bash native-demo/setup.sh",
+  "postStartCommand": "bash native-demo/start.sh --background",
+  "waitFor": "postCreateCommand"
+}
