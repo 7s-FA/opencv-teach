@@ -9,6 +9,21 @@ def run_smoke(root,manager,output,errors,change_photo,case):
         from PIL import ImageGrab
         try:ImageGrab.grab().save(output.parent/(label+'.png'))
         except Exception as exc:checks[label+'_screenshot_error']=str(exc)
+    def preview_visible(app, label):
+        if app.last_rgb is None or not app.preview_canvas.find_withtag('image'):
+            return False
+        # Receiving a renderer frame does not mean Tk/Windows has painted it yet.
+        # Inspect the displayed canvas, then preserve that same screen as evidence.
+        from PIL import ImageGrab, ImageStat
+        root.update_idletasks()
+        canvas=app.preview_canvas
+        screen=ImageGrab.grab()
+        x,y=canvas.winfo_rootx(),canvas.winfo_rooty()
+        area=screen.crop((x+8,y+8,x+canvas.winfo_width()-8,y+canvas.winfo_height()-8))
+        if max(ImageStat.Stat(area.convert('RGB')).stddev)<10:
+            return False
+        screen.save(output.parent/(label+'.png'))
+        return True
     def finish(error=None):
         if error:
             errors.append(str(error));snapshot('failure')
@@ -22,8 +37,8 @@ def run_smoke(root,manager,output,errors,change_photo,case):
             if errors:return finish()
             if time.monotonic()-started>150:return finish('GUI verification timed out at stage '+str(stage))
             app=manager.apps[manager.active]
-            if stage==0 and app.last_rgb is not None:
-                checks['first_arm_3d']=True;snapshot('teaching')
+            if stage==0 and preview_visible(app,'teaching'):
+                checks['first_arm_3d']=True
                 doc=deepcopy(app.episode);doc['id']=uuid.uuid4().hex;doc['name']='데모 저장 검증'
                 file=app.store.save(doc)
                 assert json.loads(file.read_text(encoding='utf-8'))['name']=='데모 저장 검증'
@@ -33,7 +48,7 @@ def run_smoke(root,manager,output,errors,change_photo,case):
                 assert file.exists() and json.loads(file.read_text(encoding='utf-8'))['id']==doc['id']
                 file.unlink();checks['save_reload_preserved']=True
                 manager.select(next(k for k in manager.apps if k!=first));stage=1
-            elif stage==1 and app.last_rgb is not None:
+            elif stage==1 and preview_visible(app,'teaching-second-arm'):
                 checks['second_arm_3d']=True
                 app.show_page('camera');stage=2
             elif stage==2 and app.camera and app.camera.observation:
