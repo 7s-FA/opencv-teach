@@ -122,7 +122,7 @@ def main():
         source=ROOT/f'모델링/B 제품/B {LABELS[ours]}.stl'
         assert hashlib.sha256(source.read_bytes()).hexdigest()==row['source_sha256'], 'B geometry differs from RL source'
     final_pallet=read_mesh(ROOT/'모델링/완제품 팔레트/완제품 팔레트.stl')
-    linear_fixture=read_mesh(ROOT/'SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl')
+    linear_fixture=read_mesh(ROOT/'SO101_teach/assets/linear_stage/assembly_fixture.stl')
     result={'schema':1,'units':{'length':'mm','angle':'deg'},'inspection_enabled':False,
             'status':'CAD_REFERENCE_REQUIRES_IMAGE_VALIDATION',
             'coordinates':{'xy':'right-handed local jig frame; +Z upward; positive yaw CCW viewed from +Z',

@@ -16,7 +16,7 @@ class PiConnectionTests(unittest.TestCase):
     def test_host_user_port_and_paths_reject_malformed_input(self):
         for values in ({'host':'-oProxyCommand=bad'},{'host':'pi;touch /tmp/bad'},{'host':'ssh://pi'},{'user':'u@pi'},{'port':0},{'port':65536},{'port':'2.2'},{'python':'python3;bad'},{'app_dir':'relative'},{'app_dir':'/a\nb'}):
             with self.subTest(values=values),self.assertRaises(ValueError):pi.validate(self.values(**values))
-        for host in ('192.0.2.10','raspberrypi.local','::1'):self.assertEqual(pi.validate(self.values(host=host))['host'],host)
+        for host in ('192.168.1.20','raspberrypi.local','::1'):self.assertEqual(pi.validate(self.values(host=host))['host'],host)
     def test_empty_configuration_can_be_saved_but_not_connected(self):
         pi.validate(pi.DEFAULTS)
         with self.assertRaises(ValueError):pi.validate(pi.DEFAULTS,True)

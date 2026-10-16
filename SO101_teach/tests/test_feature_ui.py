@@ -95,8 +95,8 @@ class FeatureUITests(unittest.TestCase):
         a=self.app;s=a.settings;before=(self.data/'profile.json').read_bytes();items=deepcopy(a.catalog.items)
         s.vars['tcp_mode'].set('직접 설정');s.vars['tcp_xyz_X'].set('8')
         spec=s.model_spec('tcp');self.assertEqual(spec['tcp']['xyz_mm'][0],8)
-        s.vars['jig_width'].set('999');s.vars['jig_stl'].set('')
-        self.assertEqual(s.model_spec('jigs')['size_mm'][0],999)
+        self.assertNotIn('jig_width',s.vars);s.vars['jig_stl'].set('')
+        with self.assertRaisesRegex(ValueError,'STL'):s.model_spec('jigs')
         self.assertEqual((self.data/'profile.json').read_bytes(),before);self.assertEqual(a.catalog.items,items)
         self.assertIsNone(a.session)
     def test_model_inspector_stays_beside_scrollable_fields_at_1280(self):

@@ -13,7 +13,7 @@ import tempfile
 import threading
 
 
-def validate_snapshot(cli, request):
+def validate_snapshot(cli, request,*,required_arms=('arm2','arm3')):
     from so101_teach.domain import EpisodeStore,load_profile
     from so101_teach.remote_config import materialize
     from so101_teach.episode_inspection import criteria_signature
@@ -24,7 +24,8 @@ def validate_snapshot(cli, request):
     arm=request.get('arm');episode=request['episode'];bundle=request['bundle']
     if arm not in ('arm2','arm3') or episode.get('robot_id')!=arm or bundle['profile'].get('robot_id')!=arm:
         raise ValueError('실행 스냅샷의 로봇팔이 일치하지 않습니다.')
-    if set(request['links'])!={'arm2','arm3'}:raise ValueError('두 팔의 연결이 필요합니다.')
+    if set(request['links'])!=set(required_arms) or arm not in required_arms:
+        raise ValueError('실행에 필요한 팔의 연결이 누락되었습니다.')
     for link in request['links'].values():
         if type(link.get('port')) is not int or not 1<=link['port']<=65535 or not all(isinstance(link.get(k),str) and link[k] for k in ('token','lease','instance')):
             raise ValueError('Pi 제어 연결 정보가 올바르지 않습니다.')

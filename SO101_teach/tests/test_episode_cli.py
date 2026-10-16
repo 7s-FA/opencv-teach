@@ -77,7 +77,7 @@ class DirectEpisodeTests(unittest.TestCase):
         clock, monotonic, sleep = self.clock()
         with monotonic, sleep: run.execute(ep, {}, 400, 100.)
         self.assertEqual(self.events[-2:], ['EPISODE_DONE', 'DONE'])
-        self.assertLess(self.events.index('LINEAR_READY:target_mm=100:position_measured=false'), self.events.index('EPISODE_STARTED'))
+        self.assertLess(self.events.index('LINEAR_READY:target_mm=100:target_position=ASSEMBLY:position_measured=false'), self.events.index('EPISODE_STARTED'))
         self.assertIn('STAGE_DONE:LOWER', self.events)
         self.assertLess(clock[0],101.)
         self.assertFalse(any(m=='command' and a.get('action')=='release' for m,a in link.calls))
@@ -322,7 +322,7 @@ class ParallelPreparationTests(unittest.TestCase):
     def test_detection_finishes_first_arm_waits_for_linear(self):
         self.setup_job()
         self.execute()
-        self.assertLess(self.events.index('JIG_CONFIRMED:j'), self.events.index('LINEAR_DONE:TIME_BASED:position_measured=false'))
+        self.assertLess(self.events.index('JIG_CONFIRMED:j'), self.events.index('LINEAR_DONE:TIME_BASED:target_mm=100:target_position=ASSEMBLY:position_measured=false'))
         self.assertGreaterEqual(min(self.link.move_times),108.)
         self.assertLess(min(self.link.move_times),108.2)
         self.assertEqual(self.linear.calls.count('ensure'),1)
@@ -331,7 +331,7 @@ class ParallelPreparationTests(unittest.TestCase):
     def test_linear_finishes_first_arm_waits_for_detection(self):
         self.setup_job(detect_after=10.)
         self.execute()
-        self.assertLess(self.events.index('LINEAR_DONE:TIME_BASED:position_measured=false'),self.events.index('JIG_CONFIRMED:j'))
+        self.assertLess(self.events.index('LINEAR_DONE:TIME_BASED:target_mm=100:target_position=ASSEMBLY:position_measured=false'),self.events.index('JIG_CONFIRMED:j'))
         self.assertGreaterEqual(min(self.link.move_times),110.)
 
     def test_detection_failure_never_arms_or_moves_robot(self):

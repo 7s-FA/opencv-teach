@@ -23,13 +23,16 @@ def label_image(text):
     return cv2.cvtColor(np.asarray(image),cv2.COLOR_RGB2BGR)
 
 
-def draw_label(image,text,point,*,below=False,layout=None):
+def draw_label(image,text,point,*,below=False,layout=None,above=False):
     badge=label_image(text);h,w=badge.shape[:2];ih,iw=image.shape[:2]
     if w>iw or h>ih:return
+    preferred=(round(float(point[0])-w/2),round(float(point[1])-h)) if above else None
     if layout is not None:
-        position=layout.place(w,h,point)
+        position=layout.place(w,h,point,preferred=preferred)
         if position is None:return
         x,y=position
+    elif above:
+        x=max(0,min(iw-w,preferred[0]));y=max(0,min(ih-h,preferred[1]))
     else:
         x=max(0,min(iw-w,int(point[0])));y=max(0,min(ih-h,int(point[1])+3 if below else int(point[1])-h-3))
     image[y:y+h,x:x+w]=badge

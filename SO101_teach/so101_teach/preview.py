@@ -130,12 +130,10 @@ def worker(commands,frames,stop):
     try:
         import mujoco,cv2
         from .preview_materials import apply_preview_materials
-        m=load_model(SCENE.with_name('inspection_scene.xml'));d=mujoco.MjData(m)
-        apply_preview_materials(m)
-        m.vis.global_.offwidth=PREVIEW_SIZE[0];m.vis.global_.offheight=PREVIEW_SIZE[1]
-        renderer=mujoco.Renderer(m,height=PREVIEW_SIZE[1],width=PREVIEW_SIZE[0])
+        from .mujoco_finish import render_finished_frame
+        m=None;d=None
         camera=mujoco.MjvCamera();camera.lookat[:]=[.15,-.025,.15]
-        options=mujoco.MjvOption();options.geomgroup[3]=0;next_frame_at=0.;compiled_signature=None;highlight_colors={};visibility=arm_visibility(m)
+        options=mujoco.MjvOption();options.geomgroup[3]=0;options.geomgroup[4]=1;next_frame_at=0.;compiled_signature=None;highlight_colors={};visibility={}
         while not stop.is_set():
             try:token,angles,view,jig,table_z,context,requested_at=commands.get(timeout=.2)
             except queue.Empty:continue
@@ -145,12 +143,15 @@ def worker(commands,frames,stop):
             for geom,color in highlight_colors.items():m.geom_rgba[geom]=color
             highlight_colors={}
             config=jig if isinstance(jig,dict) else None
+            signature=scene_signature(config) if config else None
+            if m is None or signature!=compiled_signature:
+                if renderer is not None:renderer.close();renderer=None
+                m=(load_model(xml=configured_scene(config['jigs'],config.get('tcp'),workcell=config.get('workcell'),full_map=True))
+                   if config else load_model(SCENE.with_name('inspection_scene.xml')))
+                d=mujoco.MjData(m);apply_preview_materials(m)
+                m.vis.global_.offwidth=PREVIEW_SIZE[0];m.vis.global_.offheight=PREVIEW_SIZE[1]
+                renderer=mujoco.Renderer(m,height=PREVIEW_SIZE[1],width=PREVIEW_SIZE[0]);compiled_signature=signature;visibility=arm_visibility(m)
             if config:
-                signature=scene_signature(config)
-                if signature!=compiled_signature:
-                    renderer.close();m=load_model(xml=configured_scene(config['jigs'],config.get('tcp'),workcell=config.get('workcell')));d=mujoco.MjData(m)
-                    apply_preview_materials(m)
-                    m.vis.global_.offwidth=PREVIEW_SIZE[0];m.vis.global_.offheight=PREVIEW_SIZE[1];renderer=mujoco.Renderer(m,height=PREVIEW_SIZE[1],width=PREVIEW_SIZE[0]);compiled_signature=signature;visibility=arm_visibility(m)
                 for i,item in enumerate(config['jigs']):
                     index=m.body(f'registered_jig_{i}').mocapid[0];m.geom(f'registered_jig_{i}').rgba[3]=1. if item.get('pose') else 0.
                     if not item.get('pose'):d.mocap_pos[index]=[0,0,-10];continue
@@ -191,7 +192,7 @@ def worker(commands,frames,stop):
             m.vis.global_.fovy=float((config or {}).get('camera_fovy',65.)) if at_camera else 45.
             for name in ('overhead_pcb','overhead_lens'):m.geom(name).rgba[3]=0. if at_camera else 1.
             renderer.update_scene(d,camera=camera,scene_option=options)
-            rgb=draw_base_origin(renderer.render(),renderer.scene,m,d,active_arm_id=(placement or {}).get('active_arm_id','arm2'),placement=placement);ok,jpeg=cv2.imencode('.jpg',cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR),[cv2.IMWRITE_JPEG_QUALITY,88])
+            rgb=draw_base_origin(render_finished_frame(renderer,m),renderer.scene,m,d,active_arm_id=(placement or {}).get('active_arm_id','arm2'),placement=placement);ok,jpeg=cv2.imencode('.jpg',cv2.cvtColor(rgb,cv2.COLOR_RGB2BGR),[cv2.IMWRITE_JPEG_QUALITY,88])
             if not ok:raise RuntimeError('3D 영상 인코딩 실패')
             latest(frames,('frame',token,jpeg.tobytes(),context,requested_at))
     except Exception as exc:latest(frames,('error',str(exc)))
@@ -251,7 +252,7 @@ def append_registered_jig(assets,world,jig,i):
     from .workcell_scene import append_carrier_platform
     append_carrier_platform(assets,body,jig,i)
 
-def configured_scene(jigs,tcp=None,*,workcell=None):
+def configured_scene(jigs,tcp=None,*,workcell=None,full_map=False):
     """Build visual-only jig bodies from their actual registered STLs."""
     import xml.etree.ElementTree as ET
     from pathlib import Path
@@ -267,6 +268,8 @@ def configured_scene(jigs,tcp=None,*,workcell=None):
     scene.find(".//geom[@name='observed_pallet_visual']").set('rgba','.7 .9 .9 0')
     assets=scene.find('asset');world=scene.find('worldbody')
     for i,jig in enumerate(jigs):append_registered_jig(assets,world,jig,i)
+    from .gripper_pads import append_gripper_pads
+    append_gripper_pads(scene)
     from .workcell_preview import append_static_arm,place_active_arm
     append_static_arm(scene,workcell)
     place_active_arm(scene,workcell)
@@ -283,6 +286,9 @@ def configured_scene(jigs,tcp=None,*,workcell=None):
     if tcp:
         body=scene.find(".//body[@name='gripper_frame_link']")
         if body is not None:ET.SubElement(body,'site',name='active_tcp',pos=' '.join(str(v/1000) for v in tcp['xyz_mm']),size='.0025',rgba='1 .35 .1 1')
+    if full_map:
+        from .full_map import append_full_map
+        append_full_map(scene,workcell)
     return ET.tostring(scene,encoding='unicode')
 
 

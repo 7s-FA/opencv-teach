@@ -58,7 +58,7 @@ class DetectionFrame:
             item['quad']=self.raw_points(q).tolist();item['center_px']=self.raw_points([item['center_px']])[0].tolist()
             if item.get('axes_px') is not None:item['axes_px']=self.raw_points(item['axes_px']).tolist()
             if item.get('grid_crossings_px') is not None:item['grid_crossings_px']=self.raw_points(item['grid_crossings_px']).tolist()
-            for key in ('orientation_hole_px','orientation_hole_outline_px'):
+            for key in ('orientation_hole_px','orientation_hole_outline_px','orientation_junction_outline_px'):
                 if item.get(key) is not None:
                     points=self.raw_points(item[key]);item[key]=(points[0] if key=='orientation_hole_px' else points).tolist()
             q=np.asarray(item['quad']);edge=q[1]-q[0]

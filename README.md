@@ -4,6 +4,13 @@
 
 **[Windows·Linux 데모 다운로드](https://github.com/7s-FA/opencv-teach/releases/latest)** · [이전 SO-101 작업](https://github.com/7s-FA/so101-workbench)
 
+## 2026-10-16 갱신
+
+- 전체 공장 맵·3D 표시, 지그 외곽·방향 판정, 오류 기록, 카메라·촬영 화면을 최신 티칭 코드로 갱신했습니다.
+- 사진 촬영 버튼은 **좌클릭 저장·우클릭 선택 사진 묶음 삭제**를 지원합니다. 긴 안내 잘림과 불필요한 표시 전환을 줄였습니다.
+- [YOLO 부품 인식 모델 9종 비교](docs/models/2026-10-16/README.md): 실물·시뮬레이션·혼합 학습 × 원본·**FP16(16비트 실수)**·**INT8(8비트 정수 혼합)**. 파이 권장은 혼합 학습 FP16이며, 기존 티칭 앱의 판정에 자동 적용된 기능은 아닙니다.
+- [10월 13~16일 개발 현황과 검증 범위](docs/progress-2026-10-16.md)
+
 ## 다운로드해서 실행
 
 [최신 릴리스](https://github.com/7s-FA/opencv-teach/releases/latest)의 운영체제에 맞는 파일을 받으세요. GitHub 로그인이나 Python 설치 없이 실행할 수 있습니다.

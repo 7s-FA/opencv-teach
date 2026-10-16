@@ -32,13 +32,14 @@ class CameraPaintBudgetTests(unittest.TestCase):
             self.assertFalse(a.camera_inspection.canvas.find_withtag('image'))
     def test_same_frame_metadata_refresh_and_expired_detection(self):
         frame,data=self.camera();a=self.app;a.camera_tabs.select(a.camera_inspection);self.root.update()
-        now=time.monotonic();data={**data,'detection_frame_at':now-.85};a.camera.observation=(frame,data,now)
+        from so101_teach.camera_lifecycle import MEASUREMENT_MAX_AGE_SECONDS
+        now=time.monotonic();data={**data,'detection_frame_at':now-(MEASUREMENT_MAX_AGE_SECONDS-.15)};a.camera.observation=(frame,data,now)
         a.draw_camera_frame(now,scheduled=True)
         a.draw_camera_frame(now+.16,scheduled=True)
         self.assertTrue(a.camera_inspection.canvas.find_withtag('image'))
         self.assertIn('검출 갱신 대기',a.camera_inspection.status.get())
         a.camera.observation=(frame,{**data,'detection_frame_at':now},now)
-        with patch.object(a.camera_inspection,'update_frame') as paint:
+        with patch.object(a.camera_inspection,'update_frame') as paint,patch('so101_teach.ui.time.monotonic',return_value=now):
             a.draw_camera_frame(now,scheduled=True);a.draw_camera_frame(now+.21,scheduled=True)
             self.assertEqual(paint.call_count,2)
     def test_capture_can_refresh_detection_while_roi_tab_selected(self):

@@ -20,7 +20,7 @@ class AdoptedPositionUITests(unittest.TestCase):
         accepted=snapshot['result']['adopted_by_jig'];self.assertEqual(accepted['pallet']['selected']['center_px'],data['by_jig']['pallet']['selected']['center_px'])
         cx,cy=np.rint(accepted['pallet']['selected']['center_px']).astype(int)
         self.assertTrue(np.any(snapshot['base_image'][cy-12:cy+12,cx-12:cx+12]!=frame[cy-12:cy+12,cx-12:cx+12]))
-        path=a.save_camera();metadata=read_json(path.parent/'metadata'/path.with_suffix('.json').name)
+        path=a.save_camera();metadata=read_json(path.parent.parent/'판정 기록'/path.with_suffix('.json').name)
         self.assertIn('pallet',metadata['detection']['adopted_by_jig']);self.assertIsNone(metadata['detection']['by_jig']['pallet']['selected'])
     def test_new_live_position_does_not_move_held_position_and_off_hides_it(self):
         frame,data=self.held_scene();a=self.app;held=deepcopy(data['by_jig']['pallet']['selected']);live=deepcopy(held)

@@ -68,3 +68,17 @@ class LinearMotionTests(unittest.TestCase):
         self.assertEqual(self.motion.deadline - self.now, 6.)
         with self.assertRaisesRegex(ValueError,'BUSY'): self.motion.claim('other')
         self.out.assert_called_once_with(2000)
+
+    def test_legacy_completed_record_has_station_names_without_motion(self):
+        for mm,old,name,label in ((100.,'FORWARD','ASSEMBLY','조립 위치'),(1.5,'RETRACTED','UNLOAD','하차 위치')):
+            driver=m.LinearMotion(self.out,self.save,{'phase':'TIMED_COMPLETE','target_mm':mm,'position_state':old},clock=lambda:self.now)
+            driver.persist();state=self.save.call_args.args[0]
+            self.assertEqual((state['position_state'],state['target_position'],state['target_label']),(name,name,label))
+            driver.ensure(mm)
+        self.out.assert_not_called()
+
+    def test_moving_target_name_does_not_claim_arrival(self):
+        self.motion.ensure(1.5)
+        state=self.save.call_args.args[0]
+        self.assertEqual((state['position_state'],state['target_label']),('INTERMEDIATE','하차 위치'))
+        self.assertFalse(state['position_measured'])

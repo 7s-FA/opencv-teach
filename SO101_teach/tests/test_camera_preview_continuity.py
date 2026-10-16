@@ -2,6 +2,7 @@ import time
 import unittest
 from unittest.mock import patch
 from tests import test_camera_overview as fixtures
+from so101_teach.camera_lifecycle import MEASUREMENT_MAX_AGE_SECONDS
 
 
 class CameraPreviewContinuityTests(unittest.TestCase):
@@ -15,7 +16,7 @@ class CameraPreviewContinuityTests(unittest.TestCase):
         from so101_teach.camera_inspection_ui import all_anchors
         with patch('so101_teach.camera_inspection_ui.all_anchors',wraps=all_anchors) as draw_roi:
             image_id=None
-            for delta,age in [(0,.8),(.1,1.2),(.2,1.45),(.3,.7),(.4,1.1)]:
+            for delta,age in [(0,.8),(.1,2.),(.2,MEASUREMENT_MAX_AGE_SECONDS+.1),(.3,.7),(.4,MEASUREMENT_MAX_AGE_SECONDS+.2)]:
                 a.camera.observation=(frame,{**data,'detection_frame_at':now+delta-age},now+delta-.03)
                 before=draw_roi.call_count
                 a.draw_camera_frame(now+delta,scheduled=True)
@@ -24,8 +25,8 @@ class CameraPreviewContinuityTests(unittest.TestCase):
                 if image_id is None:image_id=image[0]
                 self.assertEqual(image[0],image_id)
                 self.assertEqual(draw_roi.call_count-before,1)
-                if age>=1:self.assertEqual(draw_roi.call_args.args[1],{})
-                self.assertIn('전체 영역 자동 비교' if age<1 else '영상 정상',p.status.get())
+                if age>=MEASUREMENT_MAX_AGE_SECONDS:self.assertEqual(draw_roi.call_args.args[1],{})
+                self.assertIn('전체 영역 자동 비교' if age<MEASUREMENT_MAX_AGE_SECONDS else '영상 정상',p.status.get())
     def test_preview_without_any_detection_stays_visible_but_expired_video_is_cleared(self):
         frame,_=self.camera();a=self.app;p=a.camera_inspection;a.camera_tabs.select(p);self.root.update()
         now=time.monotonic();a.camera.observation=(frame,{'detection_frame_at':None},now)

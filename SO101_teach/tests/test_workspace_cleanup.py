@@ -17,7 +17,7 @@ class WorkspaceCleanupTests(unittest.TestCase):
         return result
 
     def test_controls_removed_monitor_named_and_step_list_has_room(self):
-        a=self.app;self.root.geometry('1180x760');self.root.update()
+        a=self.app;self.root.geometry('1920x1043');self.root.update()
         texts=[str(w.cget('text')) for w in self.widgets(self.root) if w.winfo_class()=='TButton']
         for label in ('↑','↓','미리보기 정지','선택 지그의 티칭 기준 갱신'):self.assertNotIn(label,texts)
         self.assertIn('장비 모니터링',a.nav_buttons['devices'].cget('text'));a.show_page('devices');self.assertEqual(a.page_title.get(),'장비 모니터링')
@@ -54,9 +54,9 @@ class WorkspaceCleanupTests(unittest.TestCase):
 
     def test_image_save_shows_full_path_and_folder_button_uses_that_folder(self):
         a=self.app;self.fake_jig_camera();path=a.save_camera()
-        self.assertTrue(path.exists());self.assertTrue((path.parent/'metadata'/path.with_suffix('.json').name).exists())
+        self.assertTrue(path.exists());self.assertTrue((path.parent.parent/'판정 기록'/path.with_suffix('.json').name).exists())
         self.assertEqual(a.camera_save_path.get(),str(path.resolve()));self.assertIn(str(path.resolve()),a.message.get())
-        with patch('subprocess.Popen') as open_folder:a.open_capture_folder();self.assertEqual(open_folder.call_args.args[0],['xdg-open',str(path.parent.resolve())])
+        with patch('subprocess.Popen') as open_folder:a.open_capture_folder();self.assertEqual(open_folder.call_args.args[0],['xdg-open',str(path.parent.parent.resolve())])
 
     def test_pause_and_continue_keep_preview_position_without_stop_button(self):
         a=self.app;a.commit_target();a.play();a.pause_preview();self.assertTrue(a.transport.paused);self.assertEqual(a.pause_btn.cget('text'),'이어보기')
@@ -67,7 +67,7 @@ class WorkspaceCleanupTests(unittest.TestCase):
         outer=s.scroll_canvases[str(s.pages['camera'])];outer.yview_moveto(.15);self.root.update();old=outer.yview()
         s.photos.event_generate('<Button-5>');self.root.update();self.assertGreater(s.photos.yview()[0],0);self.assertEqual(outer.yview(),old)
         self.root.tk.call(s.photo_scroll_y.cget('command'),'moveto',.8);self.assertGreater(s.photos.yview()[0],.5)
-        s.photos.column('file',width=1500,stretch=False);self.root.update();self.root.tk.call(s.photo_scroll_x.cget('command'),'moveto',.5);self.assertGreater(s.photos.xview()[0],0)
+        s.photos.column('file',width=s.photos.winfo_width()+500,stretch=False);self.root.update();self.root.tk.call(s.photo_scroll_x.cget('command'),'moveto',.5);self.assertGreater(s.photos.xview()[0],0)
 
     def test_in_app_photo_folder_browser_has_scrollbars(self):
         a=self.app;s=a.settings;folder=self.data/'photos';folder.mkdir()

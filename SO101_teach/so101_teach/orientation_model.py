@@ -1,10 +1,10 @@
-"""Disambiguate carrier half-turns using its fixed A-fixture circular opening."""
+"""Disambiguate carrier half-turns using its circular opening, then its fixed central junction."""
 import cv2
 import numpy as np
 from .height_reference import detection_plane_z
 
 
-def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None):
+def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None,junction_source=None):
     from .vision import project_plane,world_xy,projected_jig_axes
     feature=mesh.get('assembly',{}).get('orientation_hole');candidate=result.get('selected')
     if not feature or not candidate or not candidate.get('metric') or not profile:return result
@@ -37,15 +37,34 @@ def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None):
     hypotheses.sort(key=lambda v:v['cost']);best,other=hypotheses
     candidate['orientation_scores']=[{'yaw_deg':h['yaw'],'cost':h['cost'] if np.isfinite(h['cost']) else None,'supported_sectors':h['sectors']} for h in hypotheses]
     verified=best['cost']<=.30 and best['sectors']>=6 and np.mean(best['support'])>=.65 and best['error_mm']<=4 and other['cost']-best['cost']>=.12
+    junction=None
     if not verified:
-        candidate['orientation_verified']=False
-        return {**result,'selected':None,'status':'orientation_unconfirmed','error':'원형 기준 구멍의 방향을 확인하지 못했습니다.'}
+        from .junction_orientation import evaluate
+        try:
+            if junction_source is None:junction=evaluate(frame,mesh,allowed,profile,candidate)
+            else:
+                from .roi_geometry import roi_mask
+                raw_frame,raw_roi,raw_profile=junction_source
+                raw_allowed=roi_mask(raw_roi,raw_frame.shape[1],raw_frame.shape[0])
+                junction=evaluate(raw_frame,mesh,raw_allowed,raw_profile,candidate,outline_profile=profile)
+        except (OSError,ValueError,cv2.error) as exc:
+            junction={'verified':False,'scores':[],'reason':str(exc)}
+        candidate['orientation_junction_scores']=junction['scores']
+        if not junction['verified']:
+            candidate['orientation_verified']=False
+            return {**result,'selected':None,'status':'orientation_unconfirmed','error':'원형 기준과 접합부로 앞뒤 방향을 확인하지 못했습니다. '+junction['reason']}
+        best={'yaw':junction['yaw_deg']}
+        candidate.update(orientation_method='central_junction',orientation_junction_outline_px=junction['outline_px'],
+                         orientation_junction_score=junction['score'],orientation_junction_margin=junction['margin'])
+    else:
+        candidate.update(orientation_method='circular_opening',orientation_hole_px=best['center_px'].tolist(),
+                         orientation_hole_outline_px=best['outline_px'].tolist(),orientation_hole_alignment_error_mm=best['error_mm'])
     # The original carrier teaching +X points toward the A fixture. Its new
     # assembly STL uses the opposite +X. Preserve that teaching zero while
     # retaining the full-turn cue for a real physical half-turn.
     heading=(best['yaw']-180.)%360
     candidate['metric'].update(yaw_deg=heading,symmetry_deg=360,mesh_yaw_offset_deg=180.)
-    candidate.update(symmetry_deg=360,orientation_verified=True,orientation_hole_px=best['center_px'].tolist(),orientation_hole_outline_px=best['outline_px'].tolist(),orientation_hole_alignment_error_mm=best['error_mm'])
+    candidate.update(symmetry_deg=360,orientation_verified=True)
     # Preserve the same outer boundary while orienting its first edge to the
     # model's +X axis. Raw-pixel restoration must not fold the half-turn away.
     quad=np.asarray(candidate['quad']);xy=world_xy(quad[:2],profile,detection_plane_z(profile,mesh));edge=xy[1]-xy[0]

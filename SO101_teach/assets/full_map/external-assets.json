@@ -1,0 +1,62 @@
+{
+  "assets/full_map/assets/external_1aa2865545f5.stl": {
+    "file": "assets/full_map/assets/external_1aa2865545f5.stl",
+    "sha256": "1aa2865545f54063a222c4357ac20ce749b0d9e45f871965a73f4a0030a7806a",
+    "source_project": "Test_teach",
+    "source_name": "razer_fixed_pad.stl"
+  },
+  "assets/full_map/assets/external_022754be8694.stl": {
+    "file": "assets/full_map/assets/external_022754be8694.stl",
+    "sha256": "022754be8694d2a8f647199703c544f4dd338b190c9f14117b096e716c3985fe",
+    "source_project": "Test_teach",
+    "source_name": "razer_moving_pad.stl"
+  },
+  "assets/full_map/assets/external_b3655d8d97a9.stl": {
+    "file": "assets/full_map/assets/external_b3655d8d97a9.stl",
+    "sha256": "b3655d8d97a9ae10bddb5da22c8ac0b7558c432da36a67fc83968331bf49a47a",
+    "source_project": "Test_IL",
+    "source_name": "wrist_xlerobot_mount.stl"
+  },
+  "assets/full_map/assets/external_67bbea618c94.stl": {
+    "file": "assets/full_map/assets/external_67bbea618c94.stl",
+    "sha256": "67bbea618c949872ad9509986a39816a65b956d4f79262f23be401c7d49435ac",
+    "source_project": "Test_IL",
+    "source_name": "wrist_xlerobot_camera.stl"
+  },
+  "assets/full_map/assets/external_085ef80abee9.stl": {
+    "file": "assets/full_map/assets/external_085ef80abee9.stl",
+    "sha256": "085ef80abee9a00d695124b373da644466fdaeb04f6f15fa0b87728acc03750d",
+    "source_project": "모델링",
+    "source_name": "B 상단.stl"
+  },
+  "assets/full_map/assets/external_32a15264042e.stl": {
+    "file": "assets/full_map/assets/external_32a15264042e.stl",
+    "sha256": "32a15264042e44eae846e07e54ac4cc043678a252184118349452e7d50f890ec",
+    "source_project": "모델링",
+    "source_name": "B 중단.stl"
+  },
+  "assets/full_map/assets/external_5ffcfee83be6.stl": {
+    "file": "assets/full_map/assets/external_5ffcfee83be6.stl",
+    "sha256": "5ffcfee83be6bf5de0f0f54121aaf1b0a3b629bde8f46ad1582d17d7eb8b743e",
+    "source_project": "모델링",
+    "source_name": "B 하단.stl"
+  },
+  "assets/full_map/assets/external_fafcaac00380.stl": {
+    "file": "assets/full_map/assets/external_fafcaac00380.stl",
+    "sha256": "fafcaac003803228b541c3ee613d87b32bae5530560be62e26044bd547ce658e",
+    "source_project": "모델링",
+    "source_name": "A 상단.stl"
+  },
+  "assets/full_map/assets/external_8952dd391106.stl": {
+    "file": "assets/full_map/assets/external_8952dd391106.stl",
+    "sha256": "8952dd3911060ff20081c03d35c83e52eb44f281a1f5391650c1edc7befc96e4",
+    "source_project": "모델링",
+    "source_name": "A 중단.stl"
+  },
+  "assets/full_map/assets/external_95071d47457e.stl": {
+    "file": "assets/full_map/assets/external_95071d47457e.stl",
+    "sha256": "95071d47457e44ed71dec36b496cb974a4c0890a7bcc03726b89c597dd75424e",
+    "source_project": "모델링",
+    "source_name": "A 하단.stl"
+  }
+}

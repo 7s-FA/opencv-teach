@@ -59,7 +59,7 @@ def main():
                 wrong=cad.shown(mesh,cad.transform([0,0,seat])@orient)
                 save(prefix+'_wrong_'+other_group+'_'+other_kind,[('fixture',jig),(other_kind,wrong)],{'state':'wrong_part','product':other_group,'part':other_kind})
     for station in ('linear','finished'):
-        fixture=cad.read_mesh(ROOT/('SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl' if station=='linear' else '모델링/완제품 팔레트/완제품 팔레트.stl'))
+        fixture=cad.read_mesh(ROOT/('SO101_teach/assets/linear_stage/assembly_fixture.stl' if station=='linear' else '모델링/완제품 팔레트/완제품 팔레트.stl'))
         for group,profile in ref['assembly_profiles'].items():
             shift=0 if station=='linear' else cad.seating_height(products[group]['housing'],fixture)-profile['housing_seat_z_mm']
             for stage in profile['stages']:

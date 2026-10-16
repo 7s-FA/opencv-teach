@@ -58,9 +58,9 @@ class CameraCaptureTests(unittest.TestCase):
         with self.assertRaises(ValueError):a.save_camera()
         self.assertFalse((self.data/'captures').exists())
 
-    def test_edit_action_bottom_matches_left_column_at_both_sizes(self):
+    def test_edit_action_bottom_matches_left_column_when_maximized(self):
         a=self.app;a.show_page('teach')
-        for size in ('1280x800','1180x760'):
+        for size in ('1920x1043','1920x1080'):
             self.root.geometry(size);self.root.update()
             bottom=lambda w:w.winfo_rooty()+w.winfo_height()
             self.assertEqual(bottom(a.move_btn),bottom(a.execute_taught_btn),size)

@@ -50,6 +50,8 @@ def store_command(path, pulse, status="accepted"):
     """Replace the durable record atomically; incomplete output is not restored."""
     value = {"schema": 1, "status": status, "pulse_us": pulse,
              "commanded_mm": (pulse - MIN_PULSE_US) / 10.0,
+             "target_position": "ASSEMBLY" if pulse == 2000 else "UNLOAD" if pulse == 1015 else "CUSTOM",
+             "target_label": "조립 위치" if pulse == 2000 else "하차 위치" if pulse == 1015 else f"{(pulse - MIN_PULSE_US) / 10:g}mm",
              "recorded_at": time.time(), "position_measured": False}
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, name = tempfile.mkstemp(prefix=".linear-command-", dir=path.parent)

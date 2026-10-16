@@ -2,6 +2,7 @@
 from copy import deepcopy
 import tkinter as tk
 from tkinter import ttk
+from .ui_status import StatusText
 from .episode_inspection import STATIONS,TARGETS,EXPECTED,STATES,validate_inspection
 
 
@@ -19,8 +20,8 @@ class EpisodeInspectionPanel(ttk.Frame):
         ttk.Combobox(product_parent,textvariable=self.product,values=('미지정','A','B'),state='readonly',width=8).grid(row=0,column=1,sticky='w',padx=12)
         app.button(product_parent,'완제품 종류 저장',self.save_product).grid(row=0,column=2,padx=8)
         self.product_status=tk.StringVar()
-        ttk.Label(product_parent,textvariable=self.product_status,style='Small.TLabel').grid(row=1,column=0,columnspan=3,sticky='w')
-        ttk.Label(self,textvariable=self.selected,style='Section.TLabel',wraplength=590).grid(row=1,column=0,columnspan=3,sticky='w',pady=(16,8))
+        StatusText(product_parent,self.product_status,height=2).grid(row=1,column=0,columnspan=3,sticky='ew')
+        StatusText(self,self.selected,height=2,font=('Noto Sans CJK KR',14,'bold')).grid(row=1,column=0,columnspan=3,sticky='ew',pady=(16,8))
         controls=[]
         for row,(title,var,values) in enumerate((('검사 위치',self.station,tuple(STATIONS.values())),('검사 대상',self.target,()),('기대 상태',self.expected,())),2):
             ttk.Label(self,text=title).grid(row=row,column=0,sticky='w',pady=5)
@@ -36,7 +37,7 @@ class EpisodeInspectionPanel(ttk.Frame):
         actions=ttk.Frame(self,style='Card.TFrame');actions.grid(row=6,column=0,columnspan=3,sticky='ew',pady=10)
         self.save_button=app.button(actions,'선택 스텝에 검사 저장',self.save_check,True);self.save_button.pack(side='left',fill='x',expand=True)
         self.remove_button=app.button(actions,'선택 스텝 검사 해제',self.remove_check);self.remove_button.pack(side='left',fill='x',expand=True,padx=(8,0))
-        ttk.Label(self,textvariable=self.status,wraplength=610,style='Small.TLabel').grid(row=7,column=0,columnspan=3,sticky='w',pady=4)
+        StatusText(self,self.status,height=3).grid(row=7,column=0,columnspan=3,sticky='ew',pady=4)
         self.reset_button=app.button(self,'현재 입력 되돌리기',self.discard);self.reset_button.grid(row=9,column=0,columnspan=3,sticky='w',pady=(8,0))
         ttk.Label(self,text='팔·집게가 검사 영역을 벗어나는 스텝에 검사를 지정하세요.\n지정한 스텝 완료 후 새 영상으로 검사하며 이후 동작은 계속 진행합니다.\n불합격·판정 시간 초과 시 오류를 기록하고 자세를 유지하며 실행을 중지합니다.\n윗면 형상·위치 검사이며 내부 안착 깊이와 결합 강도는 확인하지 못합니다.',wraplength=610,style='Small.TLabel',justify='left').grid(row=8,column=0,columnspan=3,sticky='w',pady=(8,0))
         self.location_changed();self.refresh()

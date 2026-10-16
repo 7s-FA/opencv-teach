@@ -27,8 +27,12 @@ class InspectionBatch:
             decision=item['decision'];worker=item['worker']
             if view and decision.started<=view[1]<=now and now-view[1]<1 and view[1]!=item['submitted']:
                 worker.submit(view[0],view[1]);item['submitted']=view[1]
-            try:passed=decision.observe(worker.result,now)
-            except ValueError as exc:raise ValueError(item['step']['name']+' · '+str(exc)) from exc
+            observation=worker.result
+            try:passed=decision.observe(observation,now)
+            except ValueError as exc:
+                failure=ValueError(item['step']['name']+' · '+str(exc))
+                failure.inspection_snapshot={'steps':[deepcopy(item['step'])],'result':deepcopy(observation),'result_role':'failure_decision_input'}
+                raise failure from exc
             if passed:
                 step=item['step']
                 if decision.basis:step['inspection_basis']=deepcopy(decision.basis)
@@ -96,18 +100,15 @@ class FrameInspection(threading.Thread):
             from .episode_inspection import fixed_jig_results
             fixed=fixed_jig_results(self.fixed_jigs) if self.fixed_jigs is not None else {}
             reference=json.loads((ROOT/'inspection/roi_reference.json').read_text())
-            tracker=None
-            if self.fixed_jigs is None and (self.data_dir/'inspection_reference/pallet.json').exists():
-                from .inspection_tracking import PalletReference
-                tracker=PalletReference(self.data_dir/'inspection_reference')
             while not self.stop.is_set():
                 try:frame,at=self.jobs.get(timeout=.1)
                 except queue.Empty:continue
                 fresh=detector.process(frame)['live_by_jig'] if detector else {}
                 if self.fixed_jigs is None and self.check['station']=='finished':
                     jid=reference['stations']['finished_pallet']['jig_id'];config=self.catalog.items.get(jid)
-                    observed=tracker.locate(frame,self.profile,config) if tracker and config else None
-                    if observed is None and not fresh.get(jid,{}).get('selected') and config:observed=locate(frame,config,self.profile)
+                    # Preserve the standard empty-pallet pose. Occupied recovery
+                    # supplies inspection anchors only, never robot target poses.
+                    observed=locate(frame,config,self.profile) if config and not fresh.get(jid,{}).get('selected') else None
                     if observed is not None:fresh[jid]=observed
                 if self.check['station']=='linear':
                     state=(self.placement or {}).get('linear_stage',{}).get('startup_state',{})
@@ -141,10 +142,6 @@ class FrameInspections(FrameInspection):
             from .episode_inspection import fixed_jig_results
             fixed=fixed_jig_results(self.fixed_jigs) if self.fixed_jigs is not None else {}
             reference=json.loads((ROOT/'inspection/roi_reference.json').read_text())
-            tracker=None
-            if self.fixed_jigs is None and (self.data_dir/'inspection_reference/pallet.json').exists():
-                from .inspection_tracking import PalletReference
-                tracker=PalletReference(self.data_dir/'inspection_reference')
             if self.linear_state_reader:
                 if not self.placement:raise ValueError('시작 전 검사: 작업대 좌표 없음')
                 self.placement['linear_stage']['startup_state']=self.linear_state_reader()
@@ -157,8 +154,9 @@ class FrameInspections(FrameInspection):
                 stations={s['inspection']['station'] for s in steps}
                 if self.fixed_jigs is None and 'finished' in stations:
                     jid=reference['stations']['finished_pallet']['jig_id'];config=self.catalog.items.get(jid)
-                    observed=tracker.locate(frame,self.profile,config) if tracker and config else None
-                    if observed is None and not fresh.get(jid,{}).get('selected') and config:observed=locate(frame,config,self.profile)
+                    # Preserve the standard empty-pallet pose. Occupied recovery
+                    # supplies inspection anchors only, never robot target poses.
+                    observed=locate(frame,config,self.profile) if config and not fresh.get(jid,{}).get('selected') else None
                     if observed is not None:fresh[jid]=observed
                 located={}
                 for station in stations:

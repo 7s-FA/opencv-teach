@@ -103,6 +103,9 @@ EVENT_LABELS={
     'LINEAR_CONTINUES':'팔 정지 중에도 리니어는 기존 목표까지 계속 이동',
     'RESET_WAIT_LINEAR_COMPLETE':'안전 복귀 전 리니어 완료 대기',
     'CHAIN_STARTED':'조립·적재 연속 작업 시작', 'CHAIN_LOAD_STARTED':'조립 완료 → 적재 시작',
+    'CHAIN_RETURN_STARTED':'완제품 안착 확인 · 리니어 조립 위치 복귀 시작',
+    'CHAIN_RETURN_WAIT':'리니어 조립 위치 복귀 완료 대기',
+    'CHAIN_RETURN_DONE':'리니어 조립 위치 복귀 완료 · 구동 시간 기준',
     'CHAIN_DONE':'조립·적재 전체 완료', 'SAFE_RETURN_STARTED':'안전 자세 복귀 시작',
     'SAFE_RETURN_DONE':'안전 자세 도달', 'SAFE_RETURN_SETTLING':'토크 유지 · 정지 상태 확인 중',
     'SAFE_RETURN_SETTLED':'정지 확인 완료 · 토크 해제 준비', 'RESET_STARTED':'안전 초기화 시작',
@@ -135,11 +138,12 @@ def routine_event(event):
     product,kind,value=match.groups();value=value or ''
     if kind in QUIET_EVENTS:return None
     prefix=product+' · ' if product!='SLIDE' else ''
-    if kind in ('LINEAR_STARTED','LINEAR_READY'):
+    if kind in ('LINEAR_STARTED','LINEAR_READY','LINEAR_DONE'):
         target=re.search(r'target_mm=([0-9.]+)',value)
-        if not target:return event
-        label='리니어 이동 시작' if kind=='LINEAR_STARTED' else '리니어 목표 구동 완료 상태 확인'
-        return {**event,'status':label+' · 목표 '+target[1]+' mm'+(' (위치 실측 없음)' if kind=='LINEAR_READY' else '')}
+        if not target:return {**event,'status':'리니어 구동 시간 완료 · 위치 실측 없음'} if kind=='LINEAR_DONE' else event
+        label='리니어 이동 시작' if kind=='LINEAR_STARTED' else '리니어 구동 시간 완료' if kind=='LINEAR_DONE' else '리니어 목표 구동 완료 상태 확인'
+        position='조립 위치' if float(target[1])==100. else '하차 위치' if float(target[1])==1.5 else '사용자 지정 위치'
+        return {**event,'status':label+' · '+position+' ('+target[1]+' mm)'+(' · 위치 실측 없음' if kind!='LINEAR_STARTED' else '')}
     if kind=='LINEAR_DONE':return {**event,'status':'리니어 구동 시간 완료 · 위치 실측 없음'}
     if kind not in EVENT_LABELS:return event
     label=EVENT_LABELS[kind]

@@ -10,12 +10,28 @@ from .pi_execution import command_args
 from .remote_config import configuration_bundle
 
 
+def connected_arms(manager):
+    return {arm:app for arm,app in manager.apps.items()
+            if app.profile.get('mode')!='demo' and app.session and app.session.running}
+
+
+def requires_parking(app):
+    """Only fresh, complete torque-OFF evidence permits ordinary disconnect."""
+    from .domain import JOINTS
+    session=app.session;sample=session.latest
+    return not (session.state=='READ_ONLY' and not session.error
+        and not session.program_active.is_set() and not session.command_pending.is_set()
+        and sample and sample.fresh() and set(sample.telemetry)==set(JOINTS)
+        and all(row.get('torque')==0 for row in sample.telemetry.values()))
+
+
 class SafeShutdown:
     def __init__(self,manager):
         self.manager=manager;self.busy=True;self.events=queue.Queue();self.process=None
         self.started=time.monotonic();self.thread=None;self.cancelled=False;self.confirmed=False
         active=getattr(manager,'pi_execution',None)
         self.first=active.request['arm'] if active and active.busy else manager.active
+        self.participants=dict(manager.apps)
 
     def start(self):
         m=self.manager
@@ -37,8 +53,10 @@ class SafeShutdown:
         request={'links':{},'arms':{},'first':self.first,'apply_jig':True,'speed':300.,'timeout_seconds':120.,
                  'inspection_protocol':6,'inspection_criteria_sha256':criteria_signature()}
         config=None
-        if set(self.manager.apps)!={'arm2','arm3'}:raise ValueError('두 팔의 작업창이 필요합니다.')
-        for arm,app in self.manager.apps.items():
+        participants=connected_arms(self.manager)
+        if not participants:raise ValueError('안전 복귀할 연결된 팔이 없습니다.')
+        request['first']=self.first if self.first in participants else next(iter(participants))
+        for arm,app in participants.items():
             remote=app.remote
             if not app.remote_mode or not remote or remote.error or remote.stop.is_set() or not remote.lease:
                 raise ValueError(arm+': Pi 연결을 확인한 뒤 종료를 다시 시도하세요.')
@@ -51,6 +69,7 @@ class SafeShutdown:
                 raise ValueError(arm+': 에피소드의 안전자세를 먼저 설정하세요.')
             request['arms'][arm]={'episode':episode,'bundle':configuration_bundle(app)}
             request['links'][arm]={k:getattr(remote,{'port':'server_port'}.get(k,k)) for k in ('port','token','lease','instance')}
+        self.participants=participants
         return config,request
 
     def run(self,config,request):
@@ -92,7 +111,7 @@ class SafeShutdown:
             else:
                 try:config,request=self.request()
                 except Exception as exc:self.fail(str(exc));return
-                for app in m.apps.values():app.remote.execution_owner=self
+                for app in self.participants.values():app.remote.execution_owner=self
                 self.thread=threading.Thread(target=self.run,args=(config,request),daemon=True);self.thread.start()
         for _ in range(100):
             try:kind,value=self.events.get_nowait()
@@ -100,10 +119,10 @@ class SafeShutdown:
             if kind=='line':
                 if value.startswith('SHUTDOWN_ACCEPTED:'):
                     self.confirmed=True;self.release_ownership()
-                    for app in m.apps.values():app.remote.relinquish()
+                    for app in self.participants.values():app.remote.relinquish()
                     m.finish_safe_close();return
                 elif value.startswith('SHUTDOWN_FAILED:'):self.error=value.partition(':')[2]
-                message=('두 팔 안전자세 도착 · 3초 정지 확인 후 토크 해제' if value=='SHUTDOWN_SETTLING'
+                message=('연결된 팔 안전자세 도착 · 3초 정지 확인 후 토크 해제' if value=='SHUTDOWN_SETTLING'
                          else value.split(':')[1]+' 안전자세 복귀 중' if value.startswith('ARM_RESET_STARTED:') else None)
                 if message:
                     for app in m.apps.values():app.notice(message)

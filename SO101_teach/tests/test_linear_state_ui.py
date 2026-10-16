@@ -45,6 +45,6 @@ class LinearStateUITests(unittest.TestCase):
         self.root.geometry('1920x1080');self.root.update()
         for a in (self.a,self.b):
             a.apply_linear_state(decode_report({'pulse_us':1015,'age_s':.01}));a.apply_linear_state(decode_report({'pulse_us':1015,'age_s':2}))
-            self.assertIn('수신 끊김',a.linear_status.get());self.assertIn('마지막 후진',a.linear_status.get())
-            a.apply_linear_state(decode_report({'pulse_us':2000,'age_s':.01}));self.assertIn('전진 목표',a.linear_status.get())
+            self.assertIn('수신 끊김',a.linear_status.get());self.assertIn('마지막 명령 1.5 mm',a.linear_status.get())
+            a.apply_linear_state(decode_report({'pulse_us':2000,'age_s':.01}));self.assertIn('조립 위치 100 mm',a.linear_status.get())
             self.assertFalse(a.preview_canvas.winfo_children())

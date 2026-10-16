@@ -47,6 +47,8 @@ class WorkspaceFeatures:
         self.teaching_jig_results.clear()
         self.measurement_valid_after=time.monotonic();self.detector.clear();self.display_poses.clear();self.last_render=None
     def install_profile(self,profile):
+        if getattr(self,'demo_mode',False):
+            profile=deepcopy(profile);profile['mode']='demo';self.remote_mode=False
         from .arm_workspace import arm_id,calibration_pending
         if self.workspace_manager and arm_id(profile)!=arm_id(self.profile):
             self.workspace_manager.select(arm_id(profile));return
@@ -234,7 +236,7 @@ class WorkspaceFeatures:
         self.edit_title.set('안전 자세 설정');self.edit_hint.set('실물값·슬라이더로 맞춘 뒤 적용하세요.')
         self.step_name.set('안전 자세');self.step_name_entry.state(['readonly']);self.follow_jig.set(False)
         self.follow_jig_check.state(['disabled']);self.step_jig_choice.configure(state='disabled');self.update_jig_hint()
-        self.add_step_btn.configure(text='안전 자세 적용');self.safe_edit_btn.configure(text='안전 설정 닫기',style='Primary.TButton')
+        self.add_step_btn.configure(text='안전 자세 적용');self.safe_edit_btn.configure(text='안전 설정 닫기',style='Compact.Primary.TButton')
         self.update_step_btn.state(['disabled']);self.capture_btn.state(['disabled']);self.set_mode('target')
         self.notice('시작·끝에서 사용할 고정 자세를 설정합니다. 적용만으로 로봇이 움직이지 않습니다.')
     def end_safe_edit(self,restore=True):
@@ -242,7 +244,7 @@ class WorkspaceFeatures:
         draft=self.safe_draft;self.safe_editing=False;self.safe_draft=None
         self.edit_title.set('스텝 자세 편집');self.edit_hint.set('슬라이더 편집 → 새로 추가 또는 수정')
         self.step_name_entry.state(['!readonly']);self.follow_jig_check.state(['!disabled']);self.step_jig_choice.configure(state='readonly')
-        self.add_step_btn.configure(text='새 스텝 추가');self.safe_edit_btn.configure(text='안전 자세 설정',style='TButton')
+        self.add_step_btn.configure(text='새 스텝 추가');self.safe_edit_btn.configure(text='안전 자세 설정',style='Compact.TButton')
         if restore and draft:
             self.apply_target(draft['ticks']);self.step_name.set(draft['name']);self.follow_jig.set(draft['follow']);self.set_step_jig(draft['jig'])
         self.update_jig_hint()

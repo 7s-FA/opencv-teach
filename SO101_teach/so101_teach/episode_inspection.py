@@ -139,20 +139,35 @@ def inspection_reason(row):
 
 
 class InspectionDecision:
-    """Require consecutive fresh frames after arrival, never a retained UI result."""
+    """Require fresh decisive observations within a bounded interval after arrival."""
     def __init__(self,check,product,started,*,frame_gap=1,ignore_missing=False,evidence=None):
         self.check=deepcopy(check);self.product=check_product(check,product);self.started=started;self.last_at=None;self.signature=None;self.count=0;self.reason='새 영상 판정 대기'
         self.frame_gap=frame_gap
         self.ignore_missing=ignore_missing;self.evidence=evidence;self.basis=None
+        self.last_counted_at=None;self.last_good=False
     def observe(self,result,now):
         if result and result.get('error'):raise ValueError('안착 검사 오류: '+result['error'])
+        if now-self.started>=self.check['timeout_seconds']:raise ValueError('안착 판정 시간 초과: '+self.reason)
         if result:
             at=result.get('at');row=result.get('row')
             if type(at) in (int,float) and self.started<=at<=now and now-at<3 and (self.last_at is None or at>self.last_at):
-                if self.last_at is not None and at-self.last_at>self.frame_gap:self.count=0;self.signature=None
+                if self.last_counted_at is not None and at-self.last_counted_at>self.frame_gap:self.count=0;self.signature=None
                 self.last_at=at
                 if row:
                     self.reason=inspection_reason(row)
+                    uncertain=(row.get('quality')=='waiting' or row.get('state') in ('unknown','checking')
+                               or self.check['expected'] not in ('empty','occupied') and row.get('quality') not in ('abnormal','outside') and not row.get('product_certain'))
+                    if uncertain and row.get('seating') not in ('boundary','outside'):
+                        # A weak frame cannot pass or establish a fault. Preserve
+                        # recent positive evidence, but never bridge two failures
+                        # across an inconclusive observation. Its timestamp does
+                        # not renew the last counted evidence's lifetime.
+                        if not self.last_good:self.count=0;self.signature=None
+                        row=None
+                else:
+                    if not self.ignore_missing:self.count=0;self.signature=None
+                    self.reason=result.get('reason','검사 위치 확인 불가')
+                if row:
                     signature=(row.get('quality'),row.get('state'),row.get('product'),row.get('product_certain'))
                     self.count=self.count+1 if signature==self.signature else 1;self.signature=signature
                     ambiguous_top=(self.product=='B' and self.check['station']=='linear' and self.check['expected']=='cap_added' and row.get('state')=='cap_visible')
@@ -164,14 +179,11 @@ class InspectionDecision:
                         self.reason='현재 B 형상·안착 위치 확인'+('' if good else ' 실패')
                     if self.check['expected']=='empty':good=row.get('state')=='empty' and row.get('quality') not in ('waiting','outside') and row.get('seating') in (None,'missing')
                     if self.check['expected']=='occupied':good=row.get('state') in ('present','housing_seated','insert_added','cap_added','cap_visible','wrong_part') and row.get('quality') not in ('waiting','outside') and row.get('seating') not in ('outside','missing')
+                    self.last_counted_at=at;self.last_good=good
                     if self.count>=self.check.get('minimum_observations',2):
                         if good:return True
                         if row.get('quality') in ('abnormal','outside') or not ambiguous_top and row.get('quality')=='normal' and (row.get('product_certain') is True or self.check['expected'] in ('empty','occupied')):
                             raise ValueError('안착 불합격: '+self.reason+' · 기대 '+self.product+' '+EXPECTED[self.check['expected']])
-                else:
-                    if not self.ignore_missing:self.count=0;self.signature=None
-                    self.reason=result.get('reason','검사 위치 확인 불가')
-        if now-self.started>=self.check['timeout_seconds']:raise ValueError('안착 판정 시간 초과: '+self.reason)
         return False
 
 
@@ -186,10 +198,7 @@ class GroupInspectionDecision:
         if result and result.get('error'):raise ValueError('안착 검사 오류: '+result['error'])
         rows=(result or {}).get('results',{});passed=[]
         for key,decision in list(self.pending.items()):
-            observation=deepcopy(rows.get(key));row=(observation or {}).get('row')
-            if row and (row.get('quality')=='waiting' or row.get('state') in ('unknown','checking')
-                        or decision.check['expected'] not in ('empty','occupied') and row.get('quality') not in ('abnormal','outside') and not row.get('product_certain')):
-                observation['row']=None;observation['reason']=inspection_reason(row)
+            observation=deepcopy(rows.get(key))
             try:done=decision.observe(observation,now)
             except ValueError as exc:raise ValueError(self.steps[key]['name']+' · '+str(exc)) from exc
             if done:
@@ -208,7 +217,7 @@ def criteria_signature(root=None):
         from .domain import ROOT
         root=ROOT
     root=Path(root);digest=hashlib.sha256()
-    files=('so101_teach/assembly_evidence.py','so101_teach/episode_inspection.py','so101_teach/episode_inspection_runtime.py','so101_teach/shape_inspection.py','so101_teach/inspection_geometry.py','so101_teach/inspection_seating.py','inspection/roi_reference.json','inspection/shape_templates.json','inspection/shape_templates.npz','inspection/appearance_reference.json')
+    files=('so101_teach/assembly_evidence.py','so101_teach/episode_inspection.py','so101_teach/episode_inspection_runtime.py','so101_teach/shape_inspection.py','so101_teach/inspection_geometry.py','so101_teach/inspection_seating.py','inspection/roi_reference.json','inspection/shape_templates.json','inspection/shape_templates.npz','inspection/appearance_reference.json','so101_teach/occupied_pallet.py','so101_teach/orientation_model.py','so101_teach/junction_orientation.py','assets/reference/carrier-junction.png')
     for name in files:
         path=root/name
         if not path.is_file():raise ValueError('안착 검사 기준 파일 없음: '+name)

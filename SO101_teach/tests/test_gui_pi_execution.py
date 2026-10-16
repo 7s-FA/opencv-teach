@@ -105,7 +105,8 @@ class ExecutionTransportTests(unittest.TestCase):
     def test_stage_and_inspection_results_have_visible_korean_labels(self):
         self.assertEqual(gui.status_text('B_STAGE_DONE:LOWER'),'하단 완료')
         self.assertIn('안착 검사 통과',gui.status_text('B_INSPECTION_PASS:step'))
-        self.assertIn('리니어',gui.status_text('B_LINEAR_STARTED:target_mm=100'))
+        self.assertEqual(gui.status_text('B_LINEAR_STARTED:target_mm=100'),'리니어 : 조립 위치 100 mm · 이동 중')
+        self.assertEqual(gui.status_text('B_LINEAR_READY:target_mm=1.5'),'리니어 : 하차 위치 1.5 mm · 구동 완료 확인')
 
 
 class BlockingInput:

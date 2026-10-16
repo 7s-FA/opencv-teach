@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 from .domain import JOINTS,LABELS
 from .arm_workspace import arm_id,ARM_NAMES
+from .ui_status import StatusText,set_text
 from .telemetry import monitor_tick,monitor_load
 
 MONITOR_GUIDE=('각도: 서보 보정 기준(보정 없음: 2047틱=0°). 부하: 1023=100%, 실제 힘의 비율 아님.\n'
@@ -21,7 +22,7 @@ class DualMonitor(ttk.Frame):
             card=app.card(self);card.grid(row=0,column=column,sticky='nsew',padx=(0,8) if column==0 else (8,0));card.columnconfigure(0,weight=1)
             title=tk.StringVar(value=ARM_NAMES[key]);status=tk.StringVar(value='연결 상태 확인 중');detail=tk.StringVar(value='')
             ttk.Label(card,textvariable=title,style='Section.TLabel').grid(row=0,column=0,sticky='w')
-            ttk.Label(card,textvariable=status,style='Small.TLabel',wraplength=420).grid(row=1,column=0,sticky='ew',pady=(6,12))
+            StatusText(card,status,height=2).grid(row=1,column=0,sticky='ew',pady=(6,12))
             fields=[('joint','관절',82),('ticks','현재 틱 (각도)',128),('goal','목표 틱 (각도)',128),('torque','토크',42),('voltage','전압 V',54),('temp','온도 °C',60),('load','부하 원시값 (%)',115),('current','전류 원시값',85),('status','상태',42)]
             tree=ttk.Treeview(card,columns=[k for k,_,_ in fields],show='headings',height=6,style='Monitor.Treeview',selectmode='browse')
             for k,label,width in fields:tree.heading(k,text=label);tree.column(k,width=width,minwidth=width,stretch=k in ('ticks','goal','load'),anchor='w' if k=='joint' else 'center')
@@ -35,13 +36,12 @@ class DualMonitor(ttk.Frame):
                 if available>=minimum:scroll.grid_remove();tree.xview_moveto(0)
                 else:scroll.grid()
             tree.bind('<Configure>',fit_table)
-            label=ttk.Label(card,textvariable=detail,wraplength=750,justify='left');label.grid(row=4,column=0,sticky='nw',pady=(6,2))
+            label=StatusText(card,detail,height=2,font=('Noto Sans CJK KR',11));label.grid(row=4,column=0,sticky='ew',pady=(6,2))
             connection=tk.StringVar(value='연결과 계산 기준 · 해당 팔의 작업 화면 준비 중')
-            connection_label=ttk.Label(card,textvariable=connection,style='Small.TLabel',wraplength=750,justify='left');connection_label.grid(row=5,column=0,sticky='nw',pady=4)
+            connection_label=StatusText(card,connection,height=2);connection_label.grid(row=5,column=0,sticky='ew',pady=4)
             message=tk.StringVar(value='장비 알림 없음')
-            message_label=ttk.Label(card,textvariable=message,wraplength=750,justify='left');message_label.grid(row=6,column=0,sticky='nw',pady=4)
+            message_label=StatusText(card,message,height=3,font=('Noto Sans CJK KR',11));message_label.grid(row=6,column=0,sticky='ew',pady=4)
             app.button(card,'이 팔의 진단 기록 보기',lambda key=key:self.open_diagnostics(key)).grid(row=7,column=0,sticky='w',pady=8)
-            card.bind('<Configure>',lambda e,labels=(label,connection_label,message_label):[w.configure(wraplength=max(200,e.width-32)) for w in labels])
             self.cards[key]={'title':title,'status':status,'tree':tree,'detail':detail,'connection':connection,'message':message}
             tree.bind('<<TreeviewSelect>>',lambda e:self.update(force=True))
         guides=ttk.Frame(self);guides.grid(row=1,column=0,columnspan=2,sticky='ew',pady=(12,0));guides.columnconfigure((0,1),weight=1,uniform='guide')
@@ -69,12 +69,12 @@ class DualMonitor(ttk.Frame):
             error=getattr(session,'error',None) or getattr(getattr(source,'remote',None),'error',None)
             word=('오류' if error else '영점 불일치' if fresh and not sample.calibration_matches else {'READ_ONLY':'읽기 연결','HOLD':'자세 유지','MOVING':'이동 중','FOLLOW':'리더 따라가기','ACTIVATING':'토크 준비','FAULT':'오류'}.get(state,state or '미연결'))
             if connected and not fresh:word='수신 지연'
-            card['title'].set(f'{ARM_NAMES[key]} · {word}')
-            card['status'].set(str(error) if error else (f'최신 수신 · {max(0,now-sample.monotonic):.2f}초 전' if fresh else '최신 모터 수신값 없음'))
+            set_text(card['title'],f'{ARM_NAMES[key]} · {word}')
+            set_text(card['status'],str(error) if error else (f'최신 수신 · {max(0,now-sample.monotonic):.2f}초 전' if fresh else '최신 모터 수신값 없음'))
             if source:
-                card['connection'].set('포트  '+str(getattr(source,'profile',{}).get('port','—'))+'\n영점 파일  '+source.calibration.sha256[:16]+'… · 모델 좌표는 실물 대조 전')
+                set_text(card['connection'],'포트  '+str(getattr(source,'profile',{}).get('port','—'))+'\n영점 파일  '+source.calibration.sha256[:16]+'… · 모델 좌표는 실물 대조 전')
                 message=getattr(source,'device_message',None)
-                card['message'].set(getattr(source,'last_motion_stop',None) or (message.get() if message else '장비 알림 없음'))
+                set_text(card['message'],getattr(source,'last_motion_stop',None) or (message.get() if message else '장비 알림 없음'))
             for joint,label in zip(JOINTS,LABELS):
                 h=sample.telemetry.get(joint,{}) if fresh else {}
                 values=(label,monitor_tick(source.calibration,joint,sample.ticks.get(joint),verified=sample.calibration_matches) if fresh else '—',monitor_tick(source.calibration,joint,h.get('goal_ticks'),verified=sample.calibration_matches) if fresh else '—','ON' if h.get('torque')==1 else 'OFF' if h.get('torque')==0 else '—',f"{h['voltage_v']:.1f}" if h.get('voltage_v') is not None else '—',h.get('temperature_c','—'),monitor_load(h.get('load_raw')),h.get('current_raw','—'),h.get('status','—'))
@@ -82,5 +82,5 @@ class DualMonitor(ttk.Frame):
             selected=card['tree'].selection()
             if selected and fresh:
                 joint=selected[0];h=sample.telemetry.get(joint,{})
-                card['detail'].set(f'{LABELS[JOINTS.index(joint)]} · 현재 {monitor_tick(source.calibration,joint,sample.ticks[joint],verified=sample.calibration_matches)} · 목표 {monitor_tick(source.calibration,joint,h.get("goal_ticks"),verified=sample.calibration_matches)}\n부하 {monitor_load(h.get("load_raw"))} · 전류 원시값 {h.get("current_raw","—")} · 상태 {h.get("status","—")}')
-            elif selected:card['detail'].set('최신 수신값 없음 · 이전 값을 현재값으로 표시하지 않습니다.')
+                set_text(card['detail'],f'{LABELS[JOINTS.index(joint)]} · 현재 {monitor_tick(source.calibration,joint,sample.ticks[joint],verified=sample.calibration_matches)} · 목표 {monitor_tick(source.calibration,joint,h.get("goal_ticks"),verified=sample.calibration_matches)}\n부하 {monitor_load(h.get("load_raw"))} · 전류 원시값 {h.get("current_raw","—")} · 상태 {h.get("status","—")}')
+            elif selected:set_text(card['detail'],'최신 수신값 없음 · 이전 값을 현재값으로 표시하지 않습니다.')

@@ -9,7 +9,7 @@ from so101_teach.vision_service import MultiDetector
 class PositionDetectionUITests(unittest.TestCase):
     setUp=fixtures.UITests.setUp
     tearDown=fixtures.UITests.tearDown
-    def test_current_scene_partial_label_and_overview_at_1280_by_800(self):
+    def test_current_scene_partial_label_and_overview_when_maximized(self):
         from PIL import ImageGrab
         a=self.app;folder=Path(__file__).parent/'fixtures/vision-position';cfg=json.loads((folder/'fixture.json').read_text());frame=cv2.imread(str(folder/'input.jpg'))
         a.profile=cfg['profile'];a.catalog.items={key:{**j,'stl':None,'manual_size_mm':j['mesh']['size_mm'][:2],'manual_rim_mm':j['mesh']['rim_z_mm']} for key,j in cfg['jigs'].items()}
@@ -20,4 +20,4 @@ class PositionDetectionUITests(unittest.TestCase):
         def shot(name):
             self.root.update();x,y=self.root.winfo_rootx(),self.root.winfo_rooty();ImageGrab.grab(bbox=(x,y,x+self.root.winfo_width(),y+self.root.winfo_height())).save('/tmp/position-'+name+'.png')
         shot('overview');a.camera_jig_choice.current(2);a.select_camera_jig();self.root.after_cancel(a.job);a.poll();a.draw_camera_frame(time.monotonic());shot('partial')
-        self.assertIn('일부가 화면 밖',a.camera_status.get());self.assertLessEqual(a.camera_status_label.winfo_rooty()+a.camera_status_label.winfo_height(),self.root.winfo_rooty()+800)
+        self.assertIn('일부가 화면 밖',a.camera_status.get());self.assertLessEqual(a.camera_status_label.winfo_rooty()+a.camera_status_label.winfo_height(),self.root.winfo_rooty()+self.root.winfo_height())

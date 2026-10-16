@@ -21,7 +21,9 @@ try:
     x.XFlush(d)  # Deliberately never map the parent window.
     number=next(n for n in range(110,160) if not Path(f'/tmp/.X11-unix/X{n}').exists() and not Path(f'/tmp/.X{n}-lock').exists())
     display=f':{number}'
-    server=subprocess.Popen(['Xephyr',display,'-parent',str(window),'-screen','1920x1080','-ac','-noreset'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+    # Xephyr defaults to 75 DPI; the user's 1920x1080 desktop uses 96 DPI.
+    # Match production glyph sizes so clipping and geometry changes are visible.
+    server=subprocess.Popen(['Xephyr',display,'-parent',str(window),'-screen','1920x1080','-dpi',os.environ.get('SO101_TEST_DPI','96'),'-ac','-noreset'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
     for _ in range(60):
         if server.poll() is not None:raise RuntimeError('백그라운드 테스트 화면 시작 실패')
         if Path(f'/tmp/.X11-unix/X{number}').exists():break

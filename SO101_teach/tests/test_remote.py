@@ -31,6 +31,9 @@ class RemoteTests(unittest.TestCase):
         self.app=SimpleNamespace(profile=p,data_dir=DATA,catalog=JigCatalog(DATA),reference=r,pose_latch=PoseLatch(),active_jig='pallet')
         self.bundle=configuration_bundle(self.app);self.runtime=Runtime(self.tmp.name,motion_factory=FakeMotion,camera_factory=FakeCamera)
         self.lease=self.runtime.acquire()['lease'];self.runtime.configure(self.bundle)
+        # This frozen fixture predates the trial. Keep its historical IK baseline;
+        # current per-arm trial propagation is covered in test_execution_alignment.
+        self.runtime.kin.reference=self.runtime.ref;self.runtime.kin.alignment_error=None
     def tearDown(self):self.runtime.close();self.tmp.cleanup()
     def rpc(self,method,args=None,key=None):return self.runtime.rpc({'lease':self.lease,'id':key or uuid.uuid4().hex,'method':method,'args':args or {}})
     def test_bundle_preserves_calibration_angles_and_stl_without_local_paths(self):

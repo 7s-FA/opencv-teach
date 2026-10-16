@@ -63,7 +63,7 @@ class PiGroupTests(unittest.TestCase):
             def result(self):return {'results':{key:result(clock[0]-.01) for key in self.ids}}
             def retain(self,ids):self.ids=set(ids)
             def close(self):pass
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(cli.time,'monotonic',side_effect=lambda:clock[0]),patch.object(cli.time,'sleep',side_effect=lambda t:clock.__setitem__(0,clock[0]+t)),patch('so101_teach.configuration.JigCatalog'),patch('so101_teach.workcell_preview.load_placement',return_value={'linear_stage':{}}),patch('so101_teach.episode_inspection_runtime.FrameInspections',Worker):
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(cli.time,'monotonic',side_effect=lambda:clock[0]),patch.object(cli.time,'sleep',side_effect=lambda t:clock.__setitem__(0,clock[0]+t)),patch('so101_teach.configuration.JigCatalog'),patch('so101_teach.workcell_placement.load_placement',return_value={'linear_stage':{}}),patch('so101_teach.episode_inspection_runtime.FrameInspections',Worker):
             runner=cli.Runner(link,events.append,cli.Control(),20,linear=FakeLinear());runner.inspection_episode='e';runner.inspection_product='A';runner.inspection_records=[];runner.inspection_log=Path(folder)/'result.json'
             runner.inspect_startup_group(steps,{'profile':{}})
         self.assertIn('INSPECTION_GROUP_STARTED:2',events);self.assertIn('INSPECTION_PASS:one',events);self.assertIn('INSPECTION_PASS:two',events)

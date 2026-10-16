@@ -75,11 +75,13 @@ class GridDetectionTests(unittest.TestCase):
         self.assertIsNone(matching_grid(wrong,hints,self.mesh))
         opposite=deepcopy(c);opposite['metric']['yaw_deg']+=180
         self.assertIsNotNone(matching_grid(opposite,hints,self.mesh));self.assertEqual(c['symmetry_deg'],180)
-    def test_settings_accept_supported_stl_and_reject_other_shapes_before_save(self):
+    def test_settings_use_stl_policy_and_reject_missing_geometry_before_save(self):
         with tempfile.TemporaryDirectory() as tmp:
             catalog=JigCatalog(tmp,profile=self.cfg['profile']);item={**deepcopy(self.j),'method':'grid'}
             item['stl']=str(ROOT/'data/jig_assets'/Path(item['stl']).name)
             saved=catalog.save(item);self.assertEqual(saved['method'],'grid');before=catalog.path.read_bytes()
-            for changes in ({'shape':'ring'},{'stl':None},{'stl':str(ROOT/'assets/jigs/pallet.stl')}):
-                with self.assertRaises(ValueError):catalog.save({**item,**changes})
-                self.assertEqual(catalog.path.read_bytes(),before)
+            with self.assertRaises(ValueError):catalog.save({**item,'stl':None})
+            self.assertEqual(catalog.path.read_bytes(),before)
+            normalized=catalog.save({**item,'shape':'ring'});self.assertEqual(normalized['method'],'grid')
+            pallet=catalog.save({**item,'stl':str(ROOT/'assets/jigs/pallet.stl')})
+            self.assertEqual((pallet['shape'],pallet['method']),('ring','edges'))

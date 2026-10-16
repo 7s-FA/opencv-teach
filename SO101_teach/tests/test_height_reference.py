@@ -6,6 +6,7 @@ from unittest.mock import patch
 import numpy as np
 from so101_teach.height_reference import *
 from so101_teach.configuration import JigCatalog
+from so101_teach.domain import ROOT
 from so101_teach.vision_service import MultiDetector
 
 class HeightReferenceTests(unittest.TestCase):
@@ -77,14 +78,14 @@ class HeightReferenceTests(unittest.TestCase):
             with self.assertRaises(ValueError):support_height({'support_height_mm':v},{})
     def test_catalog_migration_is_read_only_unless_requested(self):
         with tempfile.TemporaryDirectory() as d:
-            p=Path(d)/'jigs.json';raw=json.dumps({'j':{'support_z_mm':-2.4,'name':'test','roi':[0,0,1,1]}});p.write_text(raw)
+            p=Path(d)/'jigs.json';raw=json.dumps({'j':{'id':'j','stl':str(ROOT/'assets/jigs/pallet.stl'),'support_z_mm':-2.4,'name':'test','roi':[0,0,1,1]}});p.write_text(raw)
             c=JigCatalog(d,profile={'table_z_mm':-7.4});self.assertEqual(p.read_text(),raw);self.assertEqual(c.items['j']['support_height_mm'],5)
             JigCatalog(d,profile={'table_z_mm':-7.4},persist_migration=True)
             saved=json.loads(p.read_text());self.assertEqual(saved['j']['support_height_mm'],5);self.assertNotIn('support_z_mm',saved['j'])
             self.assertEqual(JigCatalog(d,profile={'table_z_mm':-20}).items,saved)
     def test_new_copy_and_reload_preserve_height(self):
         with tempfile.TemporaryDirectory() as d:
-            c=JigCatalog(d);item=c.save({'name':'test','unit':'mm','shape':'rectangle','method':'edges','stl':None,'support_height_mm':''})
+            c=JigCatalog(d);item=c.save({**c.items['pallet'],'name':'test','support_height_mm':''})
             self.assertEqual(item['support_height_mm'],0);item['support_height_mm']=5;c.save(item);copy=c.duplicate(item['id'])
             self.assertEqual(JigCatalog(d).items[copy['id']]['support_height_mm'],5)
     def test_multi_detector_uses_each_jigs_floor_relative_plane(self):

@@ -1,6 +1,7 @@
 """Episode library delivery inside episode adjustment; never starts a robot."""
 import tkinter as tk
 from tkinter import ttk
+from .ui_status import StatusText
 from . import episode_transfer, pi_connection
 from .arm_workspace import arm_id, ARM_NAMES
 
@@ -26,10 +27,10 @@ class EpisodeTransferPanel:
         self.settings_check=ttk.Checkbutton(page,text='저장한 실행 설정도 함께 적용',variable=self.apply_settings)
         self.settings_check.grid(row=5,column=0,sticky='w')
         self.current=tk.StringVar(value='조회하면 선택 에피소드의 Pi 저장 상태를 표시합니다.')
-        self.current_label=ttk.Label(page,textvariable=self.current,justify='left');self.current_label.grid(row=6,column=0,sticky='ew',pady=8)
+        self.current_label=StatusText(page,self.current,height=3,font=('Noto Sans CJK KR',11));self.current_label.grid(row=6,column=0,sticky='ew',pady=8)
         ttk.Label(page,text='저장된 스텝·완료 알림·완제품 종류·안착 검사를 전송합니다.\n기존 A/B 실행 연결은 유지합니다. 실행 설정은 위 항목을 선택해야 적용합니다.\n속도·측정값은 이 팔의 공통 설정, 제한시간은 연결된 실행에 적용됩니다.\n전송 전에 Pi의 이전 파일을 백업하며, 전송만으로 로봇이 움직이지 않습니다.',style='Small.TLabel',justify='left').grid(row=7,column=0,sticky='ew',pady=8)
         self.status=tk.StringVar(value='Pi 저장 상태를 조회한 뒤 전송할 수 있습니다.')
-        self.status_label=ttk.Label(page,textvariable=self.status,style='Muted.TLabel',justify='left');self.status_label.grid(row=8,column=0,sticky='ew',pady=8)
+        self.status_label=StatusText(page,self.status,height=3,font=('Noto Sans CJK KR',11));self.status_label.grid(row=8,column=0,sticky='ew',pady=8)
         def fit_text(event):
             for widget in page.winfo_children():
                 if isinstance(widget,ttk.Label):widget.configure(wraplength=max(120,event.width-24))
@@ -58,6 +59,7 @@ class EpisodeTransferPanel:
         if not self.job:self.query()
 
     def start_job(self,kind,config,request):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         self.job_kind=kind;self.query_button.state(['disabled']);self.send_button.state(['disabled'])
         self.job=self.settings.pool.submit(episode_transfer.remote_request,config,request)
 

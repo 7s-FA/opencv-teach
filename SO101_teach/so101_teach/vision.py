@@ -160,7 +160,7 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None):
             result['grid_direction_period_deg']=180
         if mesh.get('assembly',{}).get('orientation_hole'):
             from .orientation_model import orient_carrier
-            result=orient_carrier(prepared.frame,mesh,allowed,geometry,result,evidence=evidence)
+            result=orient_carrier(prepared.frame,mesh,allowed,geometry,result,evidence=evidence,junction_source=(frame,roi,profile))
         if mesh.get('shape','ring')=='ring':
             from .raised_model import attach_raised
             result=attach_raised(prepared.frame,mesh,allowed,geometry,result,evidence=evidence)
@@ -386,7 +386,8 @@ def annotate(frame,result,*,jig_color=None,legend=True,layout=None):
         if selected and result.get('live_view') and not result.get('adopted_view') and item.get('grid_verified'):
             for point in item['grid_crossings_px']:cv2.circle(image,tuple(np.rint(point).astype(int)),3,color,1,cv2.LINE_AA)
         if selected and result.get('live_view') and not result.get('adopted_view') and item.get('orientation_verified'):
-            cv2.polylines(image,[np.rint(item['orientation_hole_outline_px']).astype(np.int32)],True,color,1,cv2.LINE_AA)
+            outline=item.get('orientation_junction_outline_px') if item.get('orientation_method')=='central_junction' else item.get('orientation_hole_outline_px')
+            if outline is not None:cv2.polylines(image,[np.rint(outline).astype(np.int32)],True,color,1,cv2.LINE_AA)
         if selected and not result.get('outline_only'):
             x,y=np.rint(item['center_px']).astype(int)
             axes=item.get('axes_px')
@@ -463,7 +464,7 @@ def annotate_all(frame,results,catalog,*,layout=None):
 @lru_cache(maxsize=1)
 def roi_font():
     from PIL import ImageFont
-    for path in ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc','/usr/share/fonts/truetype/nanum/NanumGothic.ttf'):
+    for path in ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc','/usr/share/fonts/truetype/nanum/NanumGothic.ttf',ROOT/'assets/fonts/NanumGothic.ttf'):
         if Path(path).exists():return ImageFont.truetype(path,16)
     return None
 

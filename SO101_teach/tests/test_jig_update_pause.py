@@ -24,7 +24,7 @@ class JigUpdatePauseTests(unittest.TestCase):
     def test_missing_pose_requests_one_measurement_then_holds(self):
         a=self.app
         with patch.object(a,'request_jig_read') as read:a.toggle_jig_updates()
-        read.assert_called_once();self.assertTrue(a.jig_updates_paused);self.assertIsNone(a.current_jig_reference())
+        read.assert_called_once();self.assertFalse(a.jig_updates_paused);self.assertIsNone(a.current_jig_reference())
     def test_manual_reread_updates_hold_but_does_not_overwrite_saved_episode_basis(self):
         a,old=self.pause();a.follow_jig.set(True);a.commit_target();a.request_jig_read()
         self.fake_jig_camera((260,-120,74));a.poll_camera_lifecycle()
@@ -52,7 +52,8 @@ class JigUpdatePauseTests(unittest.TestCase):
         a=self.app;other=a.catalog.duplicate('pallet');a.catalog_changed();self.fake_jig_camera()
         frame,result,at=a.camera.observation;second=deepcopy(result);second['selected']['metric']['center_xy_mm']=[300,-50]
         a.camera.observation=(frame,{'by_jig':{'pallet':result,other['id']:second}},at);a.toggle_jig_updates()
-        a.select_camera_jig(other['id']);self.assertEqual(a.current_jig_reference(other['id'])['pose'][:2],[300,-50])
+        with patch.object(a,'draw_camera_frame'):a.select_camera_jig(other['id'])
+        self.assertEqual(a.current_jig_reference(other['id'])['pose'][:2],[300,-50])
         self.assertEqual(a.current_jig_reference('pallet')['pose'][:2],[228,-138])
     def test_geometry_change_invalidates_held_pose_without_resuming_auto_updates(self):
         a,old=self.pause();a.invalidate_jig_measurements()
@@ -77,6 +78,8 @@ class JigUpdatePauseTests(unittest.TestCase):
         a.pending_execution=None
     def test_teaching_pause_reads_selected_step_jig_when_only_other_jig_is_known(self):
         a=self.app;other=a.catalog.duplicate('pallet');a.catalog_changed();self.fake_jig_camera()
-        a.set_step_jig(other['id']);a.toggle_jig_updates()
+        a.set_step_jig(other['id'])
+        with patch.object(a,'draw_camera_frame'):a.toggle_jig_updates()
         self.assertEqual(a.camera_task['jig'],other['id']);self.assertEqual(a.active_jig,other['id'])
-        self.assertIn('pallet',a.teaching_jig_results);self.assertNotIn(other['id'],a.teaching_jig_results)
+        self.assertFalse(a.teaching_jig_results);self.assertFalse(a.jig_updates_paused)
+        self.assertEqual(a.camera_task['jigs'],[other['id']])

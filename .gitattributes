@@ -1,2 +1,6 @@
 # Calibration identities hash exact file bytes. Keep text identical across OSes.
 * text=auto eol=lf
+
+# Preserve source CAD file bytes and provenance hashes.
+*.stp binary
+*.step binary

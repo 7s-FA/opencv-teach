@@ -27,9 +27,10 @@ class WorkflowAuditTests(unittest.TestCase):
         s.poll();self.assertEqual(called,[]);self.assertIsNotNone(s.job)
         a.pending_execution=None;s.poll();self.assertEqual(called,[{'value':1}]);self.assertIsNone(s.job)
 
-    def test_jig_copy_cannot_mutate_catalog_during_execution(self):
+    def test_jig_save_cannot_mutate_catalog_during_execution(self):
         a=self.app;s=a.settings;before=deepcopy(a.catalog.items);a.set_pose_frozen(True)
-        with self.assertRaises(ValueError):s.copy_jig()
+        with self.assertRaises(ValueError):s.save_jig()
+        self.assertFalse(hasattr(s,'copy_jig'))
         self.assertEqual(a.catalog.items,before)
 
     def test_inflight_detection_cannot_restore_cleared_measurement(self):

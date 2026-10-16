@@ -32,7 +32,7 @@
       "jig_id": null,
       "source": {
         "kind": "measured",
-        "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+        "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
         "wall_time": 1790508590.6294856
       },
       "saved_at": 1790508590.7067037
@@ -51,7 +51,7 @@
       "jig_id": null,
       "source": {
         "kind": "measured",
-        "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+        "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
         "wall_time": 1790508609.8572664
       },
       "saved_at": 1790508609.9449372
@@ -70,7 +70,7 @@
       "jig_id": null,
       "source": {
         "kind": "measured",
-        "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+        "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
         "wall_time": 1790508618.4443765
       },
       "saved_at": 1790508618.5235276
@@ -89,7 +89,7 @@
       "jig_id": null,
       "source": {
         "kind": "measured",
-        "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+        "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
         "wall_time": 1790508622.7478724
       },
       "saved_at": 1790508622.8272362

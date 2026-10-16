@@ -1,6 +1,6 @@
 # Goal / Request: 로봇 움직임 명령
-# /arm2/data: BUILD_A, BUILD_B, BUILD_LOAD_A, BUILD_LOAD_B, SLIDE_BUILD
-# /arm3/data: LOAD_A, LOAD_B, SLIDE_LOAD
+# /arm2/data: BUILD_A, BUILD_B, BUILD_LOAD_A, BUILD_LOAD_B, BUILD_SLIDE
+# /arm3/data: LOAD_A, LOAD_B, LOAD_SLIDE
 # 공통 제어: EMER_STOP, RESTART, RESET
 string command
 ---

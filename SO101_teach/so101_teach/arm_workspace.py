@@ -62,7 +62,7 @@ def scene_placement(placement,profile,other_angles=None):
 
 def tcp_positions(active_fk,profile,placement):
     from .geometry import Kinematics
-    from .workcell_preview import base_transform
+    from .workcell_placement import base_transform
     active=arm_id(profile);other='arm2' if active=='arm3' else 'arm3'
     result={active:(world_from_base(profile)@active_fk)[:3,3]}
     if placement:

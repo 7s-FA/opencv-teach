@@ -49,13 +49,13 @@ class EpisodeTransferUITests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'주소 설정'):panel.send()
         panel=self.ready();panel.target['calibration_sha256']='0'*64
         with self.assertRaisesRegex(ValueError,'영점'):panel.send()
-    def test_failure_and_small_window_remain_usable(self):
+    def test_failure_and_maximized_window_remain_usable(self):
         panel=self.ready();future=Future();future.set_exception(ValueError('Pi 작업 실행 중'))
         panel.job=future;panel.job_kind='deliver';panel.poll()
         self.assertIn('작업 실행 중',panel.status.get());self.assertTrue(panel.query_button.instate(['!disabled']))
         from PIL import ImageGrab
         out=Path(__file__).parents[1]/'verification/episode-transfer';out.mkdir(exist_ok=True)
-        for size in ('1180x760','1280x800'):
+        for size in ('1920x1043','1920x1080'):
             self.root.geometry(size);self.root.update()
             self.assertLessEqual(panel.send_button.winfo_rootx()+panel.send_button.winfo_width(),self.root.winfo_rootx()+self.root.winfo_width())
             self.assertTrue(panel.send_button.winfo_ismapped())

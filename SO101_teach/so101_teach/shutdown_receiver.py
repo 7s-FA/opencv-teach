@@ -1,4 +1,4 @@
-"""SSH entry point for a supervised two-arm park and power-down."""
+"""SSH entry point for parking and powering down the connected arms."""
 import fcntl
 import json
 from pathlib import Path
@@ -13,10 +13,15 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
     from episode_recovery import reset_workcell
     from linear_client import LinearClient
     records={}
-    # Validate both snapshots before changing either controller.
-    for arm in ('arm2','arm3'):
+    arms=tuple(request['arms'])
+    if not arms or not set(arms)<={'arm2','arm3'} or set(request['links'])!=set(arms):
+        raise ValueError('종료할 팔과 연결 정보가 일치하지 않습니다.')
+    first_arm=request.get('first',arms[0])
+    if first_arm not in arms:raise ValueError('먼저 종료할 팔이 연결되어 있지 않습니다.')
+    # Validate every participating snapshot before changing any controller.
+    for arm in arms:
         part={**request,**request['arms'][arm],'arm':arm}
-        _,episode,bundle,_,_=validate_snapshot(cli,part)
+        _,episode,bundle,_,_=validate_snapshot(cli,part,required_arms=arms)
         first,last=episode['steps'][0],episode['steps'][-1]
         if (first.get('safe_boundary')!='start' or last.get('safe_boundary')!='end'
                 or first['ticks']!=last['ticks'] or last.get('jig_id')):
@@ -25,7 +30,7 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
                       'calibration_sha256':episode['calibration_sha256'],'product':episode.get('product_type','GUI'),
                       'episode_id':episode['id'],'run_id':'app-shutdown','failed_at':time.time(),'error':''}
     if check:emit('SHUTDOWN_CHECK_OK');return
-    if not autonomous:install_adapters(cli,{**request,'episode':request['arms']['arm2']['episode']},None,stream)
+    if not autonomous:install_adapters(cli,{**request,'episode':request['arms'][first_arm]['episode']},None,stream)
     base=cli.Link
     class ShutdownLink(base):
         def open(self):
@@ -62,7 +67,7 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
                 signal.signal(signal.SIGINT,lambda *_:control.shutdown.set())
                 control.info={'arm':request.get('first','arm2'),'run_id':request['shutdown_id']}
                 control_thread=threading.Thread(target=cli.control_server,args=(control,done),daemon=True);control_thread.start()
-            for arm in ('arm2','arm3'):
+            for arm in arms:
                 link=ShutdownLink(arm);links[arm]=link;link.open()
             def hold_all():
                 for link in links.values():
@@ -76,10 +81,10 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
             while True:
                 if control.shutdown.is_set():raise RuntimeError('종료 복귀가 중단되었습니다.')
                 if all(cli.settled(link.state()) or cli.torque_off(link.state()) for link in links.values()):break
-                if time.monotonic()>deadline:raise RuntimeError('두 팔의 정지 확인 시간 초과')
+                if time.monotonic()>deadline:raise RuntimeError('연결된 팔의 정지 확인 시간 초과')
                 time.sleep(.05)
             linear=LinearClient();linear.open()
-            reset_workcell(cli,records,links,linear,control,emit,first=request.get('first','arm2'))
+            reset_workcell(cli,records,links,linear,control,emit,first=first_arm,arms=arms)
             control.emergency=hold_all
             emit('SHUTDOWN_SETTLING')
             wait_stable(cli,links,control)
@@ -89,7 +94,7 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
             deadline=time.monotonic()+10
             while not all(cli.torque_off(link.state()) for link in links.values()):
                 if control.shutdown.is_set():raise RuntimeError('토크 해제 확인이 중단되었습니다.')
-                if time.monotonic()>deadline:raise RuntimeError('두 팔의 토크 OFF 확인 시간 초과')
+                if time.monotonic()>deadline:raise RuntimeError('연결된 팔의 토크 OFF 확인 시간 초과')
                 time.sleep(.05)
             emit('SHUTDOWN_DONE')
         except BaseException:

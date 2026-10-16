@@ -66,17 +66,19 @@ def workcell_records(cli):
     return records
 
 
-def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='arm2'):
+def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='arm2',arms=('arm2','arm3')):
     """Keep the workcell lease while returning each arm, then confirm once."""
     from so101_teach.motion import SPEED_PRESETS
-    for arm in (first,'arm3' if first=='arm2' else 'arm2'):
-        record=records[arm];link=links[arm];peer=links['arm3' if arm=='arm2' else 'arm2']
+    if not arms or not set(arms)<={'arm2','arm3'} or set(links)!=set(arms) or set(records)!=set(arms) or first not in arms:
+        raise ValueError('안전 복귀할 팔·연결·저장 자세가 일치하지 않습니다.')
+    for arm in (first,*(a for a in arms if a!=first)):
+        record=records[arm];link=links[arm];peer=links.get('arm3' if arm=='arm2' else 'arm2')
         report=lambda event,arm=arm:emit(event if event in ('PAUSED','RESUMED') else 'ARM_RESET:'+arm+':'+event)
         runner=active if active is not None and active.link is link else cli.Runner(link,report,control,120,peer=peer,linear=linear)
         old_emit=runner.emit;runner.emit=report;runner.safe_ticks=record['safe_ticks']
         control.emergency=runner.emergency
         try:
-            state=peer.state()
+            state=peer.state() if peer else None
             if state and state.get('running') and not (cli.settled(state) or cli.torque_off(state)):
                 raise ValueError('다른 팔의 정지 확인이 필요합니다: '+arm)
             stage=linear.call('status')

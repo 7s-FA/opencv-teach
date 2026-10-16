@@ -57,7 +57,7 @@ class TimingUITests(unittest.TestCase):
             a.measurement_attempts_limit=2;self.assertIsNone(a.measurement_failure({'started':time.monotonic()},time.monotonic(),['pallet']))
     def test_controls_and_camera_render_fit_both_sizes(self):
         a=self.app;a.show_page('camera')
-        for width,height in ((1280,800),(1180,760)):
+        for width,height in ((1920,1043),(1920,1080)):
             self.root.geometry(f'{width}x{height}');self.root.update()
             for w,low,high in ((a.acquisition_seconds_spin,3,10),(a.measurement_attempts_spin,1,5),(a.hold_seconds_spin,1,10)):
                 self.assertEqual(float(w.cget('from')),low);self.assertEqual(float(w.cget('to')),high)

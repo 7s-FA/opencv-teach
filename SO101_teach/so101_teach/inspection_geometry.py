@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from .height_reference import support_bottom_z
 from .jig_heading import mesh_yaw_offset
-from .workcell_scene import carriage_position_mm
+from .linear_geometry import carriage_position_mm
 from .linear_state import direction_label
 from .arm_workspace import world_from_base
 

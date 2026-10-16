@@ -20,7 +20,7 @@ class ReferenceGuideUITests(unittest.TestCase):
     setUp=fixtures.UITests.setUp
     tearDown=fixtures.UITests.tearDown
     def test_guide_is_right_of_coordinates_when_space_allows(self):
-        a=self.app;self.root.geometry('1480x920');self.root.update()
+        a=self.app;self.root.geometry('1920x1043');self.root.update()
         self.assertEqual(a.preview_guide.grid_info()['column'],1)
         self.assertGreater(a.preview_guide.winfo_rootx(),a.preview_tcp_label.winfo_rootx()+a.preview_tcp_label.winfo_width())
         self.root.geometry('1180x760');self.root.update()

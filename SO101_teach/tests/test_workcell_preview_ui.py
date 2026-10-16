@@ -18,7 +18,7 @@ class WorkcellPreviewUITests(unittest.TestCase):
             root=tk.Tk();app=None
             with patch('so101_teach.ui.MotionSession.start',side_effect=AssertionError('No motor connection')):
                 try:
-                    app=App(root,data,render=True,auto_camera=False,auto_devices=False);root.geometry('1280x800');root.update()
+                    app=App(root,data,render=True,auto_camera=False,auto_devices=False);root.geometry('1920x1043');root.update()
                     profile_before=json.loads((data/'profile.json').read_text());bundle_before=configuration_bundle(app)
                     state=json.loads((out/'state.json').read_text());app.apply_target(state['follower']['latest']['ticks'])
                     def walk(w):
@@ -28,11 +28,12 @@ class WorkcellPreviewUITests(unittest.TestCase):
                     button.invoke()
                     deadline=time.monotonic()+20
                     while app.last_rgb is None and time.monotonic()<deadline:root.update();time.sleep(.03)
-                    self.assertIsNotNone(app.last_rgb,app.message.get());self.assertIn('로봇팔3',app.preview_caption.get())
-                    self.assertEqual(app.last_render[2]['workcell']['robot_id'],'arm3')
+                    other='arm2' if app.profile.get('robot_id')=='arm3' else 'arm3'
+                    self.assertIsNotNone(app.last_rgb,app.message.get());self.assertIn('로봇팔'+other[-1],app.preview_caption.get())
+                    self.assertEqual(app.last_render[2]['workcell']['robot_id'],app.workcell_preview['robot_id'])
                     self.assertIn('배치 확정',app.preview_caption.get())
                     self.assertFalse(app.workcell_preview['verified_for_robot_motion'])
-                    self.assertIn('팔2 TCP',app.tcp_label.get());self.assertIn('팔3 TCP(예시)',app.tcp_label.get())
+                    self.assertIn('팔2 TCP',app.tcp_label.get());self.assertIn('팔'+other[-1]+' TCP(예시)',app.tcp_label.get())
                     self.assertIn('board',app.last_render[2]['workcell']);self.assertIn('linear_stage',app.last_render[2]['workcell'])
                     board=app.last_render[2]['workcell']['board'];self.assertEqual(board['enclosure']['sides'],4);self.assertEqual(board['backdrop']['height_mm'],400)
                     carrier=next(j for j in app.last_render[2]['jigs'] if j.get('platform')=='TurtleBot3 Burger')
@@ -40,7 +41,7 @@ class WorkcellPreviewUITests(unittest.TestCase):
                     self.assertEqual(configuration_bundle(app),bundle_before)
                     self.assertEqual(json.loads((data/'profile.json').read_text()),profile_before)
                     self.assertIsNone(app.session)
-                    for width,height in ((1280,800),(1180,760)):
+                    for width,height in ((1920,1043),(1920,1080)):
                         root.geometry(f'{width}x{height}');root.update()
                         self.assertLessEqual(button.winfo_rootx()+button.winfo_width(),root.winfo_rootx()+width)
                         self.assertLessEqual(app.capture_btn.winfo_rooty()+app.capture_btn.winfo_height(),root.winfo_rooty()+height)

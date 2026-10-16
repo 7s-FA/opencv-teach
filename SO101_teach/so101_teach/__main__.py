@@ -5,6 +5,7 @@ from .domain import ROOT,load_profile,atomic_json,EpisodeStore
 
 def main():
     p=argparse.ArgumentParser(description='SO-101 raw-tick teaching workspace')
+    p.add_argument('--demo-scene',choices=('complete','faults'),default='complete',help='Recorded demo scene')
     p.add_argument('--demo',action='store_true',help='Offline simulated servos; no USB')
     p.add_argument('--camera-only',action='store_true',help='Connect the Pi camera only; disable motor connection and motion')
     p.add_argument('--integration',metavar='RECIPES_JSON',help='Explicitly enable ROS 2 episode commands with this recipe map')
@@ -16,6 +17,7 @@ def main():
     p.add_argument('--no-camera',action='store_true');p.add_argument('--seconds',type=float,default=3.)
     p.add_argument('--save-pose',help='Save an actual fresh measured pose during a read-only probe')
     args=p.parse_args()
+    if args.demo and args.probe:p.error('데모에서는 실제 장치 진단을 실행할 수 없습니다.')
     if args.demo and args.integration:p.error('데모는 통합 실물 명령 수신과 함께 실행할 수 없습니다.')
     if args.camera_only and (args.demo or args.integration or args.probe):p.error('카메라 전용은 데모·통합 실행·모터 진단과 함께 사용할 수 없습니다.')
     profile,cal,ref=load_profile()
@@ -56,7 +58,14 @@ def main():
     import tkinter as tk
     from .ui import show_ready_window
     from .arm_workspaces import ArmWorkspaces
-    root=tk.Tk();root.withdraw();workspaces=ArmWorkspaces(root,auto_camera=not args.no_camera,auto_devices=not args.camera_only,mode_override='demo' if args.demo else None,camera_only=args.camera_only);app=workspaces.apps[workspaces.active]
+    data_dir=None
+    if args.demo:
+        from .demo_workspace import prepare_data
+        data_dir=prepare_data()
+    root=tk.Tk();root.withdraw();workspaces=ArmWorkspaces(root,data_dir=data_dir,auto_camera=not args.no_camera,auto_devices=not args.camera_only,mode_override='demo' if args.demo else None,camera_only=args.camera_only);app=workspaces.apps[workspaces.active]
+    if args.demo:
+        from .demo_workspace import activate
+        activate(workspaces,args.demo_scene)
     if args.integration:
         if not 0<=args.integration_domain<=232:raise ValueError('ROS 도메인 범위는 0~232입니다.')
         from .integration_transport import IntegrationBridge

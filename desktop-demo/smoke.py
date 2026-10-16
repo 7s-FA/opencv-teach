@@ -50,7 +50,12 @@ def run_smoke(root,manager,output,errors,change_photo,case):
                     change_photo('오안착 사진');stage=3;checks['camera_switch_at']=time.monotonic()
             elif stage==3 and time.monotonic()-checks['camera_switch_at']>4 and app.camera and app.camera.observation:
                 live=app.camera.observation[1].get('live_by_jig',{})
-                if any(v.get('status')=='orientation_unconfirmed' for v in live.values()):
+                # Junction orientation can now recover the carrier in this photo.
+                # Verify the actual new image was processed, not an obsolete failure label.
+                import cv2,numpy as np
+                from so101_teach.domain import ROOT
+                expected=cv2.imdecode(np.frombuffer((ROOT/'tests/fixtures/inspection-all/faults.jpg').read_bytes(),dtype=np.uint8),cv2.IMREAD_COLOR)
+                if np.array_equal(app.camera.observation[0],expected) and any(v.get('selected') for v in live.values()):
                     checks['fault_photo_processed']=True
                     checks['motors']=[type(a.session).__name__ for a in manager.apps.values()]
                     assert checks['motors']==['DemoSession','DemoSession']

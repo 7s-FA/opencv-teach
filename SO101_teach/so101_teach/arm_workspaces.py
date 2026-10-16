@@ -31,9 +31,9 @@ class ArmWorkspaces:
             controls=ttk.Frame(app.arm_selector.master);controls.grid(row=0,column=1,padx=(8,4))
             app.arm_quick_buttons={}
             for i,other in enumerate(profiles):
-                button=ttk.Button(controls,text=ARM_NAMES[other],style='TButton',command=lambda k=other,a=app:a.guard(lambda:self.select(k)))
+                button=ttk.Button(controls,text=ARM_NAMES[other],style='Shell.TButton',width=18,command=lambda k=other,a=app:a.guard(lambda:self.select(k)))
                 button.grid(row=0,column=i,padx=2);app.arm_quick_buttons[other]=button
-            app.connect_all_btn=ttk.Button(controls,text='전체 연결',style='TButton',command=lambda a=app:a.guard(self.connect_all))
+            app.connect_all_btn=ttk.Button(controls,text='전체 연결',style='Shell.TButton',width=12,command=lambda a=app:a.guard(self.connect_all))
             app.connect_all_btn.grid(row=0,column=len(profiles),padx=(8,2))
         first=self.apps[self.active]
         preferences_path=self.data_dir/'preferences.json'
@@ -147,14 +147,14 @@ class ArmWorkspaces:
                 if source:step=next((s for s in source.episode['steps'] if s.get('safe_boundary')=='start'),None)
             placement['other_arm_pose_kind']='safe' if step else 'reference'
             if step:
-                placement['other_arm_joint_angles_rad']=list(source.reference.angles(step['ticks']))
+                placement['other_arm_joint_angles_rad']=list((source.reference if safe else source.preview_reference).angles(step['ticks']))
                 placement['other_arm_tcp']=deepcopy(other.profile['tcp'])
             return placement
         sample=other.live_preview_sample() if other else None
         valid=sample is not None
         placement.update(other_arm_dynamic=True,other_arm_visible=valid,other_arm_pose_kind='live' if valid else 'unavailable')
         if valid:
-            placement['other_arm_joint_angles_rad']=list(other.reference.angles(sample.ticks))
+            placement['other_arm_joint_angles_rad']=list(other.preview_reference.angles(sample.ticks))
             placement['other_arm_tcp']=deepcopy(other.profile['tcp'])
         return placement
 
@@ -198,7 +198,7 @@ class ArmWorkspaces:
                 state=getattr(session,'state',None) if session and session.running else None
                 label={'READ_ONLY':'연결','HOLD':'유지','MOVING':'실행 중','ACTIVATING':'시작 중','FOLLOW':'따라가기','FAULT':'오류'}.get(state,'미연결')
                 if target.pending_execution or target.safe_entry or target.remote_plan_job:label='실행 준비'
-                text=f'{ARM_NAMES[key]} · {label}';style='Primary.TButton' if self.active==key else 'TButton'
+                text=f'{ARM_NAMES[key]} · {label}';style='Shell.Primary.TButton' if self.active==key else 'Shell.TButton'
                 if button.cget('text')!=text:button.configure(text=text)
                 if button.cget('style')!=style:button.configure(style=style)
 
@@ -209,9 +209,10 @@ class ArmWorkspaces:
     def close(self):
         if self.closing:return
         if getattr(getattr(self,'safe_shutdown',None),'busy',False):return
-        live=any(app.profile.get('mode')!='demo' and (app.remote or app.session) for app in self.apps.values())
-        if live and not self.camera_only:
-            from .safe_shutdown import SafeShutdown
+        from .safe_shutdown import SafeShutdown,connected_arms,requires_parking
+        live=connected_arms(self)
+        if not self.camera_only and (any(requires_parking(app) for app in live.values())
+                or self.pi_execution and self.pi_execution.busy):
             self.safe_shutdown=SafeShutdown(self)
             try:self.safe_shutdown.start()
             except Exception as exc:self.safe_shutdown.fail(str(exc))

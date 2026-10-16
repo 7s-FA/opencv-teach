@@ -46,7 +46,8 @@ class LiveCameraTests(unittest.TestCase):
         self.assertIsNone(out['live_by_jig']['pallet']['selected']);self.assertFalse(out['live_by_jig']['pallet']['pose_held'])
     def test_preview_drops_stale_detection_without_hiding_video(self):
         c=CameraSession(0);c.observation=(np.zeros((20,30,3),np.uint8),{'selected':{'old':True},'candidates':[]},10.)
-        c.preview_frame=(np.ones((20,30,3),np.uint8),11.6)
+        from so101_teach.camera_lifecycle import MEASUREMENT_MAX_AGE_SECONDS
+        c.preview_frame=(np.ones((20,30,3),np.uint8),10.+MEASUREMENT_MAX_AGE_SECONDS+.1)
         self.assertEqual(int(c.preview_observation[0][0,0,0]),1);self.assertIsNone(c.preview_observation[1]['selected'])
         self.assertIsNotNone(c.observation[1]['selected'])
     def test_server_keeps_capture_measurement_pair_and_deduplicates_images(self):

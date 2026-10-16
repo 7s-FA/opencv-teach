@@ -10,6 +10,7 @@ from pathlib import Path
 from http.server import BaseHTTPRequestHandler,ThreadingHTTPServer
 from .domain import ROOT,JOINTS,Snapshot,Calibration,EpisodeStore,load_profile,atomic_json,read_json
 from .remote_config import PROTOCOL,code_version,materialize,bundle_digest
+from .runtime_version import manifest,difference
 
 class LeaderBridge:
     """Latest PC leader sample, expressed on the Pi monotonic clock."""
@@ -31,6 +32,7 @@ class Runtime:
         self.profile=None;self.cal=None;self.ref=None;self.kin=None;self.catalog=None;self.detector=None
         self.lease=None;self.last_heartbeat=0.;self.detached=False;self.events=deque(maxlen=256);self.event_id=0
         self.requests=OrderedDict();self.generation=0;self.bundle_hash=None;self.stop=threading.Event();self.version=code_version()
+        self.runtime_version=manifest(ROOT)
         self.instance=uuid.uuid4().hex;self.plans=OrderedDict();self.watch=threading.Thread(target=self.watchdog,daemon=True);self.watch.start()
     def event(self,role,kind,value):
         self.event_id+=1;self.events.append({'id':self.event_id,'role':role,'kind':kind,'value':value})
@@ -88,7 +90,9 @@ class Runtime:
         if self.worker and self.worker.running:self.worker.close()
         return {}
     def acquire(self):
-        with self.lock,self.control_lock:
+        with (ROOT/'data/runtime-update.lock').open('a') as update,self.lock,self.control_lock:
+            try:fcntl.flock(update,fcntl.LOCK_SH|fcntl.LOCK_NB)
+            except BlockingIOError:raise ValueError('Pi 실행부 갱신 중입니다. 완료 후 다시 연결하세요.') from None
             if self.lease and not self.detached and time.monotonic()-self.last_heartbeat<2 and not self.handoff_ready:raise ValueError('다른 PC 창이 Pi를 사용 중입니다.')
             if self.busy():raise ValueError('Pi에서 동작 정리 중입니다. 잠시 후 다시 연결하세요.')
             if self.worker and self.worker.running:raise ValueError('Pi 보정 정리 중입니다.')
@@ -373,7 +377,7 @@ class Handler(BaseHTTPRequestHandler):
             if not 0<size<=30*1024*1024:raise ValueError('요청 크기 오류')
             body=json.loads(self.rfile.read(size),parse_constant=lambda _:(_ for _ in ()).throw(ValueError('잘못된 숫자')))
             runtime=self.server.runtime
-            if self.path=='/health':value={'ok':True,'value':{'protocol':PROTOCOL,'version':runtime.version,'instance':runtime.instance,'devices':inventory()}}
+            if self.path=='/health':value={'ok':True,'value':{'protocol':PROTOCOL,'version':runtime.version,'runtime':runtime.runtime_version,'instance':runtime.instance,'devices':inventory()}}
             elif self.path=='/acquire':value={'ok':True,'value':runtime.acquire()}
             elif self.path=='/detach':value={'ok':True,'value':runtime.detach(body.get('lease'))}
             elif self.path=='/state':value={'ok':True,'value':runtime.state(body.get('lease'),body.get('alive'),int(body.get('after',0)))}
@@ -404,7 +408,7 @@ def serve(port,arm='arm2'):
         with os.fdopen(fd,'w') as f:f.write(secrets.token_urlsafe(32))
     token_path.chmod(0o600);runtime=Runtime(data_dir,robot_id=arm)
     server=Server(('127.0.0.1',port),Handler);server.token=token_path.read_text().strip();server.runtime=runtime
-    atomic_json(data_dir/'remote-server.json',{'pid':os.getpid(),'port':port,'instance':runtime.instance,'protocol':PROTOCOL,'version':runtime.version,'robot_id':arm})
+    atomic_json(data_dir/'remote-server.json',{'pid':os.getpid(),'port':port,'instance':runtime.instance,'protocol':PROTOCOL,'version':runtime.version,'runtime':runtime.runtime_version,'robot_id':arm})
     try:server.serve_forever(poll_interval=.2)
     finally:runtime.close();server.server_close()
 
@@ -444,7 +448,7 @@ def ensure(port,arm='arm2'):
             if result['ok']:return {**result['value'],'token':token,'port':port}
         except (OSError,ValueError,KeyError):return None
     current=ready()
-    if current and current.get('version')!=code_version():
+    if current and (difference(manifest(ROOT),current['runtime']) if 'runtime' in current else current.get('version')!=code_version()):
         stop_stale_idle_server(current,port,arm)
         for _ in range(30):
             current=ready()

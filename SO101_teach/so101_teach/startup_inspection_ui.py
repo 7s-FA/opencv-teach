@@ -3,6 +3,7 @@ from copy import deepcopy
 import tkinter as tk
 from tkinter import ttk
 from .ui_scroll import AutoScrollbar
+from .ui_status import StatusText
 from .episode_inspection import STATIONS,START_TARGETS,EXPECTED,STATES,validate_check
 
 
@@ -37,10 +38,10 @@ class StartupInspectionPanel(ttk.Frame):
             ttk.Spinbox(limits,textvariable=var,from_=low,to=high,width=7).grid(row=1,column=col,sticky='w',padx=(0,12),pady=(4,8))
         actions=ttk.Frame(self,style='Card.TFrame');actions.grid(row=4,column=0,sticky='ew')
         app.button(actions,'새 검사 입력',self.new).pack(side='left',padx=(0,8))
-        self.save_button=app.button(actions,'시작 조건 추가',self.save,True);self.save_button.pack(side='left',padx=(0,8))
+        self.save_button=app.button(actions,'시작 조건 추가',self.save,True,width=14);self.save_button.pack(side='left',padx=(0,8))
         self.remove_button=app.button(actions,'선택 조건 삭제',self.remove);self.remove_button.pack(side='left',padx=(0,8))
         self.reset_button=app.button(actions,'입력 되돌리기',self.discard);self.reset_button.pack(side='left')
-        self.status=tk.StringVar();ttk.Label(self,textvariable=self.status,style='Small.TLabel',wraplength=560).grid(row=5,column=0,sticky='w',pady=10)
+        self.status=tk.StringVar();StatusText(self,self.status,height=3).grid(row=5,column=0,sticky='ew',pady=10)
         self.refresh()
         for var in (self.station,self.target,self.expected,self.timeout,self.minimum):var.trace_add('write',self.changed)
 

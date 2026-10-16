@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json,time,tkinter as tk
 from tkinter import ttk
 from .ui_scroll import AutoScrollbar
+from .ui_theme import COLORS
 from .domain import ROOT,JOINTS,LABELS,Calibration,atomic_json,read_json
 from .motion import FOLLOW_START_SPEEDS,DEFAULT_FOLLOW_START_RATE
 from .configuration import ProfileLibrary,model_tcp,tcp_matrix,TCP_PRESETS,tcp_label
@@ -48,8 +49,9 @@ class SettingsPanel:
         widget.bind('<MouseWheel>',lambda e:scroll(-max(1,abs(int(e.delta/120))) if e.delta>0 else max(1,abs(int(e.delta/120)))))
     def form(self,key):
         outer=self.pages[key];outer.columnconfigure(0,weight=1);outer.rowconfigure(0,weight=1)
-        canvas=tk.Canvas(outer,bg='white',highlightthickness=0);self.scroll_canvases[str(outer)]=canvas;canvas.grid(row=0,column=0,sticky='nsew');bar=AutoScrollbar(outer,command=canvas.yview);bar.grid(row=0,column=1,sticky='ns');canvas.configure(yscrollcommand=bar.set)
-        body=ttk.Frame(canvas,padding=18,style='Card.TFrame');win=canvas.create_window(0,0,window=body,anchor='nw');body.columnconfigure(1,weight=1)
+        surface=ttk.Frame(outer,style='Surface.TFrame',padding=8);surface.grid(row=0,column=0,sticky='nsew');surface.rowconfigure(0,weight=1);surface.columnconfigure(0,weight=1)
+        canvas=tk.Canvas(surface,bg=COLORS['panel'],highlightthickness=0);self.scroll_canvases[str(outer)]=canvas;canvas.grid(row=0,column=0,sticky='nsew');bar=AutoScrollbar(surface,command=canvas.yview);bar.grid(row=0,column=1,sticky='ns');canvas.configure(yscrollcommand=bar.set)
+        body=ttk.Frame(canvas,padding=10,style='Card.TFrame');win=canvas.create_window(0,0,window=body,anchor='nw');body.columnconfigure(1,weight=1)
         def resize_form(event):
             canvas.configure(scrollregion=canvas.bbox('all'))
             if body.winfo_reqheight()<=canvas.winfo_height():canvas.yview_moveto(0)
@@ -207,6 +209,7 @@ class SettingsPanel:
         self.label(p,16,'리더 따라가기 시작 시에만 적용합니다. 합류 후 조정 속도는 그대로 유지합니다.\n아주 느리게 100 · 느리게 200 · 보통 300 · 빠르게 400틱/초 · 로봇 설정 저장·적용으로 저장합니다.')
         self.refresh_profiles();self.fill_robot()
     def start_calibration(self,use_file=False):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         if self.app.camera_only:raise ValueError('카메라 전용 실행에서는 모터 보정을 시작하지 않습니다.')
         self.require_idle()
         if self.app.profile.get('mode')=='demo':raise ValueError('데모에서는 실물 보정을 시작하지 않습니다. 로봇 설정에서 실물 모드를 선택하세요.')
@@ -236,20 +239,18 @@ class SettingsPanel:
         if not self.worker or not self.worker.running:raise ValueError('먼저 보정을 시작하세요.')
         self.worker.commands.put(command)
     def build_jigs(self):
-        p=self.form('jigs');self.jig_choice=self.field(p,0,'등록된 지그','jig_pick','',[]);self.jig_choice.bind('<<ComboboxSelected>>',lambda e:self.app.guard(self.fill_jig));self.button(p,0,'새 지그',self.new_jig)
-        self.field(p,1,'이름','jig_name','');self.field(p,2,'STL 파일 (선택)','jig_stl','');self.button(p,2,'파일 선택',lambda:self.choose('jig_stl',('.stl',)))
-        self.field(p,3,'STL 단위','jig_unit','mm',['mm','cm','m']);self.field(p,4,'형태','jig_shape','도넛형',['직사각형','도넛형'])
-        self.jig_method_keys={'윤곽 중심':'edges','색상+윤곽':'combined','외곽+교차점':'grid','외곽+교차점+원형':'grid','윤곽+돌출 모서리':'edges','색상+윤곽+돌출':'combined'}
-        self.jig_method_choice=self.field(p,5,'검출 방식','jig_method','윤곽 중심',['색상+윤곽','윤곽 중심','외곽+교차점'])
-        self.field(p,6,'STL 없을 때 가로 mm','jig_width',70);self.field(p,7,'STL 없을 때 세로 mm','jig_depth',70);self.field(p,8,'STL 없을 때 테두리 높이 mm','jig_rim',20)
-        self.field(p,9,'받침 높이 mm (바닥=0)','jig_z',0)
-        self.jig_info=tk.StringVar(value='STL을 넣으면 외곽 크기·높이·구멍을 자동 분석합니다.');ttk.Label(p,textvariable=self.jig_info,wraplength=380).grid(row=10,column=0,columnspan=3,sticky='w',pady=8)
-        jig_actions=ttk.Frame(p,style='Card.TFrame');jig_actions.grid(row=11,column=0,columnspan=3,sticky='ew',pady=6)
+        p=self.form('jigs');self.jig_choice=self.field(p,0,'등록된 지그','jig_pick','',[]);self.jig_choice.bind('<<ComboboxSelected>>',lambda e:self.app.guard(self.fill_jig));self.jig_choice.grid_configure(columnspan=2)
+        self.field(p,1,'이름','jig_name','');self.field(p,2,'STL 파일','jig_stl','');self.button(p,2,'파일 선택',lambda:self.choose('jig_stl',('.stl',)))
+        self.jig_policy=tk.StringVar(value='STL을 선택하면 지그별 고정 검출 설정을 표시합니다.')
+        ttk.Label(p,text='고정 검출 설정',style='Section.TLabel').grid(row=3,column=0,columnspan=3,sticky='w',pady=(12,4))
+        self.jig_policy_label=ttk.Label(p,textvariable=self.jig_policy,wraplength=380,justify='left');self.jig_policy_label.grid(row=4,column=0,columnspan=3,sticky='ew',pady=(0,12))
+        self.field(p,5,'받침 높이 mm (바닥=0)','jig_z',0)
+        self.jig_info=tk.StringVar(value='STL의 외곽 크기·검출 높이를 표시합니다.');ttk.Label(p,textvariable=self.jig_info,wraplength=380).grid(row=6,column=0,columnspan=3,sticky='w',pady=8)
+        jig_actions=ttk.Frame(p,style='Card.TFrame');jig_actions.grid(row=7,column=0,columnspan=3,sticky='ew',pady=6)
         self.app.button(jig_actions,'지그 저장',self.save_jig,True).pack(side='left',padx=(0,8))
-        self.app.button(jig_actions,'복사',self.copy_jig).pack(side='left')
         self.app.button(jig_actions,'삭제',self.delete_jig).pack(side='right')
-        self.jig_detection_note=ttk.Label(p,text='외곽+교차점은 3×2 홈 또는 고정 지그가 있는 운반용 지그에 사용합니다. A 지그의 고정 원형 구멍으로 앞뒤를 확인하고, 다른 부품 내부는 검사하지 않습니다. 빈 팔레트의 윤곽+돌출 모서리는 검출 방식이고, 돌출부 확인은 영상에서 실제 확인된 상태입니다. 원형 기준을 못 찾으면 방향을 채택하지 않습니다.',wraplength=380)
-        self.jig_detection_note.grid(row=12,column=0,columnspan=3,sticky='w',pady=7)
+        self.jig_detection_note=ttk.Label(p,text='운반용 지그는 외곽·교차점과 고정 원형 구멍으로 위치·방향을 확인합니다. 완제품 팔레트는 윤곽·돌출 모서리를 확인합니다. 감지 범위는 상단 카메라에서 편집합니다.',wraplength=380)
+        self.jig_detection_note.grid(row=8,column=0,columnspan=3,sticky='w',pady=7)
         self.refresh_jigs();self.fill_jig()
     def refresh_jigs(self):
         self.jig_keys=list(self.app.catalog.items);self.jig_choice.configure(values=[self.app.catalog.items[k]['name'] for k in self.jig_keys])
@@ -258,34 +259,26 @@ class SettingsPanel:
         i=self.jig_choice.current()
         if i<0:return
         d=self.app.catalog.items[self.jig_keys[i]];self.jig_id=d['id']
-        for key,v in {'jig_name':d['name'],'jig_stl':d.get('stl') or '','jig_unit':d['unit'],'jig_shape':{'rectangle':'직사각형','ring':'도넛형'}[d['shape']],'jig_method':{'edges':'윤곽 중심','combined':'색상+윤곽','grid':'외곽+교차점'}[d['method']],'jig_z':f'{support_height(d,self.app.profile):g}'}.items():self.vars[key].set(v)
+        for key,v in {'jig_name':d['name'],'jig_stl':d.get('stl') or '','jig_z':f'{support_height(d,self.app.profile):g}'}.items():self.vars[key].set(v)
         m=self.app.catalog.mesh(self.jig_id)
-        self.update_jig_method_names(m)
-        for k,v in zip(('jig_width','jig_depth','jig_rim'),[*m['size_mm'][:2],rim_height(m)]):self.vars[k].set(str(v))
+        self.show_jig_policy(m)
         model_info=f"고정 지그 {len(m['assembly']['fixtures'])}개 · 운반판 기준" if m.get('assembly') else f"내부 구멍 {len(m['holes'])}개"
         self.jig_info.set(f"STL 크기 {[round(v, 2) for v in m['size_mm']]} mm · {model_info}\n받침 {support_height(d,self.app.profile):g} mm · 감지면 {support_height(d,self.app.profile)+rim_height(m):g} mm (바닥 기준)")
-    def update_jig_method_names(self,mesh=None):
-        raised=self.value('jig_shape')=='도넛형' and bool((mesh or {}).get('raised_edges_mm'))
-        direction=bool((mesh or {}).get('assembly',{}).get('orientation_hole'))
-        names={'edges':'윤곽+돌출 모서리' if raised else '윤곽 중심','combined':'색상+윤곽+돌출' if raised else '색상+윤곽','grid':'외곽+교차점+원형' if direction else '외곽+교차점'}
-        method=self.jig_method_keys.get(self.value('jig_method'),'edges')
-        self.jig_method_choice.configure(values=[names[k] for k in ('combined','edges','grid')])
-        if self.value('jig_method')!=names[method]:self.vars['jig_method'].set(names[method])
-    def new_jig(self):
-        self.jig_id=None;self.vars['jig_z'].set('0');self.vars['jig_name'].set('새 지그');self.vars['jig_stl'].set('');self.jig_info.set('STL을 선택하고 저장하세요.');self.update_jig_method_names()
+    def show_jig_policy(self,mesh=None):
+        if mesh is None:self.jig_policy.set('STL을 선택하면 지그별 고정 검출 설정을 표시합니다.');return
+        from .configuration import fixed_jig_detection
+        settings=fixed_jig_detection(mesh)
+        if settings['shape']=='rectangle':text='운반용 지그 · 직사각형 · mm\n외곽+교차점 · 고정 특징으로 방향 확인'
+        else:text='완제품 팔레트 · 도넛형 · mm\n윤곽+돌출 모서리'
+        self.jig_policy.set(text)
     def save_jig(self):
         if self.app.workspace_manager:self.app.workspace_manager.require_shared_jig_idle(self.app)
         self.require_calculation_idle()
         a=self.app
         if a.pose_latch.frozen or a.pending_execution:raise ValueError('실행이 끝난 뒤 지그를 변경하세요.')
         old=a.catalog.items.get(self.jig_id,{})
-        d=a.catalog.save({**deepcopy(old),'id':self.jig_id,'name':self.value('jig_name'),'stl':self.value('jig_stl'),'unit':self.value('jig_unit'),'shape':{'직사각형':'rectangle','도넛형':'ring'}[self.value('jig_shape')],'method':self.jig_method_keys[self.value('jig_method')],'support_height_mm':float(self.value('jig_z') or '0'),'roi':old.get('roi'),'manual_size_mm':[70,70] if self.value('jig_stl') else [float(self.value('jig_width')),float(self.value('jig_depth'))],'manual_rim_mm':20 if self.value('jig_stl') else float(self.value('jig_rim'))})
+        d=a.catalog.save({**deepcopy(old),'id':self.jig_id,'name':self.value('jig_name'),'stl':self.value('jig_stl'),'support_height_mm':float(self.value('jig_z') or '0'),'roi':old.get('roi')})
         self.jig_id=d['id'];a.catalog_changed();self.refresh_jigs();self.jig_choice.current(self.jig_keys.index(d['id']));self.fill_jig();a.notice('지그 저장 · 기존 스텝의 티칭 기준은 유지됩니다.')
-    def copy_jig(self):
-        if self.app.workspace_manager:self.app.workspace_manager.require_shared_jig_idle(self.app)
-        self.require_calculation_idle()
-        if self.jig_id:
-            item=self.app.catalog.duplicate(self.jig_id);self.app.catalog_changed();self.refresh_jigs();self.jig_choice.current(self.jig_keys.index(item['id']));self.fill_jig()
     def delete_jig(self):
         if self.app.workspace_manager:self.app.workspace_manager.require_shared_jig_idle(self.app)
         self.require_calculation_idle()
@@ -296,6 +289,7 @@ class SettingsPanel:
         self.camera_choices={};self.camera_devices_job=None
         self.camera_source_choice=self.field(p,0,'카메라 컬러 채널','cam_source',a.profile['camera']['source'],[]);self.camera_source_choice.configure(state='normal')
         self.camera_refresh_btn=self.button(p,0,'목록 새로고침',self.refresh_camera_devices)
+        self.camera_refresh_btn.configure(width=16)
         self.set_camera_choices(getattr(a.remote,'health',{}).get('devices',{}).get('camera_details',[]) if a.remote_mode else [])
         self.field(p,1,'너비 px','cam_width',a.profile['camera']['width']);self.field(p,2,'높이 px','cam_height',a.profile['camera']['height']);self.button(p,2,'장치 설정 적용',self.save_camera_device)
         default=ROOT/'data/camera_images';self.field(p,3,'체커보드 사진 폴더','photo_dir',default);self.button(p,3,'폴더 선택',lambda:self.choose('photo_dir',directory=True))
@@ -592,8 +586,9 @@ class SettingsPanel:
             tcp_matrix(d);return {'kind':'tcp','tcp':d}
         path=self.value('jig_stl');path=Path(path).expanduser().resolve() if path else None
         if path and not path.is_file():raise ValueError('선택한 STL 파일을 찾을 수 없습니다.')
-        spec={'kind':'jig','stl':str(path) if path else None,'mtime':path.stat().st_mtime_ns if path else None,'unit':self.value('jig_unit'),
-              'size_mm':[float(self.value('jig_width')),float(self.value('jig_depth'))] if not path else None,'rim_mm':float(self.value('jig_rim')) if not path else None}
+        if not path:raise ValueError('미리 볼 지그 STL 파일을 선택하세요.')
+        mesh=self.app.catalog.fixed_mesh(path)
+        spec={'kind':'jig','stl':str(path),'mtime':path.stat().st_mtime_ns,'unit':'mm'}
         registered=self.app.catalog.items.get(self.jig_id,{})
         if path and registered.get('stl') and path==Path(registered['stl']).resolve() and spec['unit']==registered['unit']:
             mesh=self.app.catalog.mesh(self.jig_id);installation=registered.get('physical_installation',{})
@@ -605,6 +600,7 @@ class SettingsPanel:
         return spec
     def poll_models(self):
         if self.models_closed:return
+        active=None
         try:
             active=next((k for k in self.model_views if str(self.pages[k])==self.tabs.select()),None) if self.app.workspace_visible and self.app.page=='settings' else None
             if active:
@@ -618,9 +614,10 @@ class SettingsPanel:
                     try:
                         spec=self.model_spec(active);pane.set_spec(spec)
                         if active=='jigs':
-                            from .vision import stl_profile
-                            self.update_jig_method_names(stl_profile(spec['stl'],unit=spec['unit']) if spec.get('stl') else None)
-                    except Exception as exc:pane.set_spec(None,str(exc))
+                            self.show_jig_policy(self.app.catalog.fixed_mesh(spec['stl']))
+                    except Exception as exc:
+                        pane.set_spec(None,str(exc))
+                        if active=='jigs':self.jig_policy.set(str(exc))
                 if pane.spec is not None and active not in self.model_dirty and self.app.render_enabled:
                     request=(pane.version,pane.view)
                     if pane.request!=request:
@@ -638,7 +635,7 @@ class SettingsPanel:
                     if pane and pane.version==version:pane.accept(item)
         except Exception as exc:
             if active:self.model_views[active].set_spec(None,'모델 표시 오류: '+str(exc))
-        finally:self.model_job=self.app.root.after(33,self.poll_models)
+        finally:self.model_job=self.app.root.after(33 if active else 200,self.poll_models)
     def close(self):
         self.calibration_panel.close()
         self.models_closed=True

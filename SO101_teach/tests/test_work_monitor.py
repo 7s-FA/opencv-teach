@@ -60,9 +60,13 @@ class WorkMonitorTests(unittest.TestCase):
 
     def test_stage_linear_and_pause_messages_keep_their_meaning(self):
         cases={'B_STAGE_DONE:MIDDLE':'중단','A_LINEAR_DONE:TIME_BASED:position_measured=false':'위치 실측 없음',
-               'A_LINEAR_READY:target_mm=1.5:position_measured=false':'1.5 mm',
+               'A_LINEAR_READY:target_mm=1.5:position_measured=false':'하차 위치'
+               ,'A_LINEAR_DONE:TIME_BASED:target_mm=100:target_position=ASSEMBLY:position_measured=false':'조립 위치',
                'B_PAUSED':'작업 보류','B_RESUMED':'작업 재개',
                'B_LINEAR_CONTINUES:ESTOP_APPLIES_TO_ARM_ONLY':'계속 이동',
+               'B_CHAIN_RETURN_STARTED:target_mm=100:target_position=ASSEMBLY':'안착 확인',
+               'B_CHAIN_RETURN_WAIT:target_mm=100:target_position=ASSEMBLY':'완료 대기',
+               'B_CHAIN_RETURN_DONE:target_mm=100:position_measured=false':'구동 시간 기준',
                'B_ARM_RESET:arm3:RESET_WAIT_LINEAR_COMPLETE':'리니어 완료 대기'}
         for raw,meaning in cases.items():
             self.assertIn(meaning,monitor.visible_event(dict(at=1,arm='arm2',status=raw))['status'])

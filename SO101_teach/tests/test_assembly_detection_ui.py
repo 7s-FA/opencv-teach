@@ -17,7 +17,7 @@ class AssemblyDetectionUITests(unittest.TestCase):
         for item in a.catalog.items.values():item['stl']=str(ROOT/'data/jig_assets'/Path(item['stl']).name)
         a.catalog.items[key]['stl']=str(ROOT/'assets/carrier_assembly/carrier_assembly.stl')
         before=deepcopy(a.episode);a.show_page('settings');s=a.settings;s.tabs.select(s.pages['jigs']);s.refresh_jigs();s.jig_choice.current(s.jig_keys.index(key));s.fill_jig()
-        s.vars['jig_method'].set('외곽+교차점');s.save_jig();self.assertEqual(a.catalog.items[key]['method'],'grid');self.assertEqual(a.episode,before);self.assertIn('고정 지그 6개',s.jig_info.get());self.assertEqual(a.catalog.mesh(key)['rim_z_mm'],4.8)
+        self.assertNotIn('jig_method',s.vars);s.save_jig();self.assertEqual(a.catalog.items[key]['method'],'grid');self.assertEqual(a.episode,before);self.assertIn('고정 지그 6개',s.jig_info.get());self.assertEqual(a.catalog.mesh(key)['rim_z_mm'],4.8)
         a.render_enabled=True
         pane=s.model_views['jigs'];deadline=time.monotonic()+15
         while pane.image is None and time.monotonic()<deadline:

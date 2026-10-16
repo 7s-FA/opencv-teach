@@ -93,12 +93,12 @@ class ConfigurationTests(unittest.TestCase):
             while worker.state!='ANGLES' and time.monotonic()<deadline:time.sleep(.01)
             worker.close();worker.thread.join(1);self.assertFalse(worker.saved);self.assertEqual(bus.cal,original);self.assertFalse((Path(d)/'cancelled.json').exists())
 
-    def test_manual_rectangle_without_stl_has_stable_geometry_and_outline_scene(self):
-        import mujoco
+    def test_manual_geometry_is_rejected_without_modifying_catalog(self):
         with tempfile.TemporaryDirectory() as d:
-            c=JigCatalog(d);item=c.save({'id':None,'name':'220 판','stl':None,'unit':'mm','shape':'rectangle','method':'combined','manual_size_mm':[220,148],'manual_rim_mm':4.8,'roi':None,'yaw_deg':0})
-            m=c.mesh(item['id']);self.assertEqual(m['size_mm'],[220.,148.,4.8]);self.assertEqual(m['holes'],[])
-            scene=configured_scene([{**item,'low_mm':m['low_mm'],'size_mm':m['size_mm']}]);model=mujoco.MjModel.from_xml_string(scene);self.assertGreaterEqual(model.geom('registered_jig_0_edge3').id,0)
+            c=JigCatalog(d);before=deepcopy(c.items)
+            with self.assertRaisesRegex(ValueError,'STL'):
+                c.save({'id':None,'name':'220 판','stl':None,'unit':'mm','shape':'rectangle','method':'combined','manual_size_mm':[220,148],'manual_rim_mm':4.8,'roi':None})
+            self.assertEqual(c.items,before);self.assertFalse(c.path.exists())
     def test_calibration_measured_range_commits_actual_endpoints(self):
         with tempfile.TemporaryDirectory() as d:
             bus,_=self.calibration_bus();w=CalibrationWorker('fake',self.cal,Path(d)/'measured.json',bus_factory=lambda:bus);w.start()

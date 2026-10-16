@@ -38,7 +38,7 @@ class TeachingSessionBasisTests(unittest.TestCase):
     def test_repause_without_a_new_measurement_requests_read_instead_of_old_hold(self):
         a=self.app;self.fake_jig_camera();a.toggle_jig_updates();a.follow_jig.set(True);a.commit_target()
         a.toggle_jig_updates()
-        with patch.object(a,'request_jig_read') as read:a.toggle_jig_updates()
+        with patch.object(a,'start_camera'),patch.object(a,'request_jig_read',wraps=a.request_jig_read) as read:a.toggle_jig_updates()
         read.assert_called_once();self.assertIsNone(a.new_step_jig_reference('pallet'))
         with self.assertRaises(ValueError):a.commit_target()
     def test_resume_and_reload_continue_latest_saved_basis_until_next_pause(self):

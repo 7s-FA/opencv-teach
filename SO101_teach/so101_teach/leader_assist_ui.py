@@ -19,6 +19,7 @@ class LeaderAssistControls:
         leader=self.leader_session
         if leader and callable(getattr(leader,'stop_assist',None)):leader.stop_assist()
     def prepare_leader_assist(self):
+        if getattr(self,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         choice=self.preferences.get('leader_gravity_assist','약하게')
         if choice=='사용 안 함':return
         if choice not in LEVELS:raise ValueError('설정·안내 → 로봇에서 리더 보조 설정을 확인하세요.')

@@ -24,10 +24,10 @@ class CameraOverviewTests(unittest.TestCase):
         self.assertIsNone(a.camera_display_snapshot['jig_id']);self.assertEqual(len(a.camera_display_snapshot['result']['by_jig']),2)
         self.assertTrue(all(a.camera_jig_status.item(key,'tags')==('detected',) for key in a.catalog.items))
         self.assertEqual(a.camera_jig_status.item('pallet','values')[1],'돌출부 확인')
-        path=a.save_camera();meta=read_json(path.parent/'metadata'/path.with_suffix('.json').name)
+        path=a.save_camera();meta=read_json(path.parent.parent/'판정 기록'/path.with_suffix('.json').name)
         self.assertIsNone(meta['jig_id']);self.assertEqual(meta['detection']['view'],'all');self.assertEqual(len(meta['detection']['by_jig']),2)
         from PIL import ImageGrab
-        for size in ('1280x800','1180x760'):
+        for size in ('1920x1043','1920x1080'):
             self.root.geometry(size);self.root.update();a.draw_camera_frame(time.monotonic());self.root.update()
             self.assertLessEqual(a.camera_jig_status.winfo_rootx()+a.camera_jig_status.winfo_width(),self.root.winfo_rootx()+self.root.winfo_width())
             self.assertGreater(a.camera_canvas.winfo_height(),180)

@@ -7,6 +7,7 @@ from PIL import Image
 from .domain import JOINTS,LABELS,Calibration
 from .preview import Renderer,pan_view,DEFAULT_LOOKAT
 from .angle_mapping import points_ready
+from .ui_status import StatusText
 
 STATES={'IDLE':'몸체: 0°·양쪽 각도 / 집게: −90°·닫힘·열림 → 범위 → 저장',
  'MIDPOINT':'관절 선택 → 몸체 0° 또는 집게 −90° 기준을 기록하세요.',
@@ -20,26 +21,26 @@ class CalibrationPanel:
     def __init__(self,settings):
         self.s=settings;self.a=settings.app;self.renderer=None;self.request=None;self.image=None;self.closed=False;self.last_sample=None;self.view=(100.,-18.,.82);self.view_owner=None;self.other_safe_angles=None;self.drag=None;self.preview_kind='guide';self.guide=0.;self.guide_source='zero';self.selected_joint=None;self.angle_drafts={};self.state='IDLE'
         outer=settings.pages['calibration'];p=settings.form('calibration');p.inspection_form=True
+        p.columnconfigure(0,minsize=135);p.columnconfigure(2,minsize=190)
         outer.columnconfigure(0,weight=3);outer.columnconfigure(2,weight=3,minsize=350)
-        right=ttk.Frame(outer,padding=14,style='Card.TFrame');right.grid(row=0,column=2,sticky='nsew',padx=(8,0));right.columnconfigure(0,weight=1);right.rowconfigure(2,weight=1)
+        right=ttk.Frame(outer,padding=14,style='Surface.TFrame');right.grid(row=0,column=2,sticky='nsew',padx=(8,0));right.columnconfigure(0,weight=1);right.rowconfigure(2,weight=1)
         ttk.Label(right,text='서보 각도 · 3D 기준 자세',style='Section.TLabel').grid(row=0,column=0,sticky='w')
         self.caption=tk.StringVar(value='청록색: 선택 관절 · 버튼은 모델만 움직입니다.')
         summary=ttk.Frame(right,style='Card.TFrame');summary.grid(row=1,column=0,sticky='ew',pady=8);summary.columnconfigure(1,weight=1)
         angle=ttk.Frame(summary,style='Card.TFrame');angle.grid(row=0,column=0,sticky='nw',padx=(0,16))
         self.angle_kind=tk.StringVar(value='기준 각도');self.angle_value=tk.StringVar(value='—')
         ttk.Label(angle,textvariable=self.angle_kind,style='Small.TLabel').pack(anchor='w')
-        self.angle_label=ttk.Label(angle,textvariable=self.angle_value,font=('Noto Sans CJK KR',30,'bold'),foreground='#11697a')
+        self.angle_label=ttk.Label(angle,textvariable=self.angle_value,font=('Noto Sans CJK KR',30,'bold'),foreground='#11697a',width=8)
         self.angle_label.pack(anchor='w')
-        context=ttk.Label(summary,textvariable=self.caption,wraplength=270);context.grid(row=0,column=1,sticky='w')
-        summary.bind('<Configure>',lambda e:context.configure(wraplength=max(120,e.width-angle.winfo_reqwidth()-16)))
+        StatusText(summary,self.caption,height=4,font=('Noto Sans CJK KR',11)).grid(row=0,column=1,sticky='ew')
         self.canvas=tk.Canvas(right,bg='#dfe7ed',highlightthickness=0,width=350,height=300);self.canvas.grid(row=2,column=0,sticky='nsew')
         self.canvas.bind('<Configure>',lambda e:self.a.fit_image(self.canvas,self.image) if self.image else None)
-        bar=ttk.Frame(right);bar.grid(row=3,column=0,sticky='ew',pady=8)
+        bar=ttk.Frame(right,style='Card.TFrame');bar.grid(row=3,column=0,sticky='ew',pady=8)
         self.guide_buttons={}
         for label,kind in [('음수 각도','negative'),('0°','zero'),('양수 각도','positive'),('읽은 자세','live')]:
             button=self.a.button(bar,label,lambda k=kind:self.show(k));button.pack(side='left',expand=True,fill='x',padx=2);self.guide_buttons[kind]=button
         self.detail=tk.StringVar(value='영점 자세에서 서보 출력축이 회전한 각도입니다.\n접촉 한계와 각도 기준점은 따로 기록합니다.')
-        ttk.Label(right,textvariable=self.detail,wraplength=430,style='Muted.TLabel').grid(row=4,column=0,sticky='w',pady=6)
+        StatusText(right,self.detail,height=3,font=('Noto Sans CJK KR',11)).grid(row=4,column=0,sticky='ew',pady=6)
         self.a.button(right,'시점 복원',self.reset_view).grid(row=5,column=0,sticky='e')
         self.canvas.bind('<ButtonPress-1>',lambda e:setattr(self,'drag',(e.x,e.y,self.view)))
         self.canvas.bind('<B1-Motion>',self.rotate)
@@ -49,8 +50,9 @@ class CalibrationPanel:
         settings.label(p,0,'토크 OFF에서 손으로 맞춥니다. 몸체는 0°, 집게는 −90° 자세를 2047틱으로 기록합니다. 선택한 관절만 변경합니다.')
         self.role=settings.field(p,1,'보정할 팔','cal_role','리더' if (self.a.data_dir/'calibration_progress/leader.json').exists() else '팔로워',['팔로워','리더'])
         self.start=settings.button(p,1,'보정 시작',settings.start_calibration)
+        self.start.configure(width=22)
         self.port=settings.field(p,2,'보정할 포트','cal_port',settings.value('follower_port'),list(map(str,Path('/dev/serial/by-id').glob('*'))));self.port.configure(state='normal')
-        self.port_name=tk.StringVar();ttk.Label(p,textvariable=self.port_name,style='Small.TLabel').grid(row=2,column=2,sticky='w',padx=8)
+        self.port_name=tk.StringVar();StatusText(p,self.port_name,height=2).grid(row=2,column=2,sticky='ew',padx=8)
         settings.vars['cal_port'].trace_add('write',lambda *args:self.update_port_name());self.update_port_name()
         self.role.bind('<<ComboboxSelected>>',lambda e:self.sync_role())
         settings.field(p,3,'기존 영점 JSON','cal_import','');self.choose=settings.button(p,3,'파일 선택',lambda:settings.choose('cal_import'))
@@ -59,7 +61,7 @@ class CalibrationPanel:
         self.inspect_btn=settings.button(file_actions,0,'저장 내용 확인',self.preview_saved,0)
         self.import_btn=settings.button(file_actions,0,'모터 적용',lambda:settings.start_calibration(True),1)
         settings.label(p,5,'각도·집게 범위 파일(.angles.json)은 영점 JSON 옆에서 함께 불러옵니다.')
-        settings.cal_status=tk.StringVar(value=STATES['IDLE']);ttk.Label(p,textvariable=settings.cal_status,wraplength=430).grid(row=6,column=0,columnspan=3,sticky='w',pady=6)
+        settings.cal_status=tk.StringVar(value=STATES['IDLE']);StatusText(p,settings.cal_status,height=3,font=('Noto Sans CJK KR',11)).grid(row=6,column=0,columnspan=3,sticky='ew',pady=6)
         self.progress=tk.StringVar(value='영점 0/6 · 3점 완료 0/6');ttk.Label(p,textvariable=self.progress,style='Small.TLabel').grid(row=7,column=0,sticky='w')
         self.cancel=settings.button(p,7,'중단·진행 기록 유지',lambda:settings.worker.close() if settings.worker else None,1);self.cancel.grid_configure(columnspan=2)
         cols=('joint','tick','negative','zero','positive','range');settings.cal_table=ttk.Treeview(p,columns=cols,show='headings',height=6,style='Step.Treeview',selectmode='browse')
@@ -72,7 +74,7 @@ class CalibrationPanel:
         self.negative_input=settings.field(p,10,'음수 기준각 °','cal_negative',-90);self.negative=settings.button(p,10,'현재 틱 기록',lambda:self.record('negative'))
         self.positive_input=settings.field(p,11,'양수 기준각 °','cal_positive',90);self.positive=settings.button(p,11,'현재 틱 기록',lambda:self.record('positive'))
         self.negative_label=p.grid_slaves(row=10,column=0)[0];self.positive_label=p.grid_slaves(row=11,column=0)[0]
-        self.rule=tk.StringVar();ttk.Label(p,textvariable=self.rule,wraplength=430,style='Small.TLabel').grid(row=12,column=0,columnspan=3,sticky='w',pady=8)
+        self.rule=tk.StringVar();StatusText(p,self.rule,height=2).grid(row=12,column=0,columnspan=3,sticky='ew',pady=8)
         actions=ttk.Frame(p,style='Card.TFrame');actions.grid(row=13,column=0,columnspan=3,sticky='ew',pady=(4,0))
         actions.columnconfigure((0,1),weight=1,uniform='calibration_actions')
         self.range=settings.button(actions,0,'몸체 범위 측정',lambda:settings.cal_command('range'),0)

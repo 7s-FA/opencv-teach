@@ -33,42 +33,51 @@ def tcp_matrix(tcp):
     if xyz.shape!=(3,) or rpy.shape!=(3,) or not np.isfinite([xyz,rpy]).all() or abs(xyz).max()>500 or abs(rpy).max()>360:raise ValueError('TCP 위치·각도 범위를 확인하세요.')
     T=np.eye(4);T[:3,3]=xyz;T[:3,:3]=Rotation.from_euler('xyz',rpy,degrees=True).as_matrix();return T
 
+def fixed_jig_detection(mesh):
+    """The two installed jig geometries have one tested detection policy each."""
+    from .grid_model import grid_layout
+    size=sorted(mesh['size_mm'][:2])
+    if np.allclose(size,[148.,220.],atol=.1) and grid_layout({**mesh,'shape':'rectangle'}) is not None:
+        return {'unit':'mm','shape':'rectangle','method':'grid'}
+    if np.allclose(size,[70.,70.],atol=.1) and len(mesh.get('holes',[]))==1:
+        return {'unit':'mm','shape':'ring','method':'edges'}
+    raise ValueError('운반용 지그(220×148) 또는 완제품 팔레트(70×70)의 mm 단위 STL을 선택하세요.')
+
+
 class JigCatalog:
     def __init__(self,data_dir,profile=None,*,persist_migration=False):
         self.root=Path(data_dir);self.path=self.root/'jigs.json'
         self.floor_profile=deepcopy(profile if profile is not None else read_json(self.root/'profile.json') if (self.root/'profile.json').exists() else {})
         self.items=read_json(self.path) if self.path.exists() else {'pallet':{'id':'pallet','name':'팔레트 70×70','stl':str(ROOT/'assets/jigs/pallet.stl'),'unit':'mm','shape':'ring','method':'edges','roi':None,'support_height_mm':0.}}
         from .height_reference import normalize_jig_height
+        self.revision=0;self.cache={}
         old_items=deepcopy(self.items)
         self.items={key:normalize_jig_height(item,self.floor_profile) for key,item in self.items.items()}
         for item in self.items.values():
             item.pop('yaw_deg',None);item.pop('heading_set',None)
-            if item.get('method')=='white':item['method']='combined'
+            mesh=self.fixed_mesh(item.get('stl'))
+            item.update(fixed_jig_detection(mesh))
+            item.pop('manual_size_mm',None);item.pop('manual_rim_mm',None)
         if persist_migration and self.path.exists() and self.items!=old_items:atomic_json(self.path,self.items)
-        self.revision=0;self.cache={}
-    def save(self,item):
+    def fixed_mesh(self,path):
         from .vision import stl_profile
+        if not path:raise ValueError('지그 STL 파일을 선택하세요. 수동 형상 입력은 지원하지 않습니다.')
+        source=Path(path);stat=source.stat();stamp=('fixed',str(source.resolve()),stat.st_mtime_ns,stat.st_size)
+        if stamp not in self.cache:
+            mesh=stl_profile(source,unit='mm');mesh.update(fixed_jig_detection(mesh));self.cache[stamp]=mesh
+        return deepcopy(self.cache[stamp])
+    def save(self,item):
         d=deepcopy(item);name=d.get('name','').strip()
         if not name or len(name)>80:raise ValueError('지그 이름은 1~80자입니다.')
-        if d.get('unit') not in ('mm','cm','m') or d.get('shape') not in ('rectangle','ring') or d.get('method') not in ('edges','combined','grid'):raise ValueError('지그 형상·단위·검출 방법을 선택하세요.')
-        if d['method']=='grid' and (d['shape']!='rectangle' or not d.get('stl')):raise ValueError('외곽+교차점은 내부 격자가 있는 직사각형 STL이 필요합니다.')
+        info=self.fixed_mesh(d.get('stl'));d.update(fixed_jig_detection(info))
+        d.pop('manual_size_mm',None);d.pop('manual_rim_mm',None)
         roi=d.get('roi')
         from .roi_geometry import roi_vertices
         roi_vertices(roi)
         d.pop('yaw_deg',None);d.pop('heading_set',None)
         from .height_reference import normalize_jig_height
         d=normalize_jig_height(d,self.floor_profile)
-        if not d.get('stl'):
-            size=[float(v) for v in d.get('manual_size_mm',[70,70])];height=float(d.get('manual_rim_mm',20))
-            if len(size)!=2 or not np.isfinite(size).all() or min(size)<=0 or max(size)>2000 or not np.isfinite(height) or not 0<height<=500:raise ValueError('외곽 크기·테두리 높이를 확인하세요.')
-            d.update(id=d.get('id') or uuid.uuid4().hex,name=name,stl=None,unit='mm',manual_size_mm=size,manual_rim_mm=height)
-            atomic_json(self.path,{**self.items,d['id']:d});self.items[d['id']]=d;self.revision+=1;return d
         source=Path(d['stl']);raw=source.read_bytes();sha=hashlib.sha256(raw).hexdigest();dest=self.root/'jig_assets'/(sha+'.stl')
-        # Validate before any catalog mutation.
-        info=stl_profile(source,unit=d['unit'])
-        if d['method']=='grid':
-            from .grid_model import grid_layout
-            if grid_layout({**info,'shape':d['shape']}) is None:raise ValueError('외곽+교차점은 큰 홈 또는 고정 지그 6개가 3×2로 배열된 STL을 지원합니다.')
         dest.parent.mkdir(parents=True,exist_ok=True)
         if not dest.exists():
             count=int.from_bytes(raw[80:84],'little') if len(raw)>=84 else 0
@@ -81,16 +90,7 @@ class JigCatalog:
         d.update(id=d.get('id') or uuid.uuid4().hex,name=name,stl=str(dest),mesh=info)
         atomic_json(self.path,{**self.items,d['id']:d});self.items[d['id']]=d;self.revision+=1;return d
     def mesh(self,key):
-        from .vision import stl_profile
-        d=self.items[key]
-        if not d.get('stl'):
-            import json
-            size=d['manual_size_mm'];h=d['manual_rim_mm'];sha=hashlib.sha256(json.dumps([size,h,d['shape']]).encode()).hexdigest()
-            return {'sha256':sha,'size_mm':[*size,h],'rim_z_mm':h,'low_mm':[-size[0]/2,-size[1]/2,0],'holes':[],'shape':d['shape'],'method':d['method'],'unit':'mm','stl_path':None}
-        stamp=(str(d['stl']),d['unit'],d['shape'],d['method'],Path(d['stl']).stat().st_mtime_ns)
-        if stamp not in self.cache:
-            m=stl_profile(d['stl'],unit=d['unit']);m.update(shape=d['shape'],method=d['method']);self.cache[stamp]=m
-        return deepcopy(self.cache[stamp])
+        return self.fixed_mesh(self.items[key].get('stl'))
     def mesh_for_reference(self,key,reference):
         """Render saved teaching with its own STL, never a newer asymmetric mesh."""
         current=self.mesh(key);sha=reference.get('stl_sha256')

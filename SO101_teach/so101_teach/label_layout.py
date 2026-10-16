@@ -10,9 +10,14 @@ class LabelLayout:
         if len(p) and np.isfinite(p).all():
             lo=p.min(0)-6;hi=p.max(0)+6
             self.blocked.append((lo[0],lo[1],hi[0],hi[1]))
-    def place(self,width,height,point):
+    def place(self,width,height,point,*,preferred=None):
         if width+8>self.width or height+8>self.height:return None
         px,py=map(float,point);regions=self.blocked+self.labels
+        if preferred is not None:
+            x,y=map(int,preferred)
+            if (4<=x<=self.width-width-4 and 4<=y<=self.height-height-4
+                    and not any(x<x1 and x+width>x0 and y<y1 and y+height>y0 for x0,y0,x1,y1 in regions)):
+                self.labels.append((x-3,y-3,x+width+3,y+height+3));return x,y
         xs={4,self.width-width-4,int(px),int(px-width/2)}
         ys={4,self.height-height-4,int(py-height-8),int(py+8)}
         for x0,y0,x1,y1 in regions:

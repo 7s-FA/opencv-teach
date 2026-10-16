@@ -79,7 +79,7 @@ class PiStartTests(unittest.TestCase):
         cli=cli_fixture.cli;link=cli_fixture.FakeLink();linear=cli_fixture.FakeLinear();runner=cli.Runner(link,lambda x:None,cli.Control(),20,linear=linear);seen=[]
         def inspect(steps,bundle):
             self.assertEqual(len(steps),4);self.assertFalse(any(m=='command' for m,_ in link.calls));self.assertTrue(any(op=='ensure' for op,_ in linear.calls));seen.extend(step['id'] for step in steps)
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'inspect_startup_group',side_effect=inspect),patch.object(runner,'measure',return_value={}),patch.object(runner,'release_after_completion'):
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'inspect_startup_group',side_effect=inspect),patch.object(runner,'measure',return_value={}):
             runner.execute(self.episode(),{},400,100.)
         self.assertEqual(len(seen),4);self.assertTrue(any(op=='ensure' for op,_ in linear.calls));self.assertTrue(any(m=='command' and args['action']=='move' for m,args in link.calls))
     def test_start_failure_prevents_linear_and_motor_commands(self):
@@ -95,7 +95,7 @@ class PiStartTests(unittest.TestCase):
             @property
             def result(self):return {'at':clock[0]-.01,'row':{'state':'empty','quality':'abnormal','seating':'missing','product_certain':False}}
             def close(self):pass
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(cli.time,'monotonic',side_effect=lambda:clock[0]),patch.object(cli.time,'sleep',side_effect=lambda seconds:clock.__setitem__(0,clock[0]+seconds)),patch('so101_teach.configuration.JigCatalog'),patch('so101_teach.workcell_preview.load_placement',return_value={'linear_stage':{}}),patch('so101_teach.episode_inspection_runtime.FrameInspection',return_value=Worker()):
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(cli.time,'monotonic',side_effect=lambda:clock[0]),patch.object(cli.time,'sleep',side_effect=lambda seconds:clock.__setitem__(0,clock[0]+seconds)),patch('so101_teach.configuration.JigCatalog'),patch('so101_teach.workcell_placement.load_placement',return_value={'linear_stage':{}}),patch('so101_teach.episode_inspection_runtime.FrameInspection',return_value=Worker()):
             runner.deadline=120;runner.inspection_log=Path(folder)/'inspection.json'
             if phase=='MOVING':
                 with self.assertRaisesRegex(RuntimeError,'정지'):runner.inspect_checkpoint({'id':'start','name':'시작 조건','inspection':EMPTY},{'profile':{}},startup=True)
@@ -116,6 +116,24 @@ class UITests(unittest.TestCase):
         self.assertEqual(a.episode['startup_inspections'],[ALL]);self.assertEqual(a.episode['product_type'],'A')
         p.startup.station.set('리니어 조립');p.startup.location_changed();p.startup.save();self.assertEqual(a.episode['startup_inspections'][1],EMPTY)
         p.startup.table.selection_set('0');p.startup.select();p.startup.remove();self.assertEqual(a.episode['startup_inspections'],[EMPTY]);self.assertFalse(p.dirty)
+    def test_saved_start_conditions_update_only_start_row_marker(self):
+        a=self.app;self.root.geometry('1920x1043');a.commit_target();work=a.selected;a.add_safe_steps()
+        start=a.episode['steps'][0]['id'];end=a.episode['steps'][-1]['id']
+        a.episode['product_type']='A';a.episode['completion_events']={'LOWER':work};a.episode['steps'][1]['inspection']=deepcopy(EMPTY)
+        a.refresh_steps();p=a.episode_adjust_panel;p.inspection.product.set('A')
+        self.assertEqual(a.steps.item(start,'values')[2],'—')
+        preserved=deepcopy(a.episode['steps']);p.startup.save();self.root.update()
+        self.assertEqual(a.steps.item(start,'values')[2],'시작 전 검사')
+        self.assertEqual(a.steps.item(work,'values')[2],'하단 · 검사')
+        self.assertEqual(a.steps.item(end,'values')[2],'—')
+        self.assertEqual(a.episode['steps'],preserved)
+        from tkinter import font,ttk
+        f=font.Font(self.root,font=ttk.Style(self.root).lookup('Step.Treeview','font'))
+        self.assertLess(f.measure('시작 전 검사')+8,a.steps.column('completion','width'))
+        p.startup.table.selection_set('0');p.startup.select();p.startup.remove();self.root.update()
+        self.assertEqual(a.steps.item(start,'values')[2],'—')
+        self.assertEqual(a.steps.item(work,'values')[2],'하단 · 검사')
+
     def test_start_drafts_block_export_and_survive_episode_switch(self):
         a=self.app;a.commit_target();eid=a.episode['id'];p=a.episode_adjust_panel;p.inspection.product.set('B');p.inspection.save_product();p.startup.timeout.set('7');self.assertTrue(p.dirty)
         a.new_episode();self.assertFalse(p.dirty);index=next(i for i,(_,d) in enumerate(a.library_entries) if d['id']==eid);a.library.selection_clear(0,'end');a.library.selection_set(index);a.load_selected_episode()

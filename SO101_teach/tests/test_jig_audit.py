@@ -64,6 +64,17 @@ class CompatibilityTests(unittest.TestCase):
         for changes in ({'mesh_yaw_offset_deg':0},{'stl_sha256':'f'*64},{'symmetry_deg':90}):
             invalid=deepcopy(step);invalid['jig_reference'].update(changes)
             with self.assertRaises(ValueError):corrected_step(self.kin,invalid,current,ASSEMBLED_CARRIER_SHA)
+    def test_oct11_carrier_wall_update_preserves_oct02_teaching(self):
+        from so101_teach.jig_compatibility import OCT02_ASSEMBLED_CARRIER_SHA
+        for original in self.steps:
+            step=deepcopy(original);current=self.current(step)
+            step['jig_reference']={**current,'stl_sha256':OCT02_ASSEMBLED_CARRIER_SHA}
+            before=deepcopy(step)
+            out=corrected_step(self.kin,step,current,ASSEMBLED_CARRIER_SHA)
+            self.assertEqual(out['ticks'],step['ticks'])
+            self.assertEqual(out['position_error_mm'],0.)
+            self.assertEqual(step,before)
+
     def test_full_real_episode_plan_matches_pc_and_pi_without_device_access(self):
         from so101_teach.remote_config import configuration_bundle
         from so101_teach.remote_server import Runtime

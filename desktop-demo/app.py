@@ -48,6 +48,14 @@ def main():
                 self.stop.set();self.frame_ready.set();self.running=False
                 if self.processing_thread:self.processing_thread.join(3)
     ui.CameraSession=PhotoCamera
+    # The current application routes demo mode through ReplayCamera.
+    # Keep the downloadable demo's photo menu as that route's source too.
+    import so101_teach.demo_workspace as demo_workspace
+    class DemoPhotoCamera(PhotoCamera):
+        def __init__(self,app):
+            super().__init__('recorded-demo',processor=app.detector.process)
+            self.app=app
+    demo_workspace.ReplayCamera=DemoPhotoCamera
     root=tk.Tk();root.withdraw();errors=[]
     def callback_error(kind,value,tb):
         errors.append(''.join(traceback.format_exception(kind,value,tb)))

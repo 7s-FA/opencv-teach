@@ -27,11 +27,20 @@ def refine_outer_boundary(frame,mesh,profile,allowed,visible,result,*,evidence=N
     from .vision import world_xy,project_plane,fit_planar_rectangle,_detect
     from .rectangle_model import quad_visibility
     c=result.get('selected')
-    if mesh.get('shape')!='rectangle' or not c or not c.get('model_recovered') or not c.get('metric') or c.get('partial_visible'):return None
+    if mesh.get('shape')!='rectangle' or not c or not c.get('shape_match') or not c.get('metric') or c.get('partial_visible'):return None
     quad=np.asarray(c['quad'],float);center=quad.mean(0)
     from .frame_evidence import RegionEvidence
     evidence=evidence or RegionEvidence(frame,allowed)
     gray=evidence.source.gray();white=evidence.source.white()
+    # Preserve material/background polarity when the whole carrier is dim.
+    # Estimate exposure only inside the independently detected quadrilateral.
+    footprint=np.zeros(gray.shape,np.uint8)
+    cv2.fillConvexPoly(footprint,np.rint(quad).astype(np.int32),255)
+    hsv=evidence.source.hsv().astype(float)
+    neutral=(footprint>0)&(allowed>0)&(visible>0)&(hsv[:,:,1]<60)
+    brightness=float(np.percentile(hsv[:,:,2][neutral],90)) if np.any(neutral) else 0.
+    if 90<=brightness<180:
+        white=np.clip((hsv[:,:,2]*(180/brightness)-90)/90,0,1)*(1-np.clip((hsv[:,:,1]-40)/120,0,1))
     offsets=np.linspace(-16,16,129);lines=[];coverage=[]
     for a,b in zip(quad,np.roll(quad,-1,axis=0)):
         along=np.linspace(.08,.92,64);uv=a+(b-a)*along[:,None]
@@ -44,10 +53,13 @@ def refine_outer_boundary(frame,mesh,profile,allowed,visible,result,*,evidence=N
         valid=((sample(allowed,flat,0)>254)&(sample(visible,flat,0)>254)).reshape(64,-1)
         score=contrast+.6*(inward-outward);score[(inward<.65)|~valid]=-1
         best=np.argmax(score,axis=1);chosen=offsets[best];keep=(score[np.arange(64),best]>.12)&(abs(chosen)<15.75)
-        if np.count_nonzero(keep)<32:return None
+        # A loaded part can hide more than half of one rim. A measured span
+        # across at least 35% of that side still constrains its line; below we
+        # separately require three nearly complete sides and a valid CAD fit.
+        if np.count_nonzero(keep)<24:return None
         median=np.median(chosen[keep]);mad=np.median(abs(chosen[keep]-median))
         keep &=abs(chosen-median)<=max(1.,3*mad)
-        if np.count_nonzero(keep)<32 or np.ptp(along[keep])<.4:return None
+        if np.count_nonzero(keep)<24 or np.ptp(along[keep])<.35:return None
         points=scan[np.arange(64),best][keep]
         direction_origin=cv2.fitLine(np.float32(points),cv2.DIST_HUBER,0,.01,.01).ravel()
         direction=direction_origin[:2];origin=direction_origin[2:]
@@ -90,7 +102,8 @@ def merge_refined_boundaries(frame,mesh,profile,allowed,visible,result,*,evidenc
     """Merge duplicate hypotheses only when every one fits the same observed rim."""
     candidates=result.get('candidates',[])
     if mesh.get('shape')!='rectangle' or result.get('status')!='ambiguous' or not 2<=len(candidates)<=4:return result
-    if not all(c.get('shape_match') and c.get('model_recovered') for c in candidates):return result
+    carrier=bool(mesh.get('assembly',{}).get('orientation_hole'))
+    if not all(c.get('shape_match') and (c.get('model_recovered') or carrier) for c in candidates):return result
     from .frame_evidence import RegionEvidence
     evidence=evidence or RegionEvidence(frame,allowed)
     refined=[]
@@ -116,9 +129,15 @@ def refine(frame,mesh,profile,allowed,visible,result,*,evidence=None):
     evidence=evidence or RegionEvidence(frame,allowed)
     if result.get('status')=='ambiguous':return merge_refined_boundaries(frame,mesh,profile,allowed,visible,result,evidence=evidence)
     c=result.get('selected')
-    if not c or not c.get('model_recovered') or not c.get('metric'):return result
+    carrier=bool(mesh.get('assembly',{}).get('orientation_hole'))
+    if not c or not c.get('metric') or not (c.get('model_recovered') or carrier):return result
     boundary=refine_outer_boundary(frame,mesh,profile,allowed,visible,result,evidence=evidence)
     if boundary is not None:return boundary
+    # A carrier's fixed-size edge model can lock onto an inner rim. Never
+    # publish that alternative pose when the measured outer boundary fails.
+    if carrier:
+        return {**result,'selected':None,'candidates':[],'status':'not_found','boundary_unverified':True}
+    if not c.get('model_recovered'):return result
     ring=mesh.get('shape','ring')=='ring'
     if ring and len(mesh.get('holes',[]))!=1:return result
     z=detection_plane_z(profile,mesh);quad=world_xy(c['quad'],profile,z)

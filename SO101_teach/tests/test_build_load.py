@@ -15,12 +15,12 @@ class BuildLoadTests(unittest.TestCase):
             def __init__(self,arm):self.arm=arm;self.lease=None
             def open(self):self.lease='test';events.append(('open',self.arm))
             def close(self):self.lease=None
-            def rpc(self,*args):pass
+            def rpc(self,*args):events.append(('rpc',self.arm,*args))
         class Linear:
             def open(self):pass
             def close(self):pass
         class Runner:
-            def __init__(self,link,emit,control,timeout,**kw):self.link=link;self.emit=emit;self.safe_ticks={};self.phase=len([e for e in events if e[0]=='execute']);self.assembly_evidence=SimpleNamespace(receipt={'episode_id':'current-build','completed_at':123.})
+            def __init__(self,link,emit,control,timeout,**kw):self.link=link;self.emit=emit;self.safe_ticks={};self.failure_context={};self.failure_inspection=None;self.finished_return_step=None;self.phase=len([e for e in events if e[0]=='execute']);self.assembly_evidence=SimpleNamespace(receipt={'episode_id':'current-build','completed_at':123.})
             def execute(self,ep,bundle,speed,target):
                 with (root/'data/episode-cli.lock').open('a') as lock:
                     try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -30,15 +30,19 @@ class BuildLoadTests(unittest.TestCase):
                 if self.link.arm=='arm3':events.append(('history_required',hasattr(self,'chain_handoff') or hasattr(self,'assembly_handoff')))
                 if fail==self.link.arm:raise RuntimeError('inspection failed')
                 if fail=='reset':raise cli.ResetRequested('reset')
+                events.append(('return_trigger',self.link.arm,self.finished_return_step))
                 self.emit('DONE')
             def check(self):
                 if fail=='boundary':raise cli.ResetRequested('reset between phases')
             def reset_to_safe(self):events.append(('reset',self.link.arm))
             def emergency(self):events.append(('hold',self.link.arm))
+            def save_failure_images(self,error):events.append(('failure_images',self.link.arm,str(error)))
         def load(arm,letter):
             events.append(('validate',arm,letter))
             if fail=='load_validation' and arm=='arm3':raise ValueError('invalid load')
-            ep=dict(id='e',name=letter,calibration_sha256='cal',steps=[dict(id='s',ticks={},name='safe',safe_boundary='end')])
+            check={'station':'finished','target':'pallet','expected':'cap_added','timeout_seconds':10}
+            ep=dict(id='e',name=letter,product_type=letter,calibration_sha256='cal',steps=[dict(id='placed',ticks={},name='placed',inspection=check),dict(id='s',ticks={},name='safe',safe_boundary='end')])
+            if fail=='missing_seating' and arm=='arm3':ep['steps'][0].pop('inspection')
             return root,ep,{},300,30
         def reset_all(api,records,links,linear,control,emit,**kw):
             events.append(('reset',kw['first']));events.append(('reset','arm3'));emit('RESET_DONE')
@@ -49,6 +53,21 @@ class BuildLoadTests(unittest.TestCase):
         self.assertEqual([e for e in self.events if e[0]=='execute'],[('execute','arm2',100.),('execute','arm3',1.5)])
         self.assertEqual(self.events[:2],[('validate','arm2','B'),('validate','arm3','B')])
         self.assertIn(('history_required',False),self.events)
+        self.assertIn(('return_trigger','arm2',None),self.events)
+        self.assertIn(('return_trigger','arm3','placed'),self.events)
+    def test_product_a_load_also_receives_this_run_seating_trigger(self):
+        self.assertEqual(self.run_command(command='build_load_a'),0)
+        self.assertIn(('return_trigger','arm3','placed'),self.events)
+    def test_missing_full_product_seating_check_rejected_before_connection(self):
+        self.assertEqual(self.run_command(fail='missing_seating'),1)
+        self.assertFalse(any(e[0]=='open' for e in self.events))
+    def test_load_failure_does_not_schedule_successful_idle_release(self):
+        self.assertEqual(self.run_command(fail='arm3'),1)
+        self.assertFalse(any(e[0]=='rpc' and e[2]=='schedule_idle_release' for e in self.events))
+        self.assertFalse(any(e[0]=='return_trigger' and e[1]=='arm3' for e in self.events))
+    def test_independent_load_has_no_linear_return_trigger(self):
+        self.assertEqual(self.run_command(command='load_a'),0)
+        self.assertIn(('return_trigger','arm3',None),self.events)
     def test_build_failure_never_starts_load(self):
         self.assertEqual(self.run_command(fail='arm2'),1)
         self.assertEqual([e[1] for e in self.events if e[0]=='execute'],['arm2'])

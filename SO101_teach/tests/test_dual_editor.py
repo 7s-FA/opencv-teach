@@ -81,7 +81,7 @@ class DualEditorTests(unittest.TestCase):
         with patch.object(a,'start_camera'):a.request_jig_read()
         self.assertEqual(a.active_jig,other['id']);a.stop_preview(quiet=True)
     def test_click_selected_left_step_returns_preview_without_losing_draft(self):
-        a,b,first,second=self.open_pair();a.step_name.set('왼쪽 미저장');box=a.steps.bbox(first)
+        a,b,first,second=self.open_pair();a.step_name.set('왼쪽 미저장');a.steps.see(first);self.root.update();box=a.steps.bbox(first)
         a.steps.event_generate('<Button-1>',x=25,y=box[1]+8);self.root.update()
         self.assertEqual(a.preview_editor,1);self.assertEqual(a.step_name.get(),'왼쪽 미저장')
 
@@ -93,9 +93,9 @@ class DualEditorTests(unittest.TestCase):
     def test_right_selection_uses_color_without_name_marker(self):
         a,b,first,second=self.open_pair()
         self.assertEqual(a.steps.item(second,'values')[0],'02   두 번째');self.assertIn('editor2',a.steps.item(second,'tags'))
-        box=a.steps.bbox(first);a.steps.event_generate('<Button-3>',x=25,y=box[1]+8);self.root.update()
+        a.steps.see(first);self.root.update();box=a.steps.bbox(first);a.steps.event_generate('<Button-3>',x=25,y=box[1]+8);self.root.update()
         self.assertEqual(b.selected,first);self.assertEqual(a.selected,first)
         from tkinter import ttk
         self.assertEqual(ttk.Style(self.root).lookup('Step.Treeview','background',('selected',)),'#f3e4fc')
-        box=a.steps.bbox(first);a.steps.event_generate('<Button-3>',x=25,y=box[1]+8);self.root.update()
+        a.steps.see(first);self.root.update();box=a.steps.bbox(first);a.steps.event_generate('<Button-3>',x=25,y=box[1]+8);self.root.update()
         self.assertIsNone(a.second_editor)

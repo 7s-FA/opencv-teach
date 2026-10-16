@@ -1,0 +1,24 @@
+<robot name="so101_pad_visual_reference">
+  <link name="gripper_link">
+    <visual name="razer_fixed_pad">
+      <origin xyz="8.32667e-17 -0.000218214 0.000949706" rpy="-3.14159 -5.55112e-17 0" />
+      <geometry>
+        <mesh filename="assets/razer_fixed_pad.stl" />
+      </geometry>
+      <material name="razer_black">
+        <color rgba="0.025 0.025 0.025 1" />
+      </material>
+    </visual>
+  </link>
+  <link name="moving_jaw_so101_v1_link">
+    <visual name="razer_moving_pad">
+      <origin xyz="-5.55112e-17 -5.55112e-17 0.0189" rpy="9.53145e-17 6.93889e-18 1.24077e-24" />
+      <geometry>
+        <mesh filename="assets/razer_moving_pad.stl" />
+      </geometry>
+      <material name="razer_black">
+        <color rgba="0.025 0.025 0.025 1" />
+      </material>
+    </visual>
+  </link>
+</robot>

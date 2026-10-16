@@ -19,8 +19,8 @@ class LivePreviewContinuityTests(unittest.TestCase):
         renderer=Mock();renderer.submit.return_value=True;renderer.poll.return_value=None
         a.renderer=renderer;a.render_enabled=True;a.root.after_cancel(a.render_job);a.render_tick()
         args=renderer.submit.call_args.args
-        self.assertEqual(args[0],a.reference.angles(a.session.latest.ticks))
-        self.assertEqual(args[2]['workcell']['other_arm_joint_angles_rad'],list(b.reference.angles(b.session.latest.ticks)))
+        self.assertEqual(args[0],a.preview_reference.angles(a.session.latest.ticks))
+        self.assertEqual(args[2]['workcell']['other_arm_joint_angles_rad'],list(b.preview_reference.angles(b.session.latest.ticks)))
         self.assertNotEqual(a.latest.ticks,a.session.latest.ticks)
         for app in (a,b):app.session.request.assert_not_called()
 

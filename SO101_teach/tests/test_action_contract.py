@@ -102,19 +102,19 @@ class ActionContractTests(unittest.TestCase):
 
     def test_uppercase_jobs_run_existing_internal_commands(self):
         cases=[('arm2','BUILD_A','build_a','A_DONE'),('arm3','LOAD_B','load_b','B_DONE'),
-               ('arm2','BUILD_LOAD_B','build_load_b','B_CHAIN_DONE'),('arm3','SLIDE_LOAD','slide_load','SLIDE_DONE')]
+               ('arm2','BUILD_LOAD_B','build_load_b','B_CHAIN_DONE'),('arm2','BUILD_SLIDE','slide_build','SLIDE_DONE'),('arm3','LOAD_SLIDE','slide_load','SLIDE_DONE')]
         for arm,command,internal,last in cases:
             with self.subTest(command=command),patch.object(self.module.subprocess,'Popen',return_value=Process([last])) as start:
                 result=self.execute(arm,Goal(command))
                 self.assertTrue(result.success);self.assertEqual(start.call_args.args[0][1],internal)
 
     def test_nonstandard_case_is_rejected_without_execution(self):
-        for command in ('build_a','Build_A','build_load_b','emer_stop','estop','restart','reset','ESTOP'):
+        for command in ('build_a','Build_A','build_load_b','emer_stop','estop','restart','reset','ESTOP','SLIDE_BUILD','SLIDE_LOAD'):
             self.assertFalse(self.server.goal_callback(Goal(command).request))
         self.assertFalse(self.server.job_lock.locked())
 
     def test_uppercase_does_not_allow_wrong_arm_or_unknown_commands(self):
-        for command in ('LOAD_A','SLIDE_LOAD','BUILD_UNKNOWN'):
+        for command in ('LOAD_A','LOAD_SLIDE','BUILD_UNKNOWN'):
             self.assertFalse(self.server.goal_callback(Goal(command).request))
         self.assertFalse(self.server.job_lock.locked())
     def test_old_events_cannot_confirm_a_new_restart(self):

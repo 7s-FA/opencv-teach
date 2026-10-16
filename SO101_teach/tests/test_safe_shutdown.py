@@ -62,7 +62,7 @@ class ShutdownTests(unittest.TestCase):
 
 
 class ReceiverTests(unittest.TestCase):
-    def run_park(self,*,invalid=False,failed=False,check=False,autonomous=False):
+    def run_park(self,*,invalid=False,failed=False,check=False,autonomous=False,arms=('arm2','arm3')):
         import tempfile
         from pathlib import Path
         from tests import test_episode_cli as fixture
@@ -91,12 +91,13 @@ class ReceiverTests(unittest.TestCase):
         class Linear(fixture.FakeLinear):
             def open(self):pass
             def close(self):pass
-        def validate(cli,part):
+        def validate(cli,part,*,required_arms):
+            self.assertEqual(set(required_arms),set(arms))
             if invalid and part['arm']=='arm3':raise ValueError('bad arm3')
             ticks={str(i):2048 for i in range(6)}
             ep={'id':'episode','calibration_sha256':'cal','steps':[{'ticks':ticks,'safe_boundary':'start'},{'ticks':ticks,'safe_boundary':'end'}]}
             return None,ep,{},300.,120.
-        request={'shutdown_id':'a'*32,'arms':{a:{'episode':{}} for a in ('arm2','arm3')},'links':{a:{'port':1,'token':'test','lease':'test','instance':a} for a in ('arm2','arm3')},'apply_jig':True}
+        request={'shutdown_id':'a'*32,'first':arms[0],'arms':{a:{'episode':{}} for a in arms},'links':{a:{'port':1,'token':'test','lease':'test','instance':a} for a in arms},'apply_jig':True}
         with tempfile.TemporaryDirectory() as folder,ExitStack() as stack:
             root=Path(folder);(root/'data').mkdir()
             for target,name,value in [(cli,'ROOT',root),(cli,'Link',Link),(cli,'Control',cli.Control),(cli,'Status',cli.Status),(cli,'load_job',cli.load_job)]:
@@ -135,6 +136,15 @@ class ReceiverTests(unittest.TestCase):
             self.assertLess(events.index('accepted'),events.index(arm+':move'))
             self.assertLess(events.index(arm+':release'),events.index(arm+':detach'))
         self.assertTrue(all(link.stop.is_set() for link in links))
+
+    def test_one_arm_shutdown_never_connects_or_commands_the_missing_peer(self):
+        for arm in ('arm2','arm3'):
+            events,links=self.run_park(arms=(arm,),autonomous=True)
+            self.assertEqual([link.arm for link in links],[arm])
+            self.assertLess(events.index('accepted'),events.index(arm+':move'))
+            self.assertLess(events.index(arm+':move'),events.index('three-second-dwell'))
+            self.assertLess(events.index('three-second-dwell'),events.index(arm+':release'))
+            self.assertIn('SHUTDOWN_DONE',events)
 
 
 class GuiShutdownTests(unittest.TestCase):

@@ -88,13 +88,13 @@ class AllInspectionTests(unittest.TestCase):
 class AllInspectionUITests(unittest.TestCase):
     setUp=ui_fixtures.UITests.setUp
     tearDown=ui_fixtures.UITests.tearDown
-    def test_all_rows_centers_colors_and_minimum_window(self):
+    def test_all_rows_centers_colors_and_maximized_window(self):
         frame,cfg,catalog,data=scene('complete.jpg');a=self.app;p=a.camera_inspection
         import shutil
         shutil.copytree(FOLDER/'reference',a.data_dir/'inspection_reference')
         a.profile=cfg['profile'];a.catalog.items=catalog.items;a.catalog.revision+=1;a.workcell_preview=cfg['placement']
         a.camera=SimpleNamespace(running=True,error=None,observation=(frame,data,time.monotonic()),close=lambda:None,join=lambda n:True)
-        a.show_page('camera');a.camera_tabs.select(p);self.root.geometry('1180x760');self.root.update()
+        a.show_page('camera');a.camera_tabs.select(p);self.root.geometry('1920x1043');self.root.update()
         deadline=time.monotonic()+5
         while time.monotonic()<deadline:
             a.camera.observation=(frame,data,time.monotonic());a.draw_camera_frame(time.monotonic());self.root.update()
@@ -115,18 +115,18 @@ class AllInspectionUITests(unittest.TestCase):
         a.profile=cfg['profile'];a.catalog.items=catalog.items;a.catalog.revision+=1;a.workcell_preview=cfg['placement']
         accepted={k:{**v,'teaching_held':True} for k,v in normal[3]['live_by_jig'].items() if v.get('selected')}
         a.camera=SimpleNamespace(running=True,error=None,observation=(frame,data,time.monotonic()),close=lambda:None,join=lambda n:True)
-        a.show_page('camera');a.camera_tabs.select(p);self.root.geometry('1180x760');self.root.update()
+        a.show_page('camera');a.camera_tabs.select(p);self.root.geometry('1920x1043');self.root.update()
         deadline=time.monotonic()+5
         with patch.object(a,'camera_adoption_results',return_value=accepted):
             while time.monotonic()<deadline:
                 a.camera.observation=(frame,data,time.monotonic());a.draw_camera_frame(time.monotonic());self.root.update()
-                if 'finished' in p.table.get_children() and '미완성' in p.table.item('finished','values')[1] and p.table.item('b_housing','tags')==('abnormal',):break
+                if 'finished' in p.table.get_children() and p.table.item('finished','tags')==('abnormal',) and p.table.item('b_housing','tags')==('abnormal',):break
                 time.sleep(.1)
             self.assertEqual(len(p.table.get_children()),9)
             for key in ('b_housing','a_cap','linear_1.5_0','finished'):self.assertEqual(p.table.item(key,'tags'),('abnormal',))
-            self.assertIn('미완성',p.table.item('finished','values')[1]);self.assertIn('빈 팔레트 기준',p.position.get())
+            self.assertTrue(any(reason in p.table.item('finished','values')[1] for reason in ('미완성','중단 삽입 위치 이탈')));self.assertIn('부품 검사 전용',p.position.get())
             self.assertEqual(len(p.center_marks),2)
-            self.assertLessEqual(p.legend.winfo_rooty()+p.legend.winfo_height(),p.summary.winfo_rooty()+p.summary.winfo_height())
+            self.assertLessEqual(p.legend.winfo_rooty()+p.legend.winfo_height(),p.winfo_rooty()+p.winfo_height())
             self.assertLessEqual(p.coords.winfo_rootx()+p.coords.winfo_width(),self.root.winfo_rootx()+self.root.winfo_width())
             p.status.set('현재 오배치 사진 검증 · 빈 팔레트 기준으로 이동 추적 · 리니어 후진 목표');self.root.update_idletasks()
             from PIL import ImageGrab

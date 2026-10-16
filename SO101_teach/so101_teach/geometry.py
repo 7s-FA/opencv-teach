@@ -26,6 +26,9 @@ class Kinematics:
         self.chain.reverse()
     def fk(self,ticks):
         return self.fk_angles(self.reference.angles(ticks))
+    def taught_fk(self,ticks):
+        """Cartesian teaching anchor, independent of an execution-map override."""
+        return self.fk(ticks)
     def fk_angles(self,angles):
         q=dict(zip(JOINTS,angles));t=np.eye(4)
         for name,kind,origin,axis in self.chain:
@@ -65,8 +68,10 @@ def _initial_corrected_step(kin,step,current_reference,mesh_sha):
     if current_reference.get('symmetry_deg')!=reference['symmetry_deg']:raise ValueError('지그 방향 기준이 다릅니다.')
     from .jig_heading import pose_in_reference_basis
     actual=jig_delta(reference['pose'],pose_in_reference_basis(reference,current_reference),reference['symmetry_deg'])
-    taught=kin.fk(ticks);target=transform_jig_pose(taught,reference['pose'],actual)
-    if np.allclose(taught,target,rtol=0,atol=1e-9):return {'ticks':ticks,'corrected':True,'position_error_mm':0.,'orientation_error_deg':0.}
+    taught=kin.taught_fk(ticks);target=transform_jig_pose(taught,reference['pose'],actual)
+    # An unchanged jig does not imply unchanged ticks when the execution map
+    # differs from the teaching map. Only bypass IK if these ticks reach target.
+    if np.allclose(kin.fk(ticks),target,rtol=0,atol=1e-9):return {'ticks':ticks,'corrected':True,'position_error_mm':0.,'orientation_error_deg':0.}
     q=np.array(kin.reference.angles(ticks));lower=[];upper=[]
     for n in JOINTS[:5]:
         low,high=kin.reference.angle_limits(n);lower.append(low);upper.append(high)
@@ -168,10 +173,10 @@ def corrected_step(kin,step,current_reference,mesh_sha,*,previous_ticks=None,pre
     base=_initial_corrected_step(kin,step,current_reference,mesh_sha)
     if compatible:base['jig_reference_compatibility']='legacy_carrier_to_assembly' if original.get('symmetry_deg')==180 else 'carrier_b_top_update'
     if not step.get('jig_id'):return base
-    taught_ticks=step['ticks'];taught=kin.fk(taught_ticks);r=step['jig_reference']
+    taught_ticks=step['ticks'];taught=kin.taught_fk(taught_ticks);r=step['jig_reference']
     from .jig_heading import pose_in_reference_basis
     target=transform_jig_pose(taught,r['pose'],jig_delta(r['pose'],pose_in_reference_basis(r,current_reference),r['symmetry_deg']))
-    if np.allclose(taught,target,rtol=0,atol=1e-9):return base
+    if np.allclose(kin.fk(taught_ticks),target,rtol=0,atol=1e-9):return base
     q=np.array(kin.reference.angles(taught_ticks));bounds=np.array([kin.reference.angle_limits(n) for n in JOINTS[:5]])
     lo,hi=bounds[:,0],bounds[:,1];base_metrics=_posture_metrics(kin,base['ticks'],target,taught)
     base_q=base_metrics['angles'];base_margins=np.minimum(base_q-lo,hi-base_q)

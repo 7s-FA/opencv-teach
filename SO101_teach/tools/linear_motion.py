@@ -21,8 +21,10 @@ class LinearMotion:
                 self.phase = restored['phase']
 
     def status(self):
-        position = ('FORWARD' if self.target == 100. else 'RETRACTED') if self.phase == 'TIMED_COMPLETE' else 'INTERMEDIATE' if (self.phase in ('MOVING', 'PAUSED', 'STARTING') or self.phase == 'UNKNOWN' and self.target is not None) else 'UNKNOWN'
+        position = ('ASSEMBLY' if self.target == 100. else 'UNLOAD') if self.phase == 'TIMED_COMPLETE' else 'INTERMEDIATE' if (self.phase in ('MOVING', 'PAUSED', 'STARTING') or self.phase == 'UNKNOWN' and self.target is not None) else 'UNKNOWN'
         return {'instance': self.instance, 'phase': self.phase, 'position_state': position, 'target_mm': self.target,
+                'target_position': 'ASSEMBLY' if self.target == 100. else 'UNLOAD' if self.target == 1.5 else 'UNKNOWN',
+                'target_label': '조립 위치' if self.target == 100. else '하차 위치' if self.target == 1.5 else '미확인',
                 'position_measured': False, 'pause_supported': False, 'error': self.error, 'owned': self.owner is not None}
 
     def persist(self):
@@ -47,7 +49,7 @@ class LinearMotion:
 
     def start(self, target, seconds):
         if target not in PRESETS.values():
-            raise ValueError('전진 100mm 또는 후진 1.5mm만 지원합니다.')
+            raise ValueError('조립 위치(100mm) 또는 하차 위치(1.5mm)만 지원합니다.')
         # Persist intent before output. A crash during a move restores UNKNOWN.
         self.target, self.phase, self.error = target, 'STARTING', None
         self.persist()

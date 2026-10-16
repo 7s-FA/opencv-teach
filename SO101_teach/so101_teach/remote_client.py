@@ -12,11 +12,15 @@ from .vision_service import MultiDetector
 from .remote_config import PROTOCOL,code_version,configuration_bundle,bundle_digest
 
 STATE_POLL_SECONDS=1/30  # Match the display budget; serial/control timing is unchanged.
+_MISSING_RUNTIME=object()
 
-def server_version_supported(version,protocol,*,current=None,compatibility=None):
-    """Exact reviewed client/server pair permits a PC-only rolling update."""
-    current=current or code_version()
+def server_version_supported(version,protocol,*,runtime=_MISSING_RUNTIME,current=None,compatibility=None):
+    """Use shared runtime identity; legacy peers retain the strict old gate."""
     if protocol!=PROTOCOL:return False
+    if runtime is not _MISSING_RUNTIME:
+        from .runtime_version import manifest,difference
+        return not difference(manifest(ROOT),runtime)
+    current=current or code_version()
     if version==current:return True
     try:pair=read_json(compatibility or ROOT/'assets/remote-client-compatibility.json')
     except (OSError,ValueError):return False
@@ -55,7 +59,11 @@ class RemoteLink:
         start=subprocess.run(ssh_args(c)+['-l',c['user'],c['host'],command],capture_output=True,text=True,timeout=15)
         if start.returncode:raise ValueError('Pi 실행부 연결 실패: '+start.stderr.strip()[-600:])
         info=json.loads(start.stdout);self.token=info['token'];self.server_port=info['port']
-        if not server_version_supported(info['version'],info['protocol']):raise ValueError('PC와 Pi 프로그램 버전이 다릅니다. Pi 실행부를 갱신하세요.')
+        if not server_version_supported(info['version'],info['protocol'],runtime=info.get('runtime',_MISSING_RUNTIME)):
+            from .runtime_version import manifest,difference
+            changed=difference(manifest(ROOT),info.get('runtime'))
+            detail=', '.join(changed[:4])
+            raise ValueError('PC–Pi 실행 코드 불일치: '+detail+' · tools/pi_runtime.py check로 확인하고 유휴 상태에서 sync --apply를 실행하세요.')
         with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
         self.base=f'http://127.0.0.1:{port}'
         args=ssh_args(c)+['-o','ExitOnForwardFailure=yes','-N','-L',f'127.0.0.1:{port}:127.0.0.1:{info["port"]}','-l',c['user'],c['host']]
@@ -67,6 +75,8 @@ class RemoteLink:
                 except OSError:time.sleep(.1)
             else:raise ValueError('Pi 응답 대기 시간 초과')
             if self.health['instance']!=info['instance']:raise ValueError('Pi 실행부가 변경되었습니다. 다시 연결하세요.')
+            if not server_version_supported(self.health['version'],self.health['protocol'],runtime=self.health.get('runtime',_MISSING_RUNTIME)):
+                raise ValueError('Pi 실행부 버전이 연결 중 변경되었습니다. 호환성을 다시 확인하세요.')
             acquired=self.http('/acquire',{});self.lease=acquired['lease'];self.instance=acquired['instance'];self.event_id=acquired['event_id']
             self.ui_heartbeat=time.monotonic();self.state_thread=threading.Thread(target=self.poll_state,daemon=True);self.state_thread.start();self.leader_thread=threading.Thread(target=self.poll_leader,daemon=True);self.leader_thread.start()
             return self

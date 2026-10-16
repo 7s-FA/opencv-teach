@@ -123,7 +123,7 @@ class InsertSeatingUITests(unittest.TestCase):
             self.assertEqual(p.table.item('a_ball','tags'),('normal',))
             if moved:
                 self.assertEqual(p.table.item('finished','tags'),('normal',))
-                self.assertIn('현재 외곽 재탐색',p.position.get())
+                self.assertIn('외곽',p.position.get());self.assertIn('부품 검사 전용',p.position.get())
             from PIL import ImageGrab
             x,y=self.root.winfo_rootx(),self.root.winfo_rooty()
             ImageGrab.grab(bbox=(x,y,x+self.root.winfo_width(),y+self.root.winfo_height())).save(ROOT/'verification/b-housing-seating'/name)

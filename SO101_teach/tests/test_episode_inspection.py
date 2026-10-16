@@ -93,7 +93,7 @@ class PiExecutionTests(unittest.TestCase):
             if not pending:return
             self.assertIn('STEP_DONE:1/3:하단 놓고 들기',events);self.assertNotIn('STAGE_DONE:LOWER',events)
             events.extend(['INSPECTION_PASS:a','STAGE_DONE:LOWER']);pending.clear()
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'begin_inspections',side_effect=begin),patch.object(runner,'poll_inspections',side_effect=poll),patch.object(runner,'release_after_completion'):
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'begin_inspections',side_effect=begin),patch.object(runner,'poll_inspections',side_effect=poll):
             runner.execute(episode,{},400,100.)
         plays=[a for m,a in link.calls if m=='command' and a['action']=='play'];self.assertEqual(len(plays),1);self.assertEqual(len(plays[0]['targets']),3)
         self.assertLess(events.index('INSPECTION_PASS:a'),events.index('EPISODE_DONE'));self.assertEqual(events[-1],'DONE')
@@ -130,8 +130,9 @@ class TransferTests(unittest.TestCase):
         target=self.root/'inspection';target.mkdir()
         for name in ('roi_reference.json','shape_templates.json','shape_templates.npz','appearance_reference.json'):(target/name).write_bytes((ROOT/'inspection'/name).read_bytes())
         from so101_teach.episode_inspection import criteria_signature
-        for name in ('episode_inspection.py','episode_inspection_runtime.py','shape_inspection.py','inspection_geometry.py','inspection_seating.py'):
+        for name in ('assembly_evidence.py','episode_inspection.py','episode_inspection_runtime.py','shape_inspection.py','inspection_geometry.py','inspection_seating.py','occupied_pallet.py','orientation_model.py','junction_orientation.py'):
             dest=self.root/'so101_teach'/name;dest.parent.mkdir(exist_ok=True);dest.write_bytes((ROOT/'so101_teach'/name).read_bytes())
+        reference=self.root/'assets/reference/carrier-junction.png';reference.parent.mkdir(parents=True,exist_ok=True);reference.write_bytes((ROOT/'assets/reference/carrier-junction.png').read_bytes())
         with self.assertRaisesRegex(ValueError,'기준이 다릅니다'):transfer_fixture.receiver.deliver(self.root,self.request)
         self.request['inspection_criteria_sha256']=criteria_signature()
         invalid=deepcopy(self.request);invalid['episode']['steps'].pop()

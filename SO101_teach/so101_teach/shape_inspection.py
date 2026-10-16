@@ -30,23 +30,41 @@ class ShapeInspector:
         self.meta=json.loads((directory/'shape_templates.json').read_text())['templates']
         self.appearance=json.loads((directory/'appearance_reference.json').read_text())['colors']
         with np.load(directory/'shape_templates.npz',allow_pickle=False) as source:self.arrays={k:source[k] for k in source.files}
+        # The template archive repeats CAD surfaces across assembly states.
+        # Share exact duplicates; these source arrays are read-only geometry.
+        unique={}
+        for name,array in self.arrays.items():
+            key=(array.shape,array.dtype.str,array.tobytes())
+            self.arrays[name]=unique.setdefault(key,array)
         self.cache={}
 
     def projected(self,anchor,profile,shape):
         key=(tuple(anchor['templates']),tuple(np.round(anchor['camera_from_local'].ravel(),3)),json.dumps(profile['intrinsics'],sort_keys=True),tuple(shape[:2]))
         if key in self.cache:return self.cache[key]
-        projected={name:{feature:project(self.arrays[name+'__'+feature],anchor,profile) if len(self.arrays[name+'__'+feature]) else np.empty((0,2)) for feature in ('edge','color','housing','insert','cap')} for name in anchor['templates']}
+        points_cache={}
+        def surface_points(array):
+            key=id(array)
+            if key not in points_cache:
+                points_cache[key]=project(array,anchor,profile) if len(array) else np.empty((0,2))
+            return points_cache[key]
+        projected={name:{feature:surface_points(self.arrays[name+'__'+feature]) for feature in ('edge','color','housing','insert','cap')} for name in anchor['templates']}
         bounds=np.concatenate([points for masks in projected.values() for points in masks.values()])
         lo=np.floor(bounds.min(0)-35).astype(int);hi=np.ceil(bounds.max(0)+35).astype(int)
         h,w=shape[:2]
         lo=np.maximum(lo,0);hi=np.minimum(hi,[w-1,h-1])
         size=(hi-lo)[::-1]+1
         if min(size)<30:raise ValueError('부품 영상이 너무 작음')
-        templates=[]
+        templates=[];surface_masks={};body_geometry={}
         for name in anchor['templates']:
             masks={}
             for feature in ('edge','color','housing','insert','cap'):
-                points=projected[name][feature];mask=np.zeros(size,np.uint8)
+                points=projected[name][feature]
+                cached=surface_masks.get(id(points))
+                if cached is not None:
+                    masks[feature],coverage=cached
+                    if coverage is not None:masks[feature+'_coverage']=coverage
+                    continue
+                mask=np.zeros(size,np.uint8)
                 if len(points):
                     uv=np.rint(points-lo).astype(int)
                     valid=(uv[:,0]>=0)&(uv[:,0]<size[1])&(uv[:,1]>=0)&(uv[:,1]<size[0]);uv=uv[valid]
@@ -54,6 +72,32 @@ class ShapeInspector:
                     mask[uv[:,1],uv[:,0]]=255
                     mask=cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
                 masks[feature]=mask
+                surface_masks[id(points)]=(mask,masks.get(feature+'_coverage'))
+            # Orthographic CAD templates include low fixture edges that can
+            # project behind a raised part in the real camera. They must not
+            # become required grooves on its visible upper face. Build a depth
+            # mask from the exposed part surfaces for the interior comparison.
+            detail_edges=masks['edge']
+            surface=self.arrays[name+'__color'];edge_cloud=self.arrays[name+'__edge']
+            if len(surface) and len(edge_cloud):
+                depth=np.full(size,np.inf,np.float32)
+                uv=np.rint(projected[name]['color']-lo).astype(int)
+                valid=(uv[:,0]>=0)&(uv[:,0]<size[1])&(uv[:,1]>=0)&(uv[:,1]<size[0])
+                camera_z=surface@anchor['camera_from_local'][2,:3]+anchor['camera_from_local'][2,3]
+                np.minimum.at(depth,(uv[valid,1],uv[valid,0]),camera_z[valid])
+                # One pixel closes sampling gaps; the 1 mm depth allowance
+                # keeps coincident face edges despite CAD/raster rounding.
+                depth=cv2.erode(depth,np.ones((3,3),np.uint8))
+                uv=np.rint(projected[name]['edge']-lo).astype(int)
+                valid=(uv[:,0]>=0)&(uv[:,0]<size[1])&(uv[:,1]>=0)&(uv[:,1]<size[0])
+                camera_z=edge_cloud@anchor['camera_from_local'][2,:3]+anchor['camera_from_local'][2,3]
+                indices=np.flatnonzero(valid)
+                visible=camera_z[indices]<=depth[uv[indices,1],uv[indices,0]]+1.
+                uv=uv[indices[visible]]
+                detail_edges=np.zeros(size,np.uint8);detail_edges[uv[:,1],uv[:,0]]=255
+                detail_edges=cv2.morphologyEx(detail_edges,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))
+            masks['_detail_edges']=detail_edges>0
+            masks['_detail_distances']=cv2.distanceTransform(255-detail_edges,cv2.DIST_L2,3)
             expected='carrier_'+anchor['id']+'_present' if anchor.get('part') in PARTS else name
             bound=self.meta[expected].get('bounds_mm')
             if bound is None:
@@ -78,15 +122,18 @@ class ShapeInspector:
                 # A sphere/cylinder needs its own CAD silhouette, not the square
                 # pallet footprint. Keep this region fixed to the slot pose;
                 # fitting the observed part must never move the allowed region.
-                cloud=self.arrays[expected+'__body']
-                body_polygon=cv2.convexHull(project(cloud,anchor,profile).astype(np.float32))
-                center=cv2.moments(body_polygon)
-                masks['body_center']=np.array([center['m10'],center['m01']])/center['m00']
-                angles=np.linspace(0,2*np.pi,16,endpoint=False)
-                outline_tolerance=A_BALL_POSITION_TOLERANCE_MM if anchor.get('product')=='A' else B_INSERT_OUTLINE_TOLERANCE_MM
-                shifts=np.c_[np.cos(angles),np.sin(angles),np.zeros(16)]*outline_tolerance
-                outline=project((cloud[None,:,:]+shifts[:,None,:]).reshape(-1,3),anchor,profile)
-                polygon=cv2.convexHull(np.rint(outline-lo).astype(np.int32))
+                if expected not in body_geometry:
+                    cloud=self.arrays[expected+'__body']
+                    body_polygon=cv2.convexHull(surface_points(cloud).astype(np.float32))
+                    center=cv2.moments(body_polygon)
+                    body_center=np.array([center['m10'],center['m01']])/center['m00']
+                    angles=np.linspace(0,2*np.pi,16,endpoint=False)
+                    outline_tolerance=A_BALL_POSITION_TOLERANCE_MM if anchor.get('product')=='A' else B_INSERT_OUTLINE_TOLERANCE_MM
+                    shifts=np.c_[np.cos(angles),np.sin(angles),np.zeros(16)]*outline_tolerance
+                    outline=project((cloud[None,:,:]+shifts[:,None,:]).reshape(-1,3),anchor,profile)
+                    polygon=cv2.convexHull(np.rint(outline-lo).astype(np.int32))
+                    body_geometry[expected]=(body_center,polygon)
+                masks['body_center'],polygon=body_geometry[expected]
                 masks['roi'][:]=0;cv2.fillConvexPoly(masks['roi'],polygon,255)
                 masks['roi_polygon']=(polygon[:,0,:]+lo).tolist()
                 masks['roi_display_polygon']=masks['roi_polygon']
@@ -94,6 +141,20 @@ class ShapeInspector:
                 minimum=face[:,:2].min(0);maximum=face[:,:2].max(0)
                 masks['face_corners']=np.array([[minimum[0],minimum[1]],[maximum[0],minimum[1]],[maximum[0],maximum[1]],[minimum[0],maximum[1]]])
             templates.append((name,masks))
+        # These masks and kernels depend only on the projected CAD geometry,
+        # already covered by this cache key. No image observations are cached.
+        region=np.zeros(size,np.uint8)
+        points=np.concatenate([np.column_stack(np.where(m['edge']>0)[::-1]) for _,m in templates])
+        if len(points)>2:cv2.fillConvexPoly(region,cv2.convexHull(points.astype(np.int32)),255)
+        region=cv2.dilate(region,np.ones((5,5),np.uint8))>0
+        for _,masks in templates:
+            distances=cv2.distanceTransform(255-masks['edge'],cv2.DIST_L2,3)
+            masks['_region']=region;masks['_distances']=distances
+            masks['_edges']=masks['edge']>0;masks['_expected']=masks['color']>0
+            masks['_edge_count']=int(masks['_edges'].sum());masks['_color_count']=int(masks['_expected'].sum())
+            masks['_precision_kernel']=np.exp(-distances/2)*region
+            masks['_material_masks']={part:cv2.erode(masks[part],np.ones((5,5),np.uint8))>0 for part in ('housing','insert','cap')}
+            masks['_coverage']={};masks['_interior']={}
         value=(lo,hi,templates)
         if len(self.cache)>24:self.cache.clear()
         self.cache[key]=value
@@ -115,49 +176,58 @@ class ShapeInspector:
                 hsv=cv2.cvtColor(patch,cv2.COLOR_BGR2HSV)
                 color=((hsv[:,:,1]>48)&(hsv[:,:,2]>30)).astype(np.uint8)*255
                 color=cv2.morphologyEx(color,cv2.MORPH_OPEN,np.ones((3,3),np.uint8))
-                edges=cv2.Canny(cv2.GaussianBlur(gray,(3,3),0),35,100)
+                blurred=cv2.GaussianBlur(gray,(3,3),0)
+                edges=cv2.Canny(blurred,35,100)
                 # Assembly and finished fixtures also compare same-colored
                 # housings/caps; retain the cavity evidence at those stations.
-                detail_edges=cv2.Canny(cv2.GaussianBlur(gray,(3,3),0),8,24) if anchor.get('part') in ('housing','cap','assembly','finished') else None
+                detail_edges=cv2.Canny(blurred,8,24) if anchor.get('part') in ('housing','cap','assembly','finished') else None
                 observed_distance=cv2.distanceTransform(255-edges,cv2.DIST_L2,3)
                 # Rail/background edges outside the actual fixture do not describe
                 # the candidate. Score only the projected fixture footprint.
-                region=np.zeros(gray.shape,np.uint8)
-                points=np.concatenate([np.column_stack(np.where(m['edge']>0)[::-1]) for _,m in templates])
-                if len(points)>2:cv2.fillConvexPoly(region,cv2.convexHull(points.astype(np.int32)),255)
-                region=cv2.dilate(region,np.ones((5,5),np.uint8))>0
+                region=templates[0][1]['_region']
                 # Search a bounded physical neighborhood, retaining the measured
                 # image offset as evidence instead of silently moving the anchor.
                 axes=project([[0,0,20],[1,0,20],[0,1,20]],anchor,profile)
                 pixel_axes=(axes[1:]-axes[0]).T
                 radius=min(24,max(3,int(np.ceil(np.linalg.norm(pixel_axes,axis=0).max()*8))))
+                padded={}
                 def correlate(observed,template):
-                    return cv2.matchTemplate(cv2.copyMakeBorder(observed.astype(np.float32),radius,radius,radius,radius,cv2.BORDER_CONSTANT),template.astype(np.float32),cv2.TM_CCORR)
+                    key=id(observed)
+                    if key not in padded:
+                        # Retain the input too, so a temporary array's id cannot
+                        # be reused while this per-frame cache is alive.
+                        padded[key]=(observed,cv2.copyMakeBorder(observed.astype(np.float32),radius,radius,radius,radius,cv2.BORDER_CONSTANT))
+                    return cv2.matchTemplate(padded[key][1],template.astype(np.float32),cv2.TM_CCORR)
                 observed_edges=(edges>0).astype(np.float32);observed_color=(color>0).astype(np.float32)
                 edge_count=correlate(observed_edges,region);color_count=correlate(observed_color,region)
                 # White empty pallets have shallow edges on a white table.
                 # Use softer edges only for their empty-state templates.
-                empty_edges=cv2.Canny(cv2.GaussianBlur(gray,(3,3),0),15,45) if anchor.get('part')=='finished' else None
+                empty_edges=cv2.Canny(blurred,15,45) if anchor.get('part')=='finished' else None
                 empty_distance=cv2.distanceTransform(255-empty_edges,cv2.DIST_L2,3) if empty_edges is not None else None
                 empty_count=correlate(empty_edges>0,region) if empty_edges is not None else None
                 yy,xx=np.mgrid[-radius:radius+1,-radius:radius+1]
                 shift_penalty=np.hypot(xx,yy)*.001
                 local_offsets=np.linalg.solve(pixel_axes,np.stack([xx,yy]).reshape(2,-1)).reshape(2,*xx.shape)
                 bounded=np.linalg.norm(local_offsets,axis=0)<=8
+                observed_similarity=np.exp(-observed_distance/2)
+                empty_similarity=np.exp(-empty_distance/2) if empty_distance is not None else None
+                empty_observed_edges=(empty_edges>0).astype(np.float32) if empty_edges is not None else None
+                coverage_image=np.ones(gray.shape,np.float32)
+                shifted_hsv={};shifted_detail={};detail_distances={}
                 results=[]
                 for name,masks in templates:
                     if getattr(self,'stop',None) is not None and self.stop.is_set():break
                     if masks.get('color_coverage',1)<.98 or masks.get('edge_coverage',1)<.85:continue
-                    predicted=masks['edge'];expected=masks['color']>0
-                    distances=cv2.distanceTransform(255-predicted,cv2.DIST_L2,3)
+                    predicted=masks['edge'];expected=masks['_expected']
+                    distances=masks['_distances']
                     empty_fixture=empty_edges is not None and self.meta[name]['state']=='empty'
-                    image_distance=empty_distance if empty_fixture else observed_distance
-                    image_edges=(empty_edges>0).astype(np.float32) if empty_fixture else observed_edges
+                    image_similarity=empty_similarity if empty_fixture else observed_similarity
+                    image_edges=empty_observed_edges if empty_fixture else observed_edges
                     image_count=empty_count if empty_fixture else edge_count
-                    recall=correlate(np.exp(-image_distance/2),predicted>0)/max(1,int((predicted>0).sum()))
-                    precision=correlate(image_edges,np.exp(-distances/2)*region)/np.maximum(1,image_count)
+                    recall=correlate(image_similarity,masks['_edges'])/max(1,masks['_edge_count'])
+                    precision=correlate(image_edges,masks['_precision_kernel'])/np.maximum(1,image_count)
                     shape_score=2*recall*precision/np.maximum(.001,recall+precision)
-                    n=int(expected.sum())
+                    n=masks['_color_count']
                     if n:
                         intersection=correlate(observed_color,expected)
                         silhouette=intersection/np.maximum(1,n+color_count-intersection)
@@ -166,7 +236,9 @@ class ShapeInspector:
                         # Only a matching empty fixture supports an absence observation.
                         silhouette=np.maximum(0,1-color_count/max(1,int(region.sum()))*12)
                         score=shape_score*silhouette
-                    covered=correlate(np.ones(gray.shape,np.float32),expected if n else predicted>0)/max(1,n if n else int((predicted>0).sum()))
+                    if radius not in masks['_coverage']:
+                        masks['_coverage'][radius]=correlate(coverage_image,expected if n else masks['_edges'])/max(1,n if n else masks['_edge_count'])
+                    covered=masks['_coverage'][radius]
                     allowed=bounded & (covered>=(.98 if n else .85))
                     if not allowed.any():continue
                     y,x=np.unravel_index(np.argmax(np.where(allowed,score-shift_penalty,-1)),score.shape)
@@ -176,10 +248,12 @@ class ShapeInspector:
                         # Evaluate each CAD-exposed material separately. A filled
                         # cavity has the same outer silhouette as an empty housing;
                         # a coherent, differently colored central insert is evidence.
-                        shifted=cv2.warpAffine(hsv,np.float32([[1,0,radius-x],[0,1,radius-y]]),(hsv.shape[1],hsv.shape[0]),flags=cv2.INTER_NEAREST)
+                        if (x,y) not in shifted_hsv:
+                            shifted_hsv[x,y]=cv2.warpAffine(hsv,np.float32([[1,0,radius-x],[0,1,radius-y]]),(hsv.shape[1],hsv.shape[0]),flags=cv2.INTER_NEAREST)
+                        shifted=shifted_hsv[x,y]
                         coherence=[];hues=[]
                         for part in ('housing','insert','cap'):
-                            mask=cv2.erode(masks[part],np.ones((5,5),np.uint8))>0
+                            mask=masks['_material_masks'][part]
                             if mask.sum()<20:continue
                             pixels=shifted[mask];active=(pixels[:,1]>48)&(pixels[:,2]>30)
                             histogram=np.bincount((pixels[active,0]//5).astype(int),minlength=36).astype(float)
@@ -201,18 +275,24 @@ class ShapeInspector:
                         # Same-colored caps and housings differ mainly at the
                         # shallow cavity. Examine low-contrast edges only inside
                         # the body, where jig/floor edges cannot supply evidence.
-                        interior=np.zeros(gray.shape,np.uint8)
-                        points=np.column_stack(np.where(expected)[::-1]).astype(np.int32)
-                        cv2.fillConvexPoly(interior,cv2.convexHull(points),255)
                         inset=max(3,round(float(np.linalg.norm(pixel_axes,axis=0).min())*7))
-                        interior=cv2.erode(interior,np.ones((2*inset+1,2*inset+1),np.uint8))>0
+                        if inset not in masks['_interior']:
+                            interior=np.zeros(gray.shape,np.uint8)
+                            points=np.column_stack(np.where(expected)[::-1]).astype(np.int32)
+                            cv2.fillConvexPoly(interior,cv2.convexHull(points),255)
+                            interior=cv2.erode(interior,np.ones((2*inset+1,2*inset+1),np.uint8))>0
+                            masks['_interior'][inset]=(interior,masks['_detail_edges']&interior)
+                        interior,expected_detail=masks['_interior'][inset]
                         if interior.sum()>=100:
-                            observed=cv2.warpAffine(detail_edges,np.float32([[1,0,radius-x],[0,1,radius-y]]),(gray.shape[1],gray.shape[0]))
-                            actual=(observed>0)&interior;expected_detail=(predicted>0)&interior
+                            if (x,y) not in shifted_detail:
+                                shifted_detail[x,y]=cv2.warpAffine(detail_edges,np.float32([[1,0,radius-x],[0,1,radius-y]]),(gray.shape[1],gray.shape[0]))
+                            observed=shifted_detail[x,y]
+                            actual=(observed>0)&interior
                             if expected_detail.sum()>=20:
-                                distance=cv2.distanceTransform(255-observed,cv2.DIST_L2,3)
+                                if (x,y) not in detail_distances:detail_distances[x,y]=cv2.distanceTransform(255-observed,cv2.DIST_L2,3)
+                                distance=detail_distances[x,y]
                                 recall_detail=float(np.exp(-distance[expected_detail]/2).mean())
-                                precision_detail=float(np.exp(-distances[actual]/2).mean()) if actual.any() else 0.
+                                precision_detail=float(np.exp(-masks['_detail_distances'][actual]/2).mean()) if actual.any() else 0.
                                 detail=2*recall_detail*precision_detail/max(.001,recall_detail+precision_detail)
                             else:detail=max(0.,1-float(actual.sum())/max(1,float(interior.sum())*.04))
                     results.append({'template':name,'score':combined,'shape':float(shape_score[y,x]),'silhouette':float(silhouette[y,x]),'material':material,'material_parts':material_parts,'interior_detail':detail,'offset_mm':offset.round(2).tolist()})
@@ -370,7 +450,7 @@ class InspectionWorker(threading.Thread):
         inspector=None;error=None
         try:inspector=ShapeInspector();inspector.stop=self.stop
         except Exception as exc:error=str(exc)
-        previous={};last_key=None;last_at=None;last_completed=None;tracker=None;tracker_path=None
+        previous={};last_key=None;last_at=None;last_completed=None
         while not self.stop.is_set():
             try:key,at,frame,anchors,profile,recovery=self.jobs.get(timeout=.1)
             except queue.Empty:continue
@@ -380,18 +460,9 @@ class InspectionWorker(threading.Thread):
                     from .occupied_pallet import locate
                     from .inspection_geometry import anchors_for
                     jid=recovery['reference']['stations']['finished_pallet']['jig_id'];config=recovery['catalog'].get(jid)
-                    directory=recovery.get('reference_directory');reference_file=Path(directory)/'pallet.json' if directory else None
-                    signature=(str(reference_file),reference_file.stat().st_mtime_ns) if reference_file and reference_file.exists() else None
-                    if signature!=tracker_path:
-                        tracker=None;tracker_path=signature
-                        if signature:
-                            from .inspection_tracking import PalletReference
-                            try:tracker=PalletReference(directory)
-                            except (OSError,ValueError,KeyError):tracker=None
-                    result=tracker.locate(frame,profile,config) if tracker and config else None
-                    if not result and not any(a['part']=='finished' for a in anchors):
-                        result=locate(frame,config,profile) if config else None
-                        if result and tracker:result['inspection_source']='현재 외곽 재탐색 · 기준 영상 추적 범위 밖'
+                    # Existing standard/fixed anchors retain their geometry.
+                    # Recover loaded pallets for classification only.
+                    result=locate(frame,config,profile) if config and not any(a['part']=='finished' for a in anchors) else None
                     if result:
                         extra,_=anchors_for(frame,{jid:result},{},recovery['catalog'],profile,recovery['reference'],'완성품 팔레트','전체',recovery['placement'])
                         for a in extra:a['station']='완성품 팔레트'

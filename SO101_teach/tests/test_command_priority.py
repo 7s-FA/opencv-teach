@@ -53,7 +53,7 @@ class PriorityLifecycleTests(unittest.TestCase):
                 self.assertTrue(all(link.lease is None for link in links));self.assertIn('linear-close',order)
             published.append(suffix);original_publish(status,suffix)
         with tempfile.TemporaryDirectory() as directory,patch.object(cli,'ROOT',Path(directory)),patch.object(cli,'Link',Link),patch.object(cli,'Runner',Runner),patch.object(cli.signal,'signal'),patch.object(linear_client,'LinearClient',Linear),patch.object(cli.Status,'publish',publish):
-            (cli.ROOT/'data').mkdir();ep={'steps':[{'ticks':{},'name':'end'}]}
+            (cli.ROOT/'data').mkdir();ep={'id':'priority-test','calibration_sha256':'test-calibration','steps':[{'id':'placed','ticks':{},'name':'placed','inspection':{'station':'finished','target':'pallet','expected':'cap_added','timeout_seconds':10}},{'id':'end','ticks':{},'name':'end','safe_boundary':'end'}]}
             with patch.object(cli,'load_job',return_value=(cli.ROOT/'data',ep,{},100,30)):
                 fd=os.open(cli.ROOT/'data/episode-cli.lock',os.O_CREAT|os.O_WRONLY,0o600);fcntl.flock(fd,fcntl.LOCK_EX|fcntl.LOCK_NB)
                 self.assertEqual(cli.main(['build_load_a','--no-ros','--execution-lock-fd',str(fd)]),0)

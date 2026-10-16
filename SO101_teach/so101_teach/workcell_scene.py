@@ -8,6 +8,15 @@ LINEAR_FIXTURE_BASE_Z_MM=9.4
 # B housing pallet CAD bounds: (-34,-34,0) .. (34,34,8.5) mm.
 LINEAR_FIXTURE_CENTER_Z_MM=4.25
 
+# User-selected frame color matches the current ARM2/3 printed plastic.
+# Wheels, electronic boards and support hardware retain distinct materials.
+BURGER_FINISH={
+    'burger_frame_plastic':{'color_srgb':[.18,.20,.215],'roughness':.94,'metallic':0,'specular':.035,'shininess':.027},
+    'burger_tire_rubber':{'color_srgb':[.055,.06,.065],'roughness':.96,'metallic':0,'specular':.025,'shininess':.03},
+    'burger_sensor_plastic':{'color_srgb':[.12,.13,.14],'roughness':.70,'metallic':0,'specular':.12,'shininess':.12},
+    'burger_pcb_green':{'color_srgb':[.12,.18,.145],'roughness':.80,'metallic':0,'specular':.06,'shininess':.08},
+}
+
 
 def numbers(values):return ' '.join(str(float(v)) for v in values)
 
@@ -17,14 +26,7 @@ def yaw_quat(degrees):
     return numbers([math.cos(a),0,0,math.sin(a)])
 
 
-def carriage_position_mm(stage):
-    """Map command values to the camera-confirmed rigid carriage endpoints."""
-    stroke=float(stage['stroke_mm']);endpoints=stage.get('endpoint_reference',{})
-    forward=endpoints.get('forward',{});retracted=endpoints.get('retracted',{})
-    if 'carriage_x_mm' in forward and 'carriage_x_mm' in retracted:
-        fraction=(stroke-retracted['commanded_mm'])/(forward['commanded_mm']-retracted['commanded_mm'])
-        return retracted['carriage_x_mm']+fraction*(forward['carriage_x_mm']-retracted['carriage_x_mm'])
-    return stroke+stage.get('carriage_home_x_mm',-50.)
+from .linear_geometry import carriage_position_mm
 
 
 def linear_endpoint_centers_mm(stage):
@@ -88,7 +90,7 @@ def append_environment(scene,placement):
         'ear':'assets/linear_stage/ear_assembled.stl',
         'ear_mirror':'assets/linear_stage/ear_assembled_mirrored.stl',
         'stop':'assets/linear_stage/source/05_end_stop_PRINT_2.stl',
-        'a_jig':'assets/carrier_assembly/source/current/b_housing_jig.stl',
+        'a_jig':'assets/linear_stage/assembly_fixture.stl',
         **{key:'assets/linear_stage/'+key+'.stl' for key in ('l12_tube','l12_motor_housing','l12_screws','l12_rod')}}
     latest_connector=stage.get('front_connector_model')=='latest_top_mount'
     observed_connector=stage.get('front_connector_model')=='photo_observed'
@@ -159,10 +161,18 @@ def append_carrier_platform(assets,parent,jig,index):
     height=float(jig.get('platform_height_mm') or 195.)
     if not math.isfinite(height) or abs(height-195)>1e-6:raise ValueError('현재 버거 지지대는 운반판 높이 195mm용입니다.')
     platform=ET.SubElement(parent,'body',name=f'carrier_burger_{index}',pos=numbers([0,0,-height/1000]),quat=yaw_quat(jig.get('platform_yaw_deg',-90.)))
-    for part,color in [('base_link','.22 .25 .27 1'),('wheel_left_link','.08 .09 .10 1'),('wheel_right_link','.08 .09 .10 1'),('base_scan','.10 .12 .13 1')]:
+    for mat,spec in BURGER_FINISH.items():
+        if assets.find(f"material[@name='{mat}']") is None:
+            ET.SubElement(assets,'material',name=mat,rgba=numbers([*spec['color_srgb'],1]),
+                specular=str(spec['specular']),shininess=str(spec['shininess']),reflectance='0',emission='0')
+    silver=silver_metal_material(assets)
+    for part,file,mat in [('base_link','base_link_frame','burger_frame_plastic'),
+                     ('base_pcb','base_link_pcb','burger_pcb_green'),('base_posts','base_link_posts',silver),
+                     ('wheel_left_link','wheel_left_link','burger_tire_rubber'),
+                     ('wheel_right_link','wheel_right_link','burger_tire_rubber'),('base_scan','base_scan','burger_sensor_plastic')]:
         name=f'burger_{index}_{part}'
-        ET.SubElement(assets,'mesh',name=name,file=str(ROOT/'assets/turtlebot3_burger'/(part+'.stl')),scale='.001 .001 .001')
-        ET.SubElement(platform,'geom',name=name,type='mesh',mesh=name,rgba=color,contype='0',conaffinity='0',mass='0')
+        ET.SubElement(assets,'mesh',name=name,file=str(ROOT/'assets/turtlebot3_burger'/(file+'.stl')),scale='.001 .001 .001')
+        ET.SubElement(platform,'geom',name=name,type='mesh',mesh=name,material=mat,contype='0',conaffinity='0',mass='0')
     # Original Burger hex profile, fitted between the deck and carrier underside ribs.
     name=f'burger_{index}_carrier_standoffs'
     ET.SubElement(assets,'mesh',name=name,file=str(ROOT/'assets/turtlebot3_burger/carrier_mount_standoffs.stl'),scale='.001 .001 .001')

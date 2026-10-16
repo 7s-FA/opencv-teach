@@ -35,7 +35,7 @@ class ProfileSelectionTests(unittest.TestCase):
 
     def test_other_arm_selection_routes_to_workspace_once(self):
         panel,key=self.choose_new();panel.library.items[key]['robot_id']='arm3'
-        manager=Mock();self.app.workspace_manager=manager
+        manager=Mock();manager.safe_shutdown=None;self.app.workspace_manager=manager
         try:
             panel.profile_choice.event_generate('<<ComboboxSelected>>')
             manager.select.assert_called_once_with('arm3')

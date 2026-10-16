@@ -40,7 +40,7 @@ class FixedInspectionTests(unittest.TestCase):
     def test_missing_snapshot_never_falls_back_to_a_new_pose(self):
         result=self.run_worker({});self.assertIsNone(result['row']);self.assertIn('확정 지그 위치 없음',result['reason'])
     def test_camera_processing_is_off_while_episode_inspections_run(self):
-        camera=Mock();app=SimpleNamespace(camera=camera,camera_task=None,pending_execution=None,jig_updates_paused=False,detector=SimpleNamespace(frozen=False),inspection_run=SimpleNamespace(busy=True))
+        camera=Mock(observer=False);app=SimpleNamespace(camera=camera,camera_task=None,pending_execution=None,jig_updates_paused=False,detector=SimpleNamespace(frozen=False),inspection_run=SimpleNamespace(busy=True))
         CameraLifecycle.update_camera_mode(app);camera.set_mode.assert_called_once_with(processing_enabled=False,preview_fps=10)
         self.assertTrue(CameraLifecycle.camera_needed(app))
     def test_inspection_targets_are_measured_even_when_not_motion_jigs(self):

@@ -11,7 +11,7 @@ def code_version():
         h.update(str(p.relative_to(ROOT)).encode());h.update(p.read_bytes())
     for p in sorted((ROOT/'assets/so101').glob('*.urdf')):h.update(p.read_bytes())
     # Camera mount placement and CAD restore settings must match the Pi too.
-    for name in ('assets/so101/preview_scene.xml','assets/so101/inspection_scene.xml','assets/reference/camera.json'):
+    for name in ('assets/so101/preview_scene.xml','assets/so101/inspection_scene.xml','assets/reference/camera.json','assets/reference/carrier-junction.png'):
         h.update(name.encode());h.update((ROOT/name).read_bytes())
     return h.hexdigest()
 

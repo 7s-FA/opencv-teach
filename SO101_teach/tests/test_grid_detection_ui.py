@@ -16,7 +16,7 @@ class GridDetectionUITests(unittest.TestCase):
         key='b5ebdb54807c441c8267c15d77713b6a';a.profile=cfg['profile'];a.catalog.items=deepcopy(cfg['jigs']);a.catalog.revision+=1
         for item in a.catalog.items.values():item['stl']=str(ROOT/'data/jig_assets'/Path(item['stl']).name)
         before=deepcopy(a.episode);a.show_page('settings');s=a.settings;s.tabs.select(s.pages['jigs']);s.refresh_jigs();s.jig_choice.current(s.jig_keys.index(key));s.fill_jig()
-        s.vars['jig_method'].set('외곽+교차점');s.save_jig();self.assertEqual(a.catalog.items[key]['method'],'grid');self.assertEqual(a.episode,before)
+        self.assertNotIn('jig_method',s.vars);s.save_jig();self.assertEqual(a.catalog.items[key]['method'],'grid');self.assertEqual(a.episode,before)
         for width,height in ((1280,800),(1180,760)):
             self.root.geometry(f'{width}x{height}');self.root.update()
             canvas=s.scroll_canvases[str(s.pages['jigs'])];canvas.yview_moveto(1);self.root.update()
@@ -32,6 +32,6 @@ class GridDetectionUITests(unittest.TestCase):
         for width,height in ((1280,800),(1180,760)):
             self.root.geometry(f'{width}x{height}');self.root.update();a.camera.observation=(frame,data,time.monotonic())
             a.poll();self.root.after_cancel(a.job);self.root.update();a.draw_camera_frame(time.monotonic());self.root.update()
-            self.assertEqual(a.camera_jig_status.item(key,'values')[1],'교차점 · 0.8초 전')
+            self.assertEqual(a.camera_jig_status.item(key,'values')[1],'교차점 확인')
             x,y=self.root.winfo_rootx(),self.root.winfo_rooty();ImageGrab.grab(bbox=(x,y,x+width,y+height)).save(f'/tmp/grid-camera-{width}x{height}.png')
         self.assertEqual(a.episode,before)

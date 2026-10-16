@@ -100,7 +100,7 @@ class EpisodeAdjustUITests(unittest.TestCase):
             a.steps.selection_set(first);a.select_step();self.root.update()
         self.assertEqual(a.target,a.episode['steps'][0]['ticks']);self.assertEqual(a.episode,before)
         for page in (a.episode_adjust_panel.inspection,a.episode_adjust_panel.startup):
-            a.episode_adjust_panel.tabs.select(page);self.root.update();self.assertTrue(a.preview_canvas.winfo_ismapped());self.assertGreater(a.preview_canvas.winfo_width(),600)
+            a.episode_adjust_panel.tabs.select(page);self.root.update();self.assertTrue(a.preview_canvas.winfo_ismapped());self.assertGreater(a.preview_canvas.winfo_width(),self.root.winfo_width()*.28)
             self.assertLess(a.episode_policy_card.winfo_rootx(),a.preview_canvas.winfo_rootx())
         self.assertTrue(a.teach_preview_btn.winfo_ismapped());self.assertFalse(a.execute_btn.winfo_ismapped())
         a.teach_tabs.select(a.teach_overview);self.root.update();self.assertTrue(a.editor_card.winfo_ismapped());self.assertTrue(a.preview_canvas.winfo_ismapped())
@@ -154,7 +154,7 @@ class ActualEpisodeLayoutTests(unittest.TestCase):
                         try:root.update()
                         except tk.TclError:break
                 else:root.destroy()
-    def test_actual_pi_episode_and_camera_at_two_window_sizes(self):
+    def test_actual_pi_episode_and_camera_at_maximized_size(self):
         import tkinter as tk
         import cv2
         from types import SimpleNamespace
@@ -169,7 +169,8 @@ class ActualEpisodeLayoutTests(unittest.TestCase):
             root=tk.Tk();root.withdraw();a=App(root,folder,render=True,auto_camera=False);root.deiconify()
             try:
                 snapshot=read_json(snapshot_path);sync=a.episode_sync;sync.start_signature=sync.editor_signature();sync.job=Future();sync.job.set_result(snapshot);sync.poll();self.assertTrue(sync.ready)
-                for size in ('1480x920','1180x760'):
+                # Current project contract is the maximized 1920x1080 desktop; 37px is desktop chrome.
+                for size in ('1920x1043',):
                     root.geometry(size);a.teach_tabs.select(a.teach_overview);root.update()
                     until=time.monotonic()+15
                     while a.last_rgb is None and time.monotonic()<until:root.update();time.sleep(.04)
@@ -182,7 +183,7 @@ class ActualEpisodeLayoutTests(unittest.TestCase):
                 frame=cv2.imread(str(ROOT/'tests/fixtures/insert-normal/camera-0.png'));data=a.detector.process(frame)
                 a.camera=SimpleNamespace(running=True,error=None,observation=(frame,data,time.monotonic()),close=lambda:None,join=lambda n:True)
                 a.show_page('camera');a.camera_all.set(True);root.update();a.draw_camera_frame(time.monotonic());root.update()
-                ImageGrab.grab(bbox=(root.winfo_rootx(),root.winfo_rooty(),root.winfo_rootx()+root.winfo_width(),root.winfo_rooty()+root.winfo_height())).save(ROOT/'verification/episode-adjust-sync/camera-1180x760.png')
+                ImageGrab.grab(bbox=(root.winfo_rootx(),root.winfo_rooty(),root.winfo_rootx()+root.winfo_width(),root.winfo_rooty()+root.winfo_height())).save(ROOT/'verification/episode-adjust-sync/camera-1920x1043.png')
             finally:
                 if a.camera:a.camera.running=False
                 a.close()

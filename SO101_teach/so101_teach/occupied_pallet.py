@@ -8,6 +8,17 @@ from .height_reference import support_bottom_z
 from .vision import world_xy,project_plane
 
 
+def white_rim_fraction(frame,quad):
+    """Reject nearby objects/background that offer edges but no white pallet rim."""
+    hsv=cv2.cvtColor(frame,cv2.COLOR_BGR2HSV);quad=np.asarray(quad,np.float32);center=quad.mean(0)
+    band=np.zeros(frame.shape[:2],np.uint8)
+    cv2.fillConvexPoly(band,np.rint(quad).astype(np.int32),255)
+    cv2.fillConvexPoly(band,np.rint(center+(quad-center)*.82).astype(np.int32),0)
+    product=(hsv[:,:,1]>65)&(hsv[:,:,2]>45)
+    valid=(band>0)&~product;white=(hsv[:,:,1]<65)&(hsv[:,:,2]>110)
+    return float(np.count_nonzero(valid & white)/max(1,np.count_nonzero(valid)))
+
+
 def locate(frame,config,profile):
     prepared=DetectionFrame(frame,profile)
     if prepared.error:return None
@@ -45,15 +56,20 @@ def locate(frame,config,profile):
         score=np.sort(support,axis=1)[:,-3:].mean(1)
         # The upper and lower white edges are 20 mm apart in height. Requiring
         # the lower edge too prevents registering that edge as the upper rim.
+        valid=(adjacent>=.65)&(np.sort(support,axis=1)[:,-2:].mean(1)>=.8)&allowed[iy,ix].all(1)
+        indices=np.flatnonzero(valid)
+        result=np.full(len(poses),-1.)
+        if not len(indices):return result,support
+        # Lower-rim evidence cannot rescue a failed upper-rim/ROI condition.
+        # Evaluate only surviving poses, with the identical projection and score.
+        x=x[indices];y=y[indices]
         bottom_depth=bottom_H[2,0]*x+bottom_H[2,1]*y+bottom_H[2,2]
         bx=np.rint((bottom_H[0,0]*x+bottom_H[0,1]*y+bottom_H[0,2])/bottom_depth).astype(int).clip(0,im.shape[1]-1)
         by=np.rint((bottom_H[1,0]*x+bottom_H[1,1]*y+bottom_H[1,2])/bottom_depth).astype(int).clip(0,im.shape[0]-1)
         lower=((distance[by,bx]<2.4)&allowed[by,bx]&~occluded[by,bx]).reshape(-1,4,32).sum(2)/32
         lower_score=np.sort(lower,axis=1)[:,-2:].mean(1)
-        score=.65*score+.35*lower_score
-        valid=(adjacent>=.65)&(np.sort(support,axis=1)[:,-2:].mean(1)>=.8)&allowed[iy,ix].all(1)
-        valid &= lower_score>=.5
-        return np.where(valid,score,-1),support
+        result[indices]=np.where(lower_score>=.5,.65*score[indices]+.35*lower_score,-1.)
+        return result,support
     grid=np.stack(np.meshgrid(np.arange(-20,20.1,2),np.arange(-20,20.1,2),np.deg2rad(np.arange(-12,12.1,2)),indexing='ij'),-1).reshape(-1,3)
     fine=np.stack(np.meshgrid(np.arange(-2,2.1,.5),np.arange(-2,2.1,.5),np.deg2rad(np.arange(-1,1.1,.5)),indexing='ij'),-1).reshape(-1,3)
     found=[]
@@ -64,8 +80,11 @@ def locate(frame,config,profile):
         if scores[i]<.55:continue
         cx,cy,a=poses[i];r=np.array([[np.cos(a),-np.sin(a)],[np.sin(a),np.cos(a)]])
         q=prepared.raw_points(project_plane(outer@r.T+[cx,cy],p,z));center=prepared.raw_points(project_plane([[cx,cy]],p,z))[0]
-        found.append({'quad':q.tolist(),'center_px':center.tolist(),'orientation_verified':False,'metric':{'center_xy_mm':[float(cx),float(cy)],'yaw_deg':float(np.rad2deg(a)%90),'symmetry_deg':90},'score':float(scores[i]),'edge_support':support[i].tolist()})
+        white_fraction=white_rim_fraction(frame,q)
+        if white_fraction<.70:continue
+        found.append({'white_rim_fraction':white_fraction,'quad':q.tolist(),'center_px':center.tolist(),'orientation_verified':False,'metric':{'center_xy_mm':[float(cx),float(cy)],'yaw_deg':float(np.rad2deg(a)%90),'symmetry_deg':90},'score':float(scores[i]),'edge_support':support[i].tolist()})
     if not found:return None
     found.sort(key=lambda r:r['score'],reverse=True)
     if len(found)>1 and np.linalg.norm(np.array(found[0]['center_px'])-found[1]['center_px'])>20 and found[0]['score']-found[1]['score']<.08:return None
-    return {'selected':found[0],'status':'inspection_outer_edges','inspection_only':True}
+    return {'selected':found[0],'status':'inspection_outer_edges','inspection_only':True,
+            'inspection_source':'적재 팔레트 외곽·흰 테두리 · 부품 검사 전용'}

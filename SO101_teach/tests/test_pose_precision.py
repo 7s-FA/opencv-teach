@@ -13,9 +13,11 @@ class PrecisionTests(unittest.TestCase):
         for i in (0,6):
             frame=cv2.imread(str(root/f'frame{i}.jpg'))
             with patch('so101_teach.pose_refinement.refine',side_effect=lambda *args,**kwargs:args[-1]):a=detect(frame,mesh,j['roi'],profile)['selected']
-            b=detect(frame,mesh,j['roi'],profile)['selected'];self.assertTrue(b['subpixel_refined'])
-            self.assertLess(b['refinement_objective_after'],b['refinement_objective_before'])
-            np.testing.assert_allclose(sorted(b['metric']['sides_mm']),sorted(a['metric']['sides_mm']),atol=.001)
+            b=detect(frame,mesh,j['roi'],profile)['selected'];self.assertTrue(b['observed_boundary_refined'])
+            self.assertLessEqual(abs(b['boundary_scale']-1),.03)
+            self.assertLessEqual(b['boundary_corner_error_mm'],2)
+            self.assertEqual(mesh['size_mm'],j['mesh']['size_mm'])
+            np.testing.assert_allclose(sorted(b['metric']['sides_mm']),np.repeat(sorted(mesh['size_mm'][:2]),2),rtol=.03)
             np.testing.assert_allclose(b['center_px'],project_plane([b['metric']['center_xy_mm']],profile,detection_plane_z(profile,mesh))[0],atol=.001)
             old.append(a['metric']['center_xy_mm']);new.append(b['metric']['center_xy_mm'])
         self.assertLess(np.linalg.norm(np.diff(new,axis=0)),np.linalg.norm(np.diff(old,axis=0))*.6)

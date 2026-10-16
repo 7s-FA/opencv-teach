@@ -1,0 +1,3205 @@
+{
+  "profile": {
+    "schema": 1,
+    "name": "로봇팔2",
+    "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
+    "calibration_file": "calibration/8fe375a029c77f2becc2d3dd1c938f3d882900a2948a9967874d25e38d82ca03.json",
+    "model_reference": {
+      "ticks": {
+        "shoulder_pan": 2047,
+        "shoulder_lift": 2047,
+        "elbow_flex": 2047,
+        "wrist_flex": 2047,
+        "wrist_roll": 2047,
+        "gripper": 2047
+      },
+      "radians": {
+        "shoulder_pan": 8.739856416340758e-06,
+        "shoulder_lift": 3.999987902844018e-06,
+        "elbow_flex": -4.242636587726078e-06,
+        "wrist_flex": 9.82706428323083e-06,
+        "wrist_roll": 0.04868213401890373,
+        "gripper": 1.5707963267948966
+      },
+      "encoder_counts_per_turn": 4096,
+      "calibration_sha256": "eaea825f770f1859a0c66e486ec3538d31280dfa16b3c7a0dc2d7e9ee89d356b",
+      "geometry_verified": false,
+      "note": "저장된 중간 틱과 CAD 조립 축을 연결한 기준. 실물 TCP 대조 미완료.",
+      "angle_mapping_sha256": "92e6a896c1c72c8c180643600a61048a5de28f9cd4faaee556565ea10886445b"
+    },
+    "camera": {
+      "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+      "width": 1280,
+      "height": 720
+    },
+    "intrinsics": {
+      "normal_spread_deg": 85.07132313914785,
+      "usable_for_metric": true,
+      "quality_note": "",
+      "K": [
+        [
+          1032.2503683943196,
+          0.0,
+          687.7723709834622
+        ],
+        [
+          0.0,
+          1032.1059987177996,
+          347.780289252618
+        ],
+        [
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "D": [
+        -0.4927825484416793,
+        0.3175725472843906,
+        0.0009627245882526294,
+        0.0006415581739380303,
+        -0.12739109971931759
+      ],
+      "size": [
+        1280,
+        720
+      ],
+      "rms_px": 0.3345732736611807,
+      "errors_px": [
+        0.23249447345733643,
+        0.1988622546195984,
+        0.22880753874778748,
+        0.2220085859298706,
+        0.22482919692993164,
+        0.21837042272090912,
+        0.20347148180007935,
+        0.18097226321697235,
+        0.1993337720632553,
+        0.2389938235282898,
+        0.17893920838832855,
+        0.2486308366060257,
+        0.22204460203647614,
+        0.2081262469291687,
+        0.19880735874176025,
+        0.21454742550849915,
+        0.20125927031040192,
+        0.4574057459831238,
+        0.5114720463752747,
+        0.7521030306816101,
+        0.5389497876167297,
+        0.36063769459724426,
+        0.49417808651924133,
+        0.5819027423858643,
+        0.3164055347442627,
+        0.210563525557518,
+        0.25723108649253845,
+        0.31445592641830444,
+        0.31573325395584106,
+        0.33514919877052307,
+        0.17703188955783844,
+        0.23043052852153778,
+        0.3805907070636749,
+        0.412645548582077,
+        0.4242311716079712
+      ],
+      "camera": {
+        "source": "/dev/v4l/by-id/usb-Innomaker_Innomaker-U20CAM-720P_SN0001-video-index0",
+        "width": 1280,
+        "height": 720
+      },
+      "board": {
+        "cols": 13,
+        "rows": 9,
+        "square_mm": 20.0
+      },
+      "source_files": [
+        "Photo from 2026-09-21 14-22-19.002897.jpeg",
+        "Photo from 2026-09-21 14-22-23.603922.jpeg",
+        "Photo from 2026-09-21 14-22-27.277905.jpeg",
+        "Photo from 2026-09-21 14-22-30.754915.jpeg",
+        "Photo from 2026-09-21 14-22-34.231099.jpeg",
+        "Photo from 2026-09-21 14-22-41.698608.jpeg",
+        "Photo from 2026-09-21 14-22-55.991840.jpeg",
+        "Photo from 2026-09-21 14-23-02.367464.jpeg",
+        "Photo from 2026-09-21 14-23-07.709889.jpeg",
+        "Photo from 2026-09-21 14-23-14.268171.jpeg",
+        "Photo from 2026-09-21 14-23-20.038546.jpeg",
+        "Photo from 2026-09-21 14-23-28.527615.jpeg",
+        "Photo from 2026-09-21 14-23-31.768654.jpeg",
+        "Photo from 2026-09-21 14-23-34.924734.jpeg",
+        "Photo from 2026-09-21 14-23-44.434608.jpeg",
+        "Photo from 2026-09-21 14-23-49.117827.jpeg",
+        "Photo from 2026-09-21 14-23-54.069995.jpeg",
+        "Photo from 2026-09-21 14-47-30.456972.jpeg",
+        "Photo from 2026-09-21 14-47-37.321896.jpeg",
+        "Photo from 2026-09-21 14-47-42.473514.jpeg",
+        "Photo from 2026-09-21 14-47-49.883488.jpeg",
+        "Photo from 2026-09-21 14-47-54.635372.jpeg",
+        "Photo from 2026-09-21 14-48-02.212012.jpeg",
+        "Photo from 2026-09-21 14-48-11.209132.jpeg",
+        "Photo from 2026-09-21 14-48-16.337043.jpeg",
+        "Photo from 2026-09-21 14-59-33.967505.jpeg",
+        "Photo from 2026-09-21 14-59-39.829627.jpeg",
+        "Photo from 2026-09-21 14-59-45.155029.jpeg",
+        "Photo from 2026-09-21 14-59-55.019602.jpeg",
+        "Photo from 2026-09-21 15-00-12.849223.jpeg",
+        "Photo from 2026-09-21 15-00-23.577830.jpeg",
+        "Photo from 2026-09-21 15-00-31.274409.jpeg",
+        "Photo from 2026-09-21 15-00-38.254069.jpeg",
+        "Photo from 2026-09-21 15-00-50.713060.jpeg",
+        "Photo from 2026-09-21 15-00-57.878643.jpeg"
+      ],
+      "source_directory": "/path/to/Final_Arm/OpenCV_teach/calibration/camera_images"
+    },
+    "extrinsics": {
+      "source": "cad_estimate",
+      "verified_for_robot_motion": false,
+      "base_from_camera": [
+        [
+          8.236175720257466e-06,
+          -0.9063119925854385,
+          0.4226092427148011,
+          25.987375015717188
+        ],
+        [
+          -0.9999999999660827,
+          -7.46454482856353e-06,
+          3.4806839841220946e-06,
+          116.01636143768306
+        ],
+        [
+          0.0,
+          -0.42260924272913486,
+          -0.9063119926161781,
+          545.6718787079634
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "intrinsics_signature": "f6fe093ef752b6f6ea89f091380059f1a0c85a73683a3cf0871c3c7aaa11523b",
+      "optical_offset_mm": 0.0,
+      "image_roll_deg": 0.0,
+      "geometry_source": "calibration/mount_geometry/left_nominal_pose.json",
+      "geometry_sha256": "894bd412a4780aaa458ff5f51aba27620dd5ca671343a019ec861b2a3a68bb3b",
+      "lens_protrusion_mm_reference_only": 20.0,
+      "note": "Stock 32x32 module on left-side mast. Opposite socket CAD translation; optical offset 0 mm and existing image axes retained. Not a measured camera pose.",
+      "verified": false,
+      "mount_side": "left",
+      "mount_socket_pitch_mm": 232.06414794921875
+    },
+    "known_issues": [
+      "손목 동일 위치 유지 이탈: 원인 미확정",
+      "이전 바닥 접촉 기록과 CAD 사이 약 21 mm 차이"
+    ],
+    "source": {
+      "calibration": "/path/to/Final_Arm/OpenCV_teach/calibration/opencv_follower_right/follower_right.json",
+      "midpoint_record": "/path/to/Final_Arm/OpenCV_teach/teaching/motor-diagnostics/calibration_recovery_follower_right_20260923_110312_826148.json",
+      "model": "/path/to/Final_Arm/OpenCV_teach/assets/so101"
+    },
+    "tcp": {
+      "mode": "model",
+      "model_point": "tip",
+      "xyz_mm": [
+        1.773409675938293,
+        0.6026567343814877,
+        6.549653899876567
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "frame": "gripper_frame_link",
+      "source_sha256": {
+        "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+        "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+      },
+      "verified": false
+    },
+    "mode": "follower",
+    "leader": {
+      "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B79015205-if00",
+      "calibration_file": "calibration/67b768f40c843a6230173cc8691a9709e01d095d20a623bf0a80a9c78ecf0173.json",
+      "angle_mapping_sha256": "30b0338656beeca88d6f0a9d01b9a8e72f7b6a5c6aa3ef55b5ef760a7308fddc"
+    },
+    "table_z_mm": -7.4,
+    "grip_contact_load": 70,
+    "robot_id": "arm2",
+    "calibration_status": "ready",
+    "world_from_base": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        0.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ],
+    "preview_joint_angles_rad": [
+      8.739856416340758e-06,
+      3.999987902844018e-06,
+      -4.242636587726078e-06,
+      9.82706428323083e-06,
+      0.04868213401890373,
+      0.0
+    ]
+  },
+  "catalog": {
+    "pallet": {
+      "id": "pallet",
+      "name": "완제품 팔레트",
+      "stl": "/home/ubuntu/OpenCV_teach/data/jig_assets/89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6.stl",
+      "unit": "mm",
+      "shape": "ring",
+      "method": "edges",
+      "roi": [
+        [
+          0.5692108631134033,
+          0.2988505681355794
+        ],
+        [
+          0.472186279296875,
+          0.07586206860012479
+        ],
+        [
+          0.45278139114379884,
+          0.07816092173258464
+        ],
+        [
+          0.4489003658294678,
+          0.0827586226993137
+        ],
+        [
+          0.4307891368865967,
+          0.0850574705335829
+        ],
+        [
+          0.4307891368865967,
+          0.08735632366604275
+        ],
+        [
+          0.40620956420898435,
+          0.09195401933458117
+        ],
+        [
+          0.40620956420898435,
+          0.09425287246704102
+        ],
+        [
+          0.38939197063446046,
+          0.09885057873196072
+        ],
+        [
+          0.3764553785324097,
+          0.1103448232014974
+        ],
+        [
+          0.3557567834854126,
+          0.11954022513495552
+        ],
+        [
+          0.35316946506500246,
+          0.12413793139987522
+        ],
+        [
+          0.3441138505935669,
+          0.12643678453233506
+        ],
+        [
+          0.34282019138336184,
+          0.1310344802008735
+        ],
+        [
+          0.3260025978088379,
+          0.1402298821343316
+        ],
+        [
+          0.3182406187057495,
+          0.14712644153171114
+        ],
+        [
+          0.3169469594955444,
+          0.15172413720024958
+        ],
+        [
+          0.310478663444519,
+          0.15402299033270941
+        ],
+        [
+          0.30918500423431394,
+          0.15862068600124782
+        ],
+        [
+          0.3027166843414307,
+          0.16091953913370768
+        ],
+        [
+          0.3027166843414307,
+          0.1655172453986274
+        ],
+        [
+          0.27943079471588134,
+          0.18160919613308377
+        ],
+        [
+          0.27813713550567626,
+          0.18620690239800347
+        ],
+        [
+          0.27296247482299807,
+          0.18850574493408204
+        ],
+        [
+          0.271668815612793,
+          0.19310345119900174
+        ],
+        [
+          0.2600258827209473,
+          0.20689654880099825
+        ],
+        [
+          0.2561448812484741,
+          0.20689654880099825
+        ],
+        [
+          0.2522639036178589,
+          0.21379309760199652
+        ],
+        [
+          0.24708926677703857,
+          0.21609196133083766
+        ],
+        [
+          0.24708926677703857,
+          0.2206896464029948
+        ],
+        [
+          0.2393272876739502,
+          0.22758621639675564
+        ],
+        [
+          0.2328589916229248,
+          0.24137931399875218
+        ],
+        [
+          0.22509703636169434,
+          0.24827586279975045
+        ],
+        [
+          0.2082794189453125,
+          0.2781609217325846
+        ],
+        [
+          0.20569210052490233,
+          0.2781609217325846
+        ],
+        [
+          0.19922380447387694,
+          0.29195401933458115
+        ],
+        [
+          0.19663648605346679,
+          0.29195401933458115
+        ],
+        [
+          0.19663648605346679,
+          0.2965517255995009
+        ],
+        [
+          0.1875808596611023,
+          0.3057471169365777
+        ],
+        [
+          0.18111255168914794,
+          0.3241379208034939
+        ],
+        [
+          0.17464424371719361,
+          0.3333333333333333
+        ],
+        [
+          0.16946959495544434,
+          0.349425294664171
+        ],
+        [
+          0.16946959495544434,
+          0.3586207071940104
+        ],
+        [
+          0.16688227653503418,
+          0.36551725599500867
+        ],
+        [
+          0.16688227653503418,
+          0.40919541252983943
+        ],
+        [
+          0.16946959495544434,
+          0.4137930976019965
+        ],
+        [
+          0.17076325416564941,
+          0.42758619520399305
+        ],
+        [
+          0.18628718852996826,
+          0.4551724327935113
+        ],
+        [
+          0.19793014526367186,
+          0.4850574917263455
+        ],
+        [
+          0.20569210052490233,
+          0.5310344696044922
+        ],
+        [
+          0.2082794189453125,
+          0.5333333333333333
+        ],
+        [
+          0.2082794189453125,
+          0.5402298821343317
+        ],
+        [
+          0.21216042041778566,
+          0.5471264309353299
+        ],
+        [
+          0.21345407962799073,
+          0.5586207071940105
+        ],
+        [
+          0.21992237567901612,
+          0.574712626139323
+        ],
+        [
+          0.23544631004333497,
+          0.5816091749403212
+        ],
+        [
+          0.271668815612793,
+          0.5793103535970052
+        ],
+        [
+          0.32729625701904297,
+          0.5586207071940105
+        ],
+        [
+          0.34023284912109375,
+          0.5471264309353299
+        ],
+        [
+          0.35963778495788573,
+          0.5379310184054904
+        ],
+        [
+          0.3609314441680908,
+          0.5333333333333333
+        ],
+        [
+          0.3868046522140503,
+          0.5103448232014974
+        ],
+        [
+          0.4036222457885742,
+          0.48275862799750435
+        ],
+        [
+          0.41138420104980467,
+          0.4758620791965061
+        ],
+        [
+          0.41138420104980467,
+          0.4712643517388238
+        ],
+        [
+          0.4139715194702148,
+          0.4712643517388238
+        ],
+        [
+          0.4294954776763916,
+          0.450574705335829
+        ],
+        [
+          0.4489003658294678,
+          0.4344827440049913
+        ],
+        [
+          0.4566623687744141,
+          0.4206896464029948
+        ],
+        [
+          0.4670116424560547,
+          0.40919541252983943
+        ],
+        [
+          0.4734799385070801,
+          0.40689654880099824
+        ],
+        [
+          0.4851229190826416,
+          0.39310345119900175
+        ],
+        [
+          0.508408784866333,
+          0.37471262613932294
+        ],
+        [
+          0.5122897624969482,
+          0.36781607733832467
+        ],
+        [
+          0.5407503128051758,
+          0.3448275883992513
+        ],
+        [
+          0.5472186088562012,
+          0.3333333333333333
+        ],
+        [
+          0.5510996341705322,
+          0.3310344907972548
+        ],
+        [
+          0.5601552486419678,
+          0.31264368693033856
+        ],
+        [
+          0.5653298854827881,
+          0.3103448232014974
+        ],
+        [
+          0.5692108631134033,
+          0.30344827440049915
+        ]
+      ],
+      "manual_size_mm": [
+        70,
+        70
+      ],
+      "manual_rim_mm": 20,
+      "mesh": {
+        "sha256": "89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6",
+        "stl_path": "/path/to/Final_Arm/SO101_teach/data/jig_assets/89fc0e26171b1426fd90a31976d2b2f28a10a69a3d8065aa7c117a43b5d63fe6.stl",
+        "unit": "mm",
+        "low_mm": [
+          -35.0,
+          -35.0,
+          0.0
+        ],
+        "size_mm": [
+          70.0,
+          70.0,
+          25.0
+        ],
+        "rim_z_mm": 20.0,
+        "holes": [
+          {
+            "center": [
+              0.5016666666666667,
+              0.5016666666666667
+            ],
+            "size": [
+              0.4033333333333333,
+              0.4033333333333333
+            ]
+          }
+        ]
+      },
+      "support_height_mm": 0.0
+    },
+    "b5ebdb54807c441c8267c15d77713b6a": {
+      "id": "b5ebdb54807c441c8267c15d77713b6a",
+      "name": "운반용 지그",
+      "stl": "/home/ubuntu/OpenCV_teach/data/jig_assets/23f8ddb6d925c8c15f5ec543804dc42c2db10bc356cfcdaa45742b1c0e04f4d9.stl",
+      "unit": "mm",
+      "shape": "rectangle",
+      "method": "grid",
+      "roi": [
+        [
+          0.6313066005706787,
+          0.46436780293782554
+        ],
+        [
+          0.6442431926727294,
+          0.5126436869303386
+        ],
+        [
+          0.6468305110931396,
+          0.5126436869303386
+        ],
+        [
+          0.6494178295135498,
+          0.524137920803494
+        ],
+        [
+          0.6545925140380859,
+          0.5333333333333333
+        ],
+        [
+          0.6545925140380859,
+          0.5379310184054904
+        ],
+        [
+          0.6584734916687012,
+          0.5425287458631728
+        ],
+        [
+          0.6584734916687012,
+          0.5471264309353299
+        ],
+        [
+          0.6623544692993164,
+          0.5517241583930121
+        ],
+        [
+          0.6623544692993164,
+          0.5563218434651692
+        ],
+        [
+          0.6662354469299316,
+          0.5632183922661675
+        ],
+        [
+          0.6675291061401367,
+          0.574712626139323
+        ],
+        [
+          0.6701164245605469,
+          0.5770114898681641
+        ],
+        [
+          0.6752910614013672,
+          0.6045976850721572
+        ],
+        [
+          0.6791720390319824,
+          0.6137930976019965
+        ],
+        [
+          0.6791720390319824,
+          0.6206896464029948
+        ],
+        [
+          0.6856403827667237,
+          0.6344827440049913
+        ],
+        [
+          0.6856403827667237,
+          0.6413792928059896
+        ],
+        [
+          0.6946959972381592,
+          0.6574712541368273
+        ],
+        [
+          0.6946959972381592,
+          0.6620689815945096
+        ],
+        [
+          0.6998706340789795,
+          0.6712643517388238
+        ],
+        [
+          0.7050452709197998,
+          0.6896551767985026
+        ],
+        [
+          0.7102199077606202,
+          0.698850589328342
+        ],
+        [
+          0.7128072261810303,
+          0.698850589328342
+        ],
+        [
+          0.7128072261810303,
+          0.7034482744004992
+        ],
+        [
+          0.7179819107055664,
+          0.7126436869303385
+        ],
+        [
+          0.7218628883361816,
+          0.7149425082736545
+        ],
+        [
+          0.7296248435974121,
+          0.7494252522786459
+        ],
+        [
+          0.7425614356994629,
+          0.7862069023980035
+        ],
+        [
+          0.7477360725402832,
+          0.7954022725423177
+        ],
+        [
+          0.7529107570648194,
+          0.8160919189453125
+        ],
+        [
+          0.7554980754852295,
+          0.8160919189453125
+        ],
+        [
+          0.7567917346954346,
+          0.8252873738606771
+        ],
+        [
+          0.7593790531158447,
+          0.827586195203993
+        ],
+        [
+          0.7606727123260498,
+          0.8367816501193577
+        ],
+        [
+          0.7645536899566651,
+          0.8436781989203559
+        ],
+        [
+          0.7865459442138671,
+          0.9218390570746527
+        ],
+        [
+          0.7878396034240722,
+          0.9356321546766493
+        ],
+        [
+          0.7956015586853027,
+          0.9609195285373264
+        ],
+        [
+          0.8020698547363281,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          0.678160900539822
+        ],
+        [
+          0.8460543632507325,
+          0.262068960401747
+        ],
+        [
+          0.8266493797302246,
+          0.2712643729315864
+        ],
+        [
+          0.8253557205200195,
+          0.27586207919650607
+        ],
+        [
+          0.8214747428894043,
+          0.27586207919650607
+        ],
+        [
+          0.8111254692077636,
+          0.2850574705335829
+        ],
+        [
+          0.8072444915771484,
+          0.29195401933458115
+        ],
+        [
+          0.8033635139465332,
+          0.29195401933458115
+        ],
+        [
+          0.7930142402648925,
+          0.30344827440049915
+        ],
+        [
+          0.7852522850036621,
+          0.3057471169365777
+        ],
+        [
+          0.783958625793457,
+          0.3103448232014974
+        ],
+        [
+          0.7761966228485108,
+          0.31264368693033856
+        ],
+        [
+          0.7736093044281006,
+          0.31724137200249564
+        ],
+        [
+          0.7671410083770752,
+          0.31954023573133683
+        ],
+        [
+          0.743855094909668,
+          0.3402298821343316
+        ],
+        [
+          0.7360931396484375,
+          0.3517241372002496
+        ],
+        [
+          0.7296248435974121,
+          0.3540229797363281
+        ],
+        [
+          0.7296248435974121,
+          0.3586207071940104
+        ],
+        [
+          0.7270375251770019,
+          0.3586207071940104
+        ],
+        [
+          0.7205692291259765,
+          0.3701149410671658
+        ],
+        [
+          0.7063389301300049,
+          0.3816091749403212
+        ],
+        [
+          0.6985769748687745,
+          0.39310345119900175
+        ],
+        [
+          0.6934023380279541,
+          0.3954023149278429
+        ],
+        [
+          0.6934023380279541,
+          0.4
+        ],
+        [
+          0.6882277011871338,
+          0.40229886372884116
+        ],
+        [
+          0.6856403827667237,
+          0.40919541252983943
+        ],
+        [
+          0.6701164245605469,
+          0.4229885101318359
+        ],
+        [
+          0.6662354469299316,
+          0.4229885101318359
+        ],
+        [
+          0.6584734916687012,
+          0.4344827440049913
+        ],
+        [
+          0.6520051956176758,
+          0.43678160773383246
+        ],
+        [
+          0.6520051956176758,
+          0.4413792928059896
+        ],
+        [
+          0.6403622150421142,
+          0.450574705335829
+        ]
+      ],
+      "manual_size_mm": [
+        70,
+        70
+      ],
+      "manual_rim_mm": 20,
+      "mesh": {
+        "assembly": {
+          "kind": "fixed_grid",
+          "fixtures": [
+            {
+              "center_mm": [
+                -72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                21.699999809265137
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                -72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                26.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                0.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                14.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                -36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                8.5
+              ],
+              "bottom_z_mm": 4.800000190734863
+            },
+            {
+              "center_mm": [
+                72.0,
+                36.0
+              ],
+              "size_mm": [
+                68.0,
+                68.0,
+                15.499999046325684
+              ],
+              "bottom_z_mm": 4.800000190734863
+            }
+          ],
+          "orientation_hole": {
+            "center_mm": [
+              -72.00000020833335,
+              -36.00000005208334
+            ],
+            "z_mm": 26.5,
+            "inner_radius_mm": 8.999998880810496,
+            "outer_radius_mm": 10.4999995979985
+          }
+        },
+        "sha256": "23f8ddb6d925c8c15f5ec543804dc42c2db10bc356cfcdaa45742b1c0e04f4d9",
+        "stl_path": "/path/to/Final_Arm/SO101_teach/data/jig_assets/23f8ddb6d925c8c15f5ec543804dc42c2db10bc356cfcdaa45742b1c0e04f4d9.stl",
+        "unit": "mm",
+        "low_mm": [
+          -110.0,
+          -74.0,
+          0.0
+        ],
+        "size_mm": [
+          220.0,
+          148.0,
+          31.299999237060547
+        ],
+        "rim_z_mm": 4.8,
+        "holes": [
+          {
+            "center": [
+              0.8283333333333334,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.55
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.5916666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.745
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.2683333333333333,
+              0.4533333333333333
+            ],
+            "size": [
+              0.09666666666666666,
+              0.03333333333333333
+            ]
+          },
+          {
+            "center": [
+              0.735,
+              0.4116666666666667
+            ],
+            "size": [
+              0.09666666666666666,
+              0.11666666666666667
+            ]
+          },
+          {
+            "center": [
+              0.8283333333333334,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.5016666666666667,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          },
+          {
+            "center": [
+              0.175,
+              0.25833333333333336
+            ],
+            "size": [
+              0.2833333333333333,
+              0.42333333333333334
+            ]
+          }
+        ]
+      },
+      "support_height_mm": 0.0,
+      "physical_installation": {
+        "platform": "TurtleBot3 Burger",
+        "reference": "physical_floor",
+        "detection_rim_height_mm": 199.8,
+        "tabletop_height_mm": 195.0,
+        "carrier_underside_height_mm": 195.0,
+        "rim_height_above_tabletop_mm": 4.8,
+        "support_height_basis": "user requested 0mm relative to tabletop; carrier underside 195mm, CAD rim 4.8mm gives 199.8mm ~= 200mm",
+        "source": "user_confirmed_2026-10-02",
+        "motion_calibration_verified": false,
+        "nominal_detection_rim_height_mm": 200.0,
+        "platform_yaw_deg": -90.0,
+        "orientation_basis": "User-confirmed front camera: Burger +X points toward carrier -Y; A is the front row, B the rear row. Existing -90 degree mounting yaw retained."
+      }
+    }
+  },
+  "placement": {
+    "schema": 1,
+    "robot_id": "arm3",
+    "display_only": true,
+    "source": "camera_visual_estimate",
+    "base_xyz_mm": [
+      236.326,
+      457.73,
+      -5.0
+    ],
+    "base_yaw_deg": -105.968,
+    "joint_angles_rad": [
+      0.0,
+      -0.1,
+      -1.0,
+      0.5,
+      0.05,
+      0.1
+    ],
+    "verified": false,
+    "camera_shared_with": "arm2",
+    "reference_frame": "arm2_base",
+    "mount_attached": false,
+    "note": "User confirmed the perforated-face outline and screw positions on 2026-10-02. Placement fixed for simulation from the two screw centers at model Z=15.1 mm and the shared table. Existing camera extrinsics are CAD estimates; no measured motion calibration. Arm3 joint posture remains illustrative, not telemetry.",
+    "evidence": "verification/arm3-camera-placement/camera-base-visible.jpg",
+    "joint_pose_source": "illustrative_not_live",
+    "model_perforated_face_z_mm": 15.1,
+    "model_bottom_z_mm": -2.4,
+    "confirmed_for_preview": true,
+    "verified_for_robot_motion": false,
+    "confirmation_date": "2026-10-02",
+    "arm2_from_arm3_mm": [
+      [
+        -0.2751004430452161,
+        0.961415490948802,
+        0,
+        236.326
+      ],
+      [
+        -0.961415490948802,
+        -0.2751004430452161,
+        0,
+        457.73
+      ],
+      [
+        0,
+        0,
+        1,
+        -5.0
+      ],
+      [
+        0,
+        0,
+        0,
+        1
+      ]
+    ],
+    "fit_screw_pixel_rms": 0.34569852382114064,
+    "camera_reference_sha256": "041842b4771709cb002fd594e5adf7185253b2e8666bda6dae8ba0d84827787e",
+    "tcp": {
+      "mode": "model",
+      "model_point": "tip",
+      "xyz_mm": [
+        1.773409675938293,
+        0.6026567343814877,
+        6.549653899876567
+      ],
+      "rpy_deg": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "frame": "gripper_frame_link",
+      "source_sha256": {
+        "so101_modified.urdf": "f5c9f919f687498d16acebbfcfb2dfc58dcce081492c79556a2e50ce78029953",
+        "assets/xlerobot_fixed_finger.stl": "51807edd7566b4e0483a2d1d8af11c8beb1e77dbdc02414edf232bf467303953"
+      },
+      "verified": false,
+      "role": "arm3_display"
+    },
+    "board": {
+      "size_mm": [
+        514.2877335531805,
+        600.0
+      ],
+      "center_xy_mm": [
+        115.4030845370466,
+        234.0632359225096
+      ],
+      "yaw_deg": 120.06111845212601,
+      "top_z_mm": -7.4,
+      "corners_xy_mm": [
+        [
+          503.8599611567565,
+          161.78444769473006
+        ],
+        [
+          246.24113914980757,
+          606.8961364100671
+        ],
+        [
+          -273.0537920826634,
+          306.34202415028915
+        ],
+        [
+          -15.434970075714432,
+          -138.76966456504792
+        ]
+      ],
+      "method": "Unconstrained width fitted to user-approved image edge points; no 500mm hard constraint",
+      "source_image": "camera.jpg",
+      "unseen_near_edge": "inferred from 600 mm length",
+      "display_only": true,
+      "per_edge_rms_mm": {
+        "top": 0.5402008392222472,
+        "right": 0.3444877696434614,
+        "left": 2.207740028041006
+      },
+      "visual_thickness_mm": 10.0,
+      "thickness_measured": false,
+      "near_edge_estimated": true,
+      "thickness_source": "user_confirmed_2026-10-02",
+      "leg_assembly_height_mm": 185.0,
+      "physical_top_height_from_floor_mm": 195.0,
+      "physical_floor_z_in_robot_frame_mm": -202.4,
+      "legs": {
+        "height_mm": 185.0,
+        "centers_xy_mm": [
+          [
+            -207.14386677659024,
+            -250.0
+          ],
+          [
+            -207.14386677659024,
+            250.0
+          ],
+          [
+            207.14386677659024,
+            -250.0
+          ],
+          [
+            207.14386677659024,
+            250.0
+          ]
+        ],
+        "center_inset_mm": 50.0,
+        "position_source": "user_requested_approximate_50mm_inset",
+        "model": "assets/table_legs/table_leg_185mm_assembly.stl"
+      },
+      "enclosure": {
+        "sides": 4,
+        "panel_thickness_mm": 5.0,
+        "thickness_basis": "display assumption; user confirmed four white enclosing side panels",
+        "height_mm": 185.0
+      },
+      "backdrop": {
+        "height_mm": 400.0,
+        "width_mm": 1200.0,
+        "thickness_mm": 5.0,
+        "gap_mm": 20.0,
+        "height_reference": "physical_floor",
+        "height_basis": "user_confirmed_400mm_from_physical_floor",
+        "width_thickness_gap_basis": "display estimates based on photograph"
+      }
+    },
+    "linear_stage": {
+      "model": "L12-100-100-6-R",
+      "position_mm": [
+        145.66976233209857,
+        176.95721265119536,
+        -7.4
+      ],
+      "yaw_deg": -60.148435888849384,
+      "stroke_mm": 100.0,
+      "rail_length_mm": 300,
+      "rail_outer_width_mm": 121.2,
+      "rear_eye_x_mm": -314.15102391448306,
+      "actuator_axis_z_mm": 7.0,
+      "joint_mode": "static_display",
+      "fixture_count": 2,
+      "a_fixture_asset": "assets/linear_stage/assembly_fixture.stl",
+      "source": "current_camera_joint_jig_fit_with_rigid_CAD_assembly",
+      "image_observations": {
+        "rail_corners": [
+          [
+            772.0,
+            355.0
+          ],
+          [
+            883.0,
+            522.0
+          ],
+          [
+            305.0,
+            610.0
+          ]
+        ],
+        "fixture_centers_reference": "verification/linear-jig-current/final-outline-centers.png"
+      },
+      "position_verified_for_motion": false,
+      "carriage_home_x_mm": -45.65102391448304,
+      "front_pin_x_mm": -116.0,
+      "actuator_body_roll_deg": -90.0,
+      "front_connector_model": "latest_top_mount",
+      "end_stop_position_mm": [
+        156.0,
+        0.0,
+        0.0
+      ],
+      "controller_state_basis": {
+        "host": "10.10.142.113",
+        "file": "/home/ubuntu/project/linear_controller_pi5.py",
+        "user_state": "forward",
+        "commanded_mm": 100.0,
+        "pulse_us": 2000,
+        "measured_position": false,
+        "environment_file": "/home/ubuntu/project/arm3_ros_env.bash",
+        "forward_command": "linear_f",
+        "retract_command": "linear_r",
+        "retract_commanded_mm": 1.5
+      },
+      "alignment": {
+        "reference": "verification/linear-jig-current/assembly-fit.json",
+        "camera_capture": "verification/linear-jig-current/capture.json",
+        "user_outline_confirmed": true,
+        "fixture_centers_pitch_mm": 80.0,
+        "fixture_local_yaw_deg": [
+          0.0,
+          0.0
+        ],
+        "fixture_base_z_mm": 9.4,
+        "mean_abs_outline_error_px": 0.2022285362242175,
+        "p95_abs_outline_error_px": 0.4977067015919882,
+        "rail_screw_mean_error_px": 2.382464826343104,
+        "camera_projection_basis": "preview-only estimated optical center; see reference; original robot calibration unchanged",
+        "camera_optical_axis_offset_mm": 11.578175267299853,
+        "base_from_camera_for_preview": [
+          [
+            8.236175720257466e-06,
+            -0.9063119925854385,
+            0.4226092427148011,
+            30.88041889745002
+          ],
+          [
+            -0.9999999999660827,
+            -7.46454482856353e-06,
+            3.4806839841220946e-06,
+            116.01640173765227
+          ],
+          [
+            0.0,
+            -0.42260924272913486,
+            -0.9063119926161781,
+            535.1784396105975
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "absolute_robot_accuracy_verified": false
+      },
+      "front_connector_geometry": "latest supplied 03_top_mount_NO_UNDER_LIP.stl, rotated -90deg about X and translated Y=-25.5mm",
+      "actuator_rear_axis_z_mm": 7.8,
+      "fixture_source_name": "B 제품/B 제품 지그/B 하단.stl",
+      "actuator_rear_height_basis": "display estimate: rear mount fixed at 7.8mm to clear the rolled CAD housing; front pin follows the 7mm CAD bore",
+      "end_stop_position_basis": "CAD contact: stop inner face meets both rail ends at X=150mm, centered at Y=0; replaces independent photo fit.",
+      "state_source": {
+        "environment_script": "/home/ubuntu/project/arm3_ros_env.bash",
+        "domain_id": 40,
+        "topic": "/arm3/linear_state",
+        "unit": "commanded_pulse_us",
+        "read_only": true,
+        "startup_only": false
+      },
+      "endpoint_reference": {
+        "forward": {
+          "command": "linear_f",
+          "commanded_mm": 100.0,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-jig-current/assembly-fit.json",
+          "carriage_x_mm": 54.34897608551696
+        },
+        "retracted": {
+          "command": "linear_r",
+          "commanded_mm": 1.5,
+          "user_confirmed": true,
+          "placement_reference": "verification/linear-state-startup/retracted/fit.json",
+          "carriage_x_mm": -41.91585421768268,
+          "reported_end_hunting": true
+        },
+        "intermediate_positions": "Linear display interpolation between camera-confirmed endpoints; not measured position feedback."
+      }
+    },
+    "safe_pose_fallback_arm": {
+      "arm3": "arm2"
+    }
+  },
+  "frames": [
+    {
+      "image": "live-0.jpg",
+      "candidate": {
+        "quad": [
+          [
+            1110.1902187849382,
+            700.1853266568855
+          ],
+          [
+            918.3051183752016,
+            402.5958583273522
+          ],
+          [
+            1090.4988897126766,
+            294.37516215108144
+          ],
+          [
+            1263.7680023095827,
+            560.1913968607182
+          ]
+        ],
+        "center_px": [
+          1108.090212315867,
+          488.07938562510117
+        ],
+        "symmetry_deg": 360,
+        "image_angle_deg": 237.18615721030466,
+        "metric": {
+          "center_xy_mm": [
+            188.05345463170178,
+            -138.3843805590885
+          ],
+          "yaw_deg": 30.062793767844738,
+          "symmetry_deg": 360,
+          "sides_mm": [
+            220.00000408677286,
+            147.99999470506944,
+            220.00002338704076,
+            147.99998467168402
+          ],
+          "verified": false,
+          "dimension_source": "stl_model",
+          "mesh_yaw_offset_deg": 180.0
+        },
+        "outer_shape": {
+          "valid": true,
+          "score": 0.9999991192425005,
+          "size_error_ratio": 1.0630473070705194e-07,
+          "aspect_error_ratio": 1.3211362492882017e-07,
+          "stl_aspect_ratio": 1.4864864864864864,
+          "observed_aspect_ratio": 1.4864866828716046,
+          "opposite_side_error_ratio": 8.77284887980421e-08,
+          "right_angle_error_deg": 7.635843682953666e-06,
+          "width_edge_index": 1,
+          "fit_corner_error_mm": 1.3965140816435233e-05,
+          "fit_scale": 1.0000000212790048,
+          "height_tolerance_mm": 10.0,
+          "fit_from_model": true
+        },
+        "hole_matches": [],
+        "shape_match": true,
+        "score": 0.4877534059229049,
+        "area_px": 69198.96364223771,
+        "edge_support": [
+          0.75,
+          1.0,
+          1.0,
+          0.96875
+        ],
+        "edge_cost": 0.1131752815741977,
+        "model_recovered": true,
+        "visible_fraction": 1.0,
+        "partial_visible": false,
+        "axes_px": [
+          [
+            1108.090203519139,
+            488.07938956359493
+          ],
+          [
+            1093.602285657371,
+            465.91651276299615
+          ],
+          [
+            1116.481308277003,
+            501.08634841431007
+          ],
+          [
+            1088.910546459567,
+            502.7899384170197
+          ],
+          [
+            1119.0320303701776,
+            479.5668855379914
+          ]
+        ],
+        "subpixel_refined": true,
+        "refinement_delta_mm_deg": [
+          -0.29610671227868024,
+          0.08236978268855673,
+          -0.2395782732282851
+        ],
+        "refinement_objective_before": 0.18912092212347728,
+        "refinement_objective_after": 0.17906906731353078,
+        "orientation_scores": [
+          {
+            "yaw_deg": 210.06279376784474,
+            "cost": 0.20587527751922607,
+            "supported_sectors": 7
+          },
+          {
+            "yaw_deg": 30.062793767844738,
+            "cost": 0.5727046728134155,
+            "supported_sectors": 4
+          }
+        ],
+        "orientation_method": "circular_opening",
+        "orientation_hole_px": [
+          1008.3801839025666,
+          409.57135514422686
+        ],
+        "orientation_hole_outline_px": [
+          [
+            1006.3398067595766,
+            392.7612328577706
+          ],
+          [
+            1004.7393454310327,
+            392.86414930678575
+          ],
+          [
+            1003.1714684166765,
+            393.1272525324558
+          ],
+          [
+            1001.6511656186534,
+            393.54826376212856
+          ],
+          [
+            1000.1930161547233,
+            394.1235635458447
+          ],
+          [
+            998.8110543791515,
+            394.8479575244679
+          ],
+          [
+            997.5186501978334,
+            395.7148727497065
+          ],
+          [
+            996.3284122530664,
+            396.71635388500977
+          ],
+          [
+            995.2520059861189,
+            397.84308809785716
+          ],
+          [
+            994.3000754478023,
+            399.084557257979
+          ],
+          [
+            993.4820612838747,
+            400.42909312169553
+          ],
+          [
+            992.8062316801928,
+            401.8639064006129
+          ],
+          [
+            992.2794148177675,
+            403.37537558534865
+          ],
+          [
+            991.9070985382627,
+            404.9489529259982
+          ],
+          [
+            991.6931869477382,
+            406.5695074926989
+          ],
+          [
+            991.640124962474,
+            408.2213097090152
+          ],
+          [
+            991.7487036530227,
+            409.8882750550812
+          ],
+          [
+            992.0181444409417,
+            411.55415285866843
+          ],
+          [
+            992.4460824961342,
+            413.20256525682237
+          ],
+          [
+            993.0284848041697,
+            414.8172995156571
+          ],
+          [
+            993.7598487324315,
+            416.38241702180676
+          ],
+          [
+            994.6331041254986,
+            417.8824673753852
+          ],
+          [
+            995.6397520857415,
+            419.302569751169
+          ],
+          [
+            996.7699798141024,
+            420.62866854890467
+          ],
+          [
+            998.0126310066942,
+            421.8476382935845
+          ],
+          [
+            999.3555129403104,
+            422.947403488641
+          ],
+          [
+            1000.7853227258938,
+            423.9170891224769
+          ],
+          [
+            1002.2879714496883,
+            424.7471842147379
+          ],
+          [
+            1003.8486148972162,
+            425.4295586500607
+          ],
+          [
+            1005.4518264739862,
+            425.9575999288273
+          ],
+          [
+            1007.0818116055192,
+            426.32622134237687
+          ],
+          [
+            1008.7225115855441,
+            426.53199661733885
+          ],
+          [
+            1010.3578536855397,
+            426.5731395324591
+          ],
+          [
+            1011.9718312083668,
+            426.44948756137325
+          ],
+          [
+            1013.5486831616095,
+            426.162558296926
+          ],
+          [
+            1015.073136448799,
+            425.7154550238858
+          ],
+          [
+            1016.5304152277681,
+            425.11287968875996
+          ],
+          [
+            1017.9065412787187,
+            424.3610154040103
+          ],
+          [
+            1019.1883407668769,
+            423.46751869003214
+          ],
+          [
+            1020.3636192502762,
+            422.4413602278074
+          ],
+          [
+            1021.4212920338476,
+            421.29279439540943
+          ],
+          [
+            1022.351456517489,
+            420.03318341416605
+          ],
+          [
+            1023.1454639010087,
+            418.6748991605078
+          ],
+          [
+            1023.7960124028764,
+            417.23125201857954
+          ],
+          [
+            1024.297206040901,
+            415.71619842521335
+          ],
+          [
+            1024.6445866771849,
+            414.14445018275046
+          ],
+          [
+            1024.8351595758509,
+            412.5310365246045
+          ],
+          [
+            1024.8674306873777,
+            410.8914158811633
+          ],
+          [
+            1024.7413522595623,
+            409.241190882627
+          ],
+          [
+            1024.4583895180397,
+            407.5960453222742
+          ],
+          [
+            1024.021470905859,
+            405.9714582895232
+          ],
+          [
+            1023.4349125554055,
+            404.38281744357954
+          ],
+          [
+            1022.70441588436,
+            402.84497944879246
+          ],
+          [
+            1021.8370153507469,
+            401.3724045466279
+          ],
+          [
+            1020.8409517276942,
+            399.97889022047053
+          ],
+          [
+            1019.7256866609822,
+            398.6774749121356
+          ],
+          [
+            1018.5017525420496,
+            397.4803422445114
+          ],
+          [
+            1017.1806633680872,
+            396.39872157024865
+          ],
+          [
+            1015.7748455943135,
+            395.4427606281993
+          ],
+          [
+            1014.2974833161225,
+            394.6214976025451
+          ],
+          [
+            1012.7624668351647,
+            393.9427039005631
+          ],
+          [
+            1011.1842126137145,
+            393.41287772259415
+          ],
+          [
+            1009.5775653559208,
+            393.03710918937446
+          ],
+          [
+            1007.9576533503463,
+            392.8191462999171
+          ]
+        ],
+        "orientation_hole_alignment_error_mm": 2.6099842455166313,
+        "orientation_verified": true,
+        "outline_px": [
+          [
+            1110.1902187849382,
+            700.1853266568855
+          ],
+          [
+            1104.1251717656553,
+            690.0892550495536
+          ],
+          [
+            1097.899273642405,
+            679.7832334935566
+          ],
+          [
+            1091.5104221757933,
+            669.266373992339
+          ],
+          [
+            1084.9564834976015,
+            658.5379555370312
+          ],
+          [
+            1078.2353765492533,
+            647.597514713035
+          ],
+          [
+            1071.345150044688,
+            636.4449268361823
+          ],
+          [
+            1064.2840521863614,
+            625.080477933025
+          ],
+          [
+            1057.0505933631264,
+            613.5049278798092
+          ],
+          [
+            1049.6436020587175,
+            601.7195650146925
+          ],
+          [
+            1042.0622741995744,
+            589.7262525377589
+          ],
+          [
+            1034.3062161707503,
+            577.5274670133888
+          ],
+          [
+            1026.3754817286294,
+            565.1263292895396
+          ],
+          [
+            1018.2706030391944,
+            552.526628148494
+          ],
+          [
+            1009.9926160705791,
+            539.7328370036298
+          ],
+          [
+            1001.5430805686409,
+            526.7501239567722
+          ],
+          [
+            992.924094844289,
+            513.5843555306785
+          ],
+          [
+            984.138305601302,
+            500.24209439121717
+          ],
+          [
+            975.1889130333763,
+            486.73059137379494
+          ],
+          [
+            966.0796714191312,
+            473.05777212858715
+          ],
+          [
+            956.8148854438155,
+            459.23221869912993
+          ],
+          [
+            947.3994024764457,
+            445.2631463488291
+          ],
+          [
+            937.8386010311133,
+            431.1603759499422
+          ],
+          [
+            928.1383756411943,
+            416.93430224958956
+          ],
+          [
+            918.3051183752016,
+            402.5958583273522
+          ],
+          [
+            926.0898477995668,
+            397.8763931593111
+          ],
+          [
+            933.8309772598824,
+            393.1681028708795
+          ],
+          [
+            941.5269506737603,
+            388.4720722885113
+          ],
+          [
+            949.1762583982462,
+            383.78936805834155
+          ],
+          [
+            956.7774386897754,
+            379.12103757170746
+          ],
+          [
+            964.3290790829644,
+            374.46810792533427
+          ],
+          [
+            971.8298176846856,
+            369.8315849182095
+          ],
+          [
+            979.2783443798799,
+            365.2124520871692
+          ],
+          [
+            986.6734019455477,
+            360.61166978321904
+          ],
+          [
+            994.0137870693756,
+            356.03017429061407
+          ],
+          [
+            1001.2983512694426,
+            351.4688769907205
+          ],
+          [
+            1008.5260017114542,
+            346.9286635726822
+          ],
+          [
+            1015.6957019199566,
+            342.41039329291624
+          ],
+          [
+            1022.8064723799778,
+            337.91489828546025
+          ],
+          [
+            1029.8573910255445,
+            333.4429829251946
+          ],
+          [
+            1036.8475936115244,
+            328.99542324596405
+          ],
+          [
+            1043.7762739652412,
+            324.57296641562056
+          ],
+          [
+            1050.6426841143139,
+            320.1763302700118
+          ],
+          [
+            1057.4461342871657,
+            315.80620290793865
+          ],
+          [
+            1064.1859927826563,
+            311.463242349104
+          ],
+          [
+            1070.8616857052782,
+            307.14807625707783
+          ],
+          [
+            1077.4726965623777,
+            302.8613017293002
+          ],
+          [
+            1084.0185657198374,
+            298.60348515614714
+          ],
+          [
+            1090.4988897126766,
+            294.37516215108144
+          ],
+          [
+            1099.6466562757996,
+            306.8193585028139
+          ],
+          [
+            1108.6354134180967,
+            319.18566673612645
+          ],
+          [
+            1117.461953818622,
+            331.4663975866192
+          ],
+          [
+            1126.1235195485924,
+            343.65423294649275
+          ],
+          [
+            1134.6177993085053,
+            355.742243441044
+          ],
+          [
+            1142.9429219957437,
+            367.7239030187631
+          ],
+          [
+            1151.0974464207206,
+            379.5931003432128
+          ],
+          [
+            1159.08034698961,
+            391.3441467748807
+          ],
+          [
+            1166.8909951717214,
+            402.9717807311866
+          ],
+          [
+            1174.5291365695716,
+            414.47116821283254
+          ],
+          [
+            1181.9948634096986,
+            425.837899284682
+          ],
+          [
+            1189.2885822722787,
+            437.0679802993519
+          ],
+          [
+            1196.410976877592,
+            448.1578216517054
+          ],
+          [
+            1203.362965747395,
+            459.1042208524301
+          ],
+          [
+            1210.145654559246,
+            469.90434070888875
+          ],
+          [
+            1216.7602830118403,
+            480.5556824014258
+          ],
+          [
+            1223.2081660194076,
+            491.05605324331964
+          ],
+          [
+            1229.4906290532185,
+            501.4035289125619
+          ],
+          [
+            1235.6089374482613,
+            511.59640994365327
+          ],
+          [
+            1241.5642194931315,
+            521.6331722675998
+          ],
+          [
+            1247.357383121195,
+            531.5124115882958
+          ],
+          [
+            1252.989026021071,
+            541.2327813834798
+          ],
+          [
+            1258.4593389844906,
+            550.7929243184491
+          ],
+          [
+            1263.7680023095827,
+            560.1913968607182
+          ],
+          [
+            1258.1271167174314,
+            565.9231075615363
+          ],
+          [
+            1252.4154351228954,
+            571.6725331698403
+          ],
+          [
+            1246.6335097065512,
+            577.4386192904207
+          ],
+          [
+            1240.7818980779953,
+            583.2202785520687
+          ],
+          [
+            1234.8611682782876,
+            589.0163908500547
+          ],
+          [
+            1228.871903428123,
+            594.825803735829
+          ],
+          [
+            1222.81470603018,
+            600.6473329479868
+          ],
+          [
+            1216.6902019340992,
+            606.4797630785232
+          ],
+          [
+            1210.4990439725439,
+            612.3218483684161
+          ],
+          [
+            1204.241915276788,
+            618.1723136265729
+          ],
+          [
+            1197.9195322802905,
+            624.029855266171
+          ],
+          [
+            1191.5326474187004,
+            629.8931424524276
+          ],
+          [
+            1185.0820515347455,
+            635.7608183558356
+          ],
+          [
+            1178.5685759964556,
+            641.6315015048947
+          ],
+          [
+            1171.9930945371723,
+            647.5037872323755
+          ],
+          [
+            1165.356524825796,
+            653.3762492091496
+          ],
+          [
+            1158.6598297757166,
+            659.2474410596197
+          ],
+          [
+            1151.9040186008851,
+            665.1158980527824
+          ],
+          [
+            1145.0901476274753,
+            670.9801388629601
+          ],
+          [
+            1138.2193208695815,
+            676.8386673942357
+          ],
+          [
+            1131.2926903774094,
+            682.6899746626206
+          ],
+          [
+            1124.3114563664096,
+            688.5325407299953
+          ],
+          [
+            1117.276867135801,
+            694.3648366838542
+          ]
+        ]
+      }
+    },
+    {
+      "image": "live-1.jpg",
+      "candidate": {
+        "quad": [
+          [
+            1110.1902187849382,
+            700.1853266568855
+          ],
+          [
+            918.3051183752016,
+            402.5958583273522
+          ],
+          [
+            1090.4988897126766,
+            294.37516215108144
+          ],
+          [
+            1263.7680023095827,
+            560.1913968607182
+          ]
+        ],
+        "center_px": [
+          1108.090212315867,
+          488.07938562510117
+        ],
+        "symmetry_deg": 360,
+        "image_angle_deg": 237.18615721030466,
+        "metric": {
+          "center_xy_mm": [
+            188.05345463170178,
+            -138.3843805590885
+          ],
+          "yaw_deg": 30.062793767844738,
+          "symmetry_deg": 360,
+          "sides_mm": [
+            220.00000408677286,
+            147.99999470506944,
+            220.00002338704076,
+            147.99998467168402
+          ],
+          "verified": false,
+          "dimension_source": "stl_model",
+          "mesh_yaw_offset_deg": 180.0
+        },
+        "outer_shape": {
+          "valid": true,
+          "score": 0.9999991192425005,
+          "size_error_ratio": 1.0630473070705194e-07,
+          "aspect_error_ratio": 1.3211362492882017e-07,
+          "stl_aspect_ratio": 1.4864864864864864,
+          "observed_aspect_ratio": 1.4864866828716046,
+          "opposite_side_error_ratio": 8.77284887980421e-08,
+          "right_angle_error_deg": 7.635843682953666e-06,
+          "width_edge_index": 1,
+          "fit_corner_error_mm": 1.3965140816435233e-05,
+          "fit_scale": 1.0000000212790048,
+          "height_tolerance_mm": 10.0,
+          "fit_from_model": true
+        },
+        "hole_matches": [],
+        "shape_match": true,
+        "score": 0.4877534059229049,
+        "area_px": 69198.96364223771,
+        "edge_support": [
+          0.75,
+          1.0,
+          1.0,
+          0.96875
+        ],
+        "edge_cost": 0.1131752815741977,
+        "model_recovered": true,
+        "visible_fraction": 1.0,
+        "partial_visible": false,
+        "axes_px": [
+          [
+            1108.090203519139,
+            488.07938956359493
+          ],
+          [
+            1093.602285657371,
+            465.91651276299615
+          ],
+          [
+            1116.481308277003,
+            501.08634841431007
+          ],
+          [
+            1088.910546459567,
+            502.7899384170197
+          ],
+          [
+            1119.0320303701776,
+            479.5668855379914
+          ]
+        ],
+        "subpixel_refined": true,
+        "refinement_delta_mm_deg": [
+          -0.29610671227868024,
+          0.08236978268855673,
+          -0.2395782732282851
+        ],
+        "refinement_objective_before": 0.18912092212347728,
+        "refinement_objective_after": 0.17906906731353078,
+        "orientation_scores": [
+          {
+            "yaw_deg": 210.06279376784474,
+            "cost": 0.20587527751922607,
+            "supported_sectors": 7
+          },
+          {
+            "yaw_deg": 30.062793767844738,
+            "cost": 0.5727046728134155,
+            "supported_sectors": 4
+          }
+        ],
+        "orientation_method": "circular_opening",
+        "orientation_hole_px": [
+          1008.3801839025666,
+          409.57135514422686
+        ],
+        "orientation_hole_outline_px": [
+          [
+            1006.3398067595766,
+            392.7612328577706
+          ],
+          [
+            1004.7393454310327,
+            392.86414930678575
+          ],
+          [
+            1003.1714684166765,
+            393.1272525324558
+          ],
+          [
+            1001.6511656186534,
+            393.54826376212856
+          ],
+          [
+            1000.1930161547233,
+            394.1235635458447
+          ],
+          [
+            998.8110543791515,
+            394.8479575244679
+          ],
+          [
+            997.5186501978334,
+            395.7148727497065
+          ],
+          [
+            996.3284122530664,
+            396.71635388500977
+          ],
+          [
+            995.2520059861189,
+            397.84308809785716
+          ],
+          [
+            994.3000754478023,
+            399.084557257979
+          ],
+          [
+            993.4820612838747,
+            400.42909312169553
+          ],
+          [
+            992.8062316801928,
+            401.8639064006129
+          ],
+          [
+            992.2794148177675,
+            403.37537558534865
+          ],
+          [
+            991.9070985382627,
+            404.9489529259982
+          ],
+          [
+            991.6931869477382,
+            406.5695074926989
+          ],
+          [
+            991.640124962474,
+            408.2213097090152
+          ],
+          [
+            991.7487036530227,
+            409.8882750550812
+          ],
+          [
+            992.0181444409417,
+            411.55415285866843
+          ],
+          [
+            992.4460824961342,
+            413.20256525682237
+          ],
+          [
+            993.0284848041697,
+            414.8172995156571
+          ],
+          [
+            993.7598487324315,
+            416.38241702180676
+          ],
+          [
+            994.6331041254986,
+            417.8824673753852
+          ],
+          [
+            995.6397520857415,
+            419.302569751169
+          ],
+          [
+            996.7699798141024,
+            420.62866854890467
+          ],
+          [
+            998.0126310066942,
+            421.8476382935845
+          ],
+          [
+            999.3555129403104,
+            422.947403488641
+          ],
+          [
+            1000.7853227258938,
+            423.9170891224769
+          ],
+          [
+            1002.2879714496883,
+            424.7471842147379
+          ],
+          [
+            1003.8486148972162,
+            425.4295586500607
+          ],
+          [
+            1005.4518264739862,
+            425.9575999288273
+          ],
+          [
+            1007.0818116055192,
+            426.32622134237687
+          ],
+          [
+            1008.7225115855441,
+            426.53199661733885
+          ],
+          [
+            1010.3578536855397,
+            426.5731395324591
+          ],
+          [
+            1011.9718312083668,
+            426.44948756137325
+          ],
+          [
+            1013.5486831616095,
+            426.162558296926
+          ],
+          [
+            1015.073136448799,
+            425.7154550238858
+          ],
+          [
+            1016.5304152277681,
+            425.11287968875996
+          ],
+          [
+            1017.9065412787187,
+            424.3610154040103
+          ],
+          [
+            1019.1883407668769,
+            423.46751869003214
+          ],
+          [
+            1020.3636192502762,
+            422.4413602278074
+          ],
+          [
+            1021.4212920338476,
+            421.29279439540943
+          ],
+          [
+            1022.351456517489,
+            420.03318341416605
+          ],
+          [
+            1023.1454639010087,
+            418.6748991605078
+          ],
+          [
+            1023.7960124028764,
+            417.23125201857954
+          ],
+          [
+            1024.297206040901,
+            415.71619842521335
+          ],
+          [
+            1024.6445866771849,
+            414.14445018275046
+          ],
+          [
+            1024.8351595758509,
+            412.5310365246045
+          ],
+          [
+            1024.8674306873777,
+            410.8914158811633
+          ],
+          [
+            1024.7413522595623,
+            409.241190882627
+          ],
+          [
+            1024.4583895180397,
+            407.5960453222742
+          ],
+          [
+            1024.021470905859,
+            405.9714582895232
+          ],
+          [
+            1023.4349125554055,
+            404.38281744357954
+          ],
+          [
+            1022.70441588436,
+            402.84497944879246
+          ],
+          [
+            1021.8370153507469,
+            401.3724045466279
+          ],
+          [
+            1020.8409517276942,
+            399.97889022047053
+          ],
+          [
+            1019.7256866609822,
+            398.6774749121356
+          ],
+          [
+            1018.5017525420496,
+            397.4803422445114
+          ],
+          [
+            1017.1806633680872,
+            396.39872157024865
+          ],
+          [
+            1015.7748455943135,
+            395.4427606281993
+          ],
+          [
+            1014.2974833161225,
+            394.6214976025451
+          ],
+          [
+            1012.7624668351647,
+            393.9427039005631
+          ],
+          [
+            1011.1842126137145,
+            393.41287772259415
+          ],
+          [
+            1009.5775653559208,
+            393.03710918937446
+          ],
+          [
+            1007.9576533503463,
+            392.8191462999171
+          ]
+        ],
+        "orientation_hole_alignment_error_mm": 2.6099842455166313,
+        "orientation_verified": true,
+        "outline_px": [
+          [
+            1110.1902187849382,
+            700.1853266568855
+          ],
+          [
+            1104.1251717656553,
+            690.0892550495536
+          ],
+          [
+            1097.899273642405,
+            679.7832334935566
+          ],
+          [
+            1091.5104221757933,
+            669.266373992339
+          ],
+          [
+            1084.9564834976015,
+            658.5379555370312
+          ],
+          [
+            1078.2353765492533,
+            647.597514713035
+          ],
+          [
+            1071.345150044688,
+            636.4449268361823
+          ],
+          [
+            1064.2840521863614,
+            625.080477933025
+          ],
+          [
+            1057.0505933631264,
+            613.5049278798092
+          ],
+          [
+            1049.6436020587175,
+            601.7195650146925
+          ],
+          [
+            1042.0622741995744,
+            589.7262525377589
+          ],
+          [
+            1034.3062161707503,
+            577.5274670133888
+          ],
+          [
+            1026.3754817286294,
+            565.1263292895396
+          ],
+          [
+            1018.2706030391944,
+            552.526628148494
+          ],
+          [
+            1009.9926160705791,
+            539.7328370036298
+          ],
+          [
+            1001.5430805686409,
+            526.7501239567722
+          ],
+          [
+            992.924094844289,
+            513.5843555306785
+          ],
+          [
+            984.138305601302,
+            500.24209439121717
+          ],
+          [
+            975.1889130333763,
+            486.73059137379494
+          ],
+          [
+            966.0796714191312,
+            473.05777212858715
+          ],
+          [
+            956.8148854438155,
+            459.23221869912993
+          ],
+          [
+            947.3994024764457,
+            445.2631463488291
+          ],
+          [
+            937.8386010311133,
+            431.1603759499422
+          ],
+          [
+            928.1383756411943,
+            416.93430224958956
+          ],
+          [
+            918.3051183752016,
+            402.5958583273522
+          ],
+          [
+            926.0898477995668,
+            397.8763931593111
+          ],
+          [
+            933.8309772598824,
+            393.1681028708795
+          ],
+          [
+            941.5269506737603,
+            388.4720722885113
+          ],
+          [
+            949.1762583982462,
+            383.78936805834155
+          ],
+          [
+            956.7774386897754,
+            379.12103757170746
+          ],
+          [
+            964.3290790829644,
+            374.46810792533427
+          ],
+          [
+            971.8298176846856,
+            369.8315849182095
+          ],
+          [
+            979.2783443798799,
+            365.2124520871692
+          ],
+          [
+            986.6734019455477,
+            360.61166978321904
+          ],
+          [
+            994.0137870693756,
+            356.03017429061407
+          ],
+          [
+            1001.2983512694426,
+            351.4688769907205
+          ],
+          [
+            1008.5260017114542,
+            346.9286635726822
+          ],
+          [
+            1015.6957019199566,
+            342.41039329291624
+          ],
+          [
+            1022.8064723799778,
+            337.91489828546025
+          ],
+          [
+            1029.8573910255445,
+            333.4429829251946
+          ],
+          [
+            1036.8475936115244,
+            328.99542324596405
+          ],
+          [
+            1043.7762739652412,
+            324.57296641562056
+          ],
+          [
+            1050.6426841143139,
+            320.1763302700118
+          ],
+          [
+            1057.4461342871657,
+            315.80620290793865
+          ],
+          [
+            1064.1859927826563,
+            311.463242349104
+          ],
+          [
+            1070.8616857052782,
+            307.14807625707783
+          ],
+          [
+            1077.4726965623777,
+            302.8613017293002
+          ],
+          [
+            1084.0185657198374,
+            298.60348515614714
+          ],
+          [
+            1090.4988897126766,
+            294.37516215108144
+          ],
+          [
+            1099.6466562757996,
+            306.8193585028139
+          ],
+          [
+            1108.6354134180967,
+            319.18566673612645
+          ],
+          [
+            1117.461953818622,
+            331.4663975866192
+          ],
+          [
+            1126.1235195485924,
+            343.65423294649275
+          ],
+          [
+            1134.6177993085053,
+            355.742243441044
+          ],
+          [
+            1142.9429219957437,
+            367.7239030187631
+          ],
+          [
+            1151.0974464207206,
+            379.5931003432128
+          ],
+          [
+            1159.08034698961,
+            391.3441467748807
+          ],
+          [
+            1166.8909951717214,
+            402.9717807311866
+          ],
+          [
+            1174.5291365695716,
+            414.47116821283254
+          ],
+          [
+            1181.9948634096986,
+            425.837899284682
+          ],
+          [
+            1189.2885822722787,
+            437.0679802993519
+          ],
+          [
+            1196.410976877592,
+            448.1578216517054
+          ],
+          [
+            1203.362965747395,
+            459.1042208524301
+          ],
+          [
+            1210.145654559246,
+            469.90434070888875
+          ],
+          [
+            1216.7602830118403,
+            480.5556824014258
+          ],
+          [
+            1223.2081660194076,
+            491.05605324331964
+          ],
+          [
+            1229.4906290532185,
+            501.4035289125619
+          ],
+          [
+            1235.6089374482613,
+            511.59640994365327
+          ],
+          [
+            1241.5642194931315,
+            521.6331722675998
+          ],
+          [
+            1247.357383121195,
+            531.5124115882958
+          ],
+          [
+            1252.989026021071,
+            541.2327813834798
+          ],
+          [
+            1258.4593389844906,
+            550.7929243184491
+          ],
+          [
+            1263.7680023095827,
+            560.1913968607182
+          ],
+          [
+            1258.1271167174314,
+            565.9231075615363
+          ],
+          [
+            1252.4154351228954,
+            571.6725331698403
+          ],
+          [
+            1246.6335097065512,
+            577.4386192904207
+          ],
+          [
+            1240.7818980779953,
+            583.2202785520687
+          ],
+          [
+            1234.8611682782876,
+            589.0163908500547
+          ],
+          [
+            1228.871903428123,
+            594.825803735829
+          ],
+          [
+            1222.81470603018,
+            600.6473329479868
+          ],
+          [
+            1216.6902019340992,
+            606.4797630785232
+          ],
+          [
+            1210.4990439725439,
+            612.3218483684161
+          ],
+          [
+            1204.241915276788,
+            618.1723136265729
+          ],
+          [
+            1197.9195322802905,
+            624.029855266171
+          ],
+          [
+            1191.5326474187004,
+            629.8931424524276
+          ],
+          [
+            1185.0820515347455,
+            635.7608183558356
+          ],
+          [
+            1178.5685759964556,
+            641.6315015048947
+          ],
+          [
+            1171.9930945371723,
+            647.5037872323755
+          ],
+          [
+            1165.356524825796,
+            653.3762492091496
+          ],
+          [
+            1158.6598297757166,
+            659.2474410596197
+          ],
+          [
+            1151.9040186008851,
+            665.1158980527824
+          ],
+          [
+            1145.0901476274753,
+            670.9801388629601
+          ],
+          [
+            1138.2193208695815,
+            676.8386673942357
+          ],
+          [
+            1131.2926903774094,
+            682.6899746626206
+          ],
+          [
+            1124.3114563664096,
+            688.5325407299953
+          ],
+          [
+            1117.276867135801,
+            694.3648366838542
+          ]
+        ]
+      }
+    }
+  ],
+  "source": "User reports carrier adoption above actual carrier and false B insert seating rejection; raw-preview JPEG and detected native-frame seeds captured 2026-10-11.",
+  "previous_mesh": {
+    "assembly": {
+      "kind": "fixed_grid",
+      "fixtures": [
+        {
+          "center_mm": [
+            -72.0,
+            -36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            21.699999809265137
+          ],
+          "bottom_z_mm": 4.800000190734863
+        },
+        {
+          "center_mm": [
+            -72.0,
+            36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            26.499999046325684
+          ],
+          "bottom_z_mm": 4.800000190734863
+        },
+        {
+          "center_mm": [
+            0.0,
+            -36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            14.499999046325684
+          ],
+          "bottom_z_mm": 4.800000190734863
+        },
+        {
+          "center_mm": [
+            0.0,
+            36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            14.499999046325684
+          ],
+          "bottom_z_mm": 4.800000190734863
+        },
+        {
+          "center_mm": [
+            72.0,
+            -36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            8.5
+          ],
+          "bottom_z_mm": 4.800000190734863
+        },
+        {
+          "center_mm": [
+            72.0,
+            36.0
+          ],
+          "size_mm": [
+            68.0,
+            68.0,
+            8.5
+          ],
+          "bottom_z_mm": 4.800000190734863
+        }
+      ],
+      "orientation_hole": {
+        "center_mm": [
+          -72.00000020833335,
+          -36.00000005208334
+        ],
+        "z_mm": 26.5,
+        "inner_radius_mm": 8.999998880810496,
+        "outer_radius_mm": 10.4999995979985
+      }
+    },
+    "sha256": "06a99f0b1ae1d0132649333b2e97f4eafd58f62d1eb7b52793ee66da6022a514",
+    "stl_path": "/path/to/Final_Arm/SO101_teach/verification/b-jigs-20261011/before/SO101_teach/assets/carrier_assembly/carrier_assembly.stl",
+    "unit": "mm",
+    "low_mm": [
+      -110.0,
+      -74.0,
+      0.0
+    ],
+    "size_mm": [
+      220.0,
+      148.0,
+      31.299999237060547
+    ],
+    "rim_z_mm": 4.8,
+    "holes": [
+      {
+        "center": [
+          0.8283333333333334,
+          0.745
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      },
+      {
+        "center": [
+          0.735,
+          0.55
+        ],
+        "size": [
+          0.09666666666666666,
+          0.03333333333333333
+        ]
+      },
+      {
+        "center": [
+          0.5016666666666667,
+          0.745
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      },
+      {
+        "center": [
+          0.2683333333333333,
+          0.5916666666666667
+        ],
+        "size": [
+          0.09666666666666666,
+          0.11666666666666667
+        ]
+      },
+      {
+        "center": [
+          0.175,
+          0.745
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      },
+      {
+        "center": [
+          0.2683333333333333,
+          0.4533333333333333
+        ],
+        "size": [
+          0.09666666666666666,
+          0.03333333333333333
+        ]
+      },
+      {
+        "center": [
+          0.735,
+          0.4116666666666667
+        ],
+        "size": [
+          0.09666666666666666,
+          0.11666666666666667
+        ]
+      },
+      {
+        "center": [
+          0.8283333333333334,
+          0.25833333333333336
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      },
+      {
+        "center": [
+          0.5016666666666667,
+          0.25833333333333336
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      },
+      {
+        "center": [
+          0.175,
+          0.25833333333333336
+        ],
+        "size": [
+          0.2833333333333333,
+          0.42333333333333334
+        ]
+      }
+    ],
+    "shape": "rectangle",
+    "method": "grid"
+  }
+}

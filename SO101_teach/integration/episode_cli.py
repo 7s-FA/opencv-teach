@@ -34,6 +34,17 @@ class ShutdownRequested(Exception):
     pass
 
 
+def finished_return_step(episode):
+    """Use this run's final full-product seating check, never a saved result."""
+    checks = [step['id'] for step in episode['steps']
+              if step.get('inspection', {}).get('station') == 'finished'
+              and step['inspection'].get('target') == 'pallet'
+              and step['inspection'].get('expected') == 'cap_added']
+    if not checks:
+        raise ValueError('BUILD LOAD 연속 실행: 운송 에피소드에 완성품 팔레트의 완제품 안착 검사가 필요합니다.')
+    return checks[-1]
+
+
 def load_job(arm, command):
     from so101_teach.configuration import JigCatalog
     from so101_teach.vision import PoseLatch
@@ -195,8 +206,40 @@ class Runner:
         self.inspection_jigs = {}
         self.inspection_due = []
         self.inspection_started = set()
+        self.inspection_passed = set()
+        self.finished_return_step = None
+        self.linear_return_started = False
         self.follower_phase = 'active'
+        from failure_images import FailureImages
+        self.failure_images=FailureImages(ROOT/'data')
+        self.failure_context={'phase':'preparation',**(self.control.info or {})}
+        self.failure_inspection=None;self.last_state=None
         self.control.emergency = self.emergency
+
+    def camera_frame(self, body):
+        reply=self.link.post('/camera',body)
+        try:self.failure_images.remember(reply)
+        except Exception as exc:self.failure_images.capture_error=str(exc)
+        return reply
+
+    def save_failure_images(self, error):
+        # Called only after emergency/HOLD. Image I/O must never replace the
+        # original failure, and it must not reconnect a device to obtain a photo.
+        if self.failure_images.saved:return
+        try:
+            context={**self.failure_context,'last_follower_state':self.last_state,
+                     'fixed_jigs':self.inspection_jigs,'linear_target_mm':self.linear_target,
+                     'inspection_log':str(self.inspection_log) if hasattr(self,'inspection_log') else None}
+            path=self.failure_images.save(error,context=context,inspection=self.failure_inspection)
+            reference=str(path.relative_to(ROOT))
+            self.emit('FAILURE_IMAGES:'+reference)
+            if hasattr(self,'inspection_log') and self.inspection_log.exists():
+                record=read_json(self.inspection_log);record['failure_evidence']=reference
+                atomic_json(self.inspection_log,record)
+        except Exception as exc:
+            print('오류 영상 저장 실패: '+str(exc),file=sys.stderr)
+            try:self.emit('FAILURE_IMAGE_SAVE_FAILED:'+str(exc))
+            except Exception:pass
 
     def emergency(self):
         # Runs on the control thread too, so an IK/HTTP wait cannot defer HOLD.
@@ -216,6 +259,7 @@ class Runner:
         for source in (self.peer, self.linear):
             if source and source.error: raise RuntimeError(source.error)
         state = self.link.state() if self.link else None
+        self.last_state=state
         if self.follower_phase=='before_connect' and (not state or not state.get('running')):
             return None
         if self.follower_phase=='connecting' and (not state or not state.get('running')):
@@ -309,6 +353,7 @@ class Runner:
         return None
 
     def move(self, action, targets, steps=None, completion_events=None, *, progress_offset=0, total_steps=None):
+        self.failure_context.update(phase='motion',motion_action=action)
         original = deepcopy(targets)
         offset, reported = 0, 0
         stage_ends = {}
@@ -324,6 +369,7 @@ class Runner:
             if not steps: return
             while reported < count:
                 reported += 1
+                self.failure_context.update(completed_step_id=steps[reported-1].get('id'),completed_step_name=steps[reported-1]['name'])
                 self.emit(f"STEP_DONE:{progress_offset+reported}/{total_steps or len(steps)}:{steps[reported-1]['name']}")
                 for stage, end in stage_ends.items():
                     if reported == end: self.emit('STAGE_DONE:' + stage)
@@ -351,6 +397,7 @@ class Runner:
                 request = self.link.rpc('command', {'action': action, 'targets': original[offset:]})['request_id']
             state = self.state()
             if time.monotonic() >= self.deadline: raise RuntimeError('실행 제한시간 초과')
+            if self.linear_active: self.poll_linear()
             if state and state.get('request_id') == request:
                 count = state.get('index', 0)
                 if type(count) is int: progress(min(len(original), offset + count))
@@ -362,17 +409,25 @@ class Runner:
                 raise RuntimeError('드라이버 보호 정지: 자동 재개하지 않습니다.')
             time.sleep(.05)
 
-    def start_linear(self, target):
-        self.check()
-        self.emit(f'LINEAR_CHECK:target_mm={target:g}')
+    def start_linear(self, target, *, defer_pause=False):
+        if defer_pause:
+            # The motion loop owns pause/resume offsets. Never consume its pause
+            # inside an inspection callback while the arm program is running.
+            self.state()
+            if time.monotonic() >= self.deadline:raise RuntimeError('실행 제한시간 초과')
+            if self.control.pause.is_set():return False
+        else:self.check()
+        position='ASSEMBLY' if target == 100. else 'UNLOAD'
+        self.emit(f'LINEAR_CHECK:target_mm={target:g}:target_position={position}')
         value = self.linear.call('ensure', target_mm=target)
         self.linear_target = target
         self.linear_until = time.monotonic() + 12
         self.linear_active = value['phase'] != 'TIMED_COMPLETE'
         if not self.linear_active:
-            self.emit(f'LINEAR_READY:target_mm={target:g}:position_measured=false')
+            self.emit(f'LINEAR_READY:target_mm={target:g}:target_position={position}:position_measured=false')
         else:
-            self.emit(f'LINEAR_STARTED:target_mm={target:g}')
+            self.emit(f'LINEAR_STARTED:target_mm={target:g}:target_position={position}')
+        return True
 
     def poll_linear(self):
         if not self.linear_active:
@@ -382,7 +437,8 @@ class Runner:
             raise RuntimeError('리니어 목표가 변경되었습니다.')
         if value['phase'] == 'TIMED_COMPLETE':
             self.linear_active = False
-            self.emit('LINEAR_DONE:TIME_BASED:position_measured=false')
+            position='ASSEMBLY' if self.linear_target == 100. else 'UNLOAD'
+            self.emit(f'LINEAR_DONE:TIME_BASED:target_mm={self.linear_target:g}:target_position={position}:position_measured=false')
             return True
         if value['phase'] != 'MOVING':
             raise RuntimeError(value.get('error') or '리니어 실행 상태 오류: ' + value['phase'])
@@ -428,6 +484,7 @@ class Runner:
         return current
 
     def measure(self, steps, bundle):
+        self.failure_context['phase']='jig_detection'
         from so101_teach.episode_inspection import inspection_jig_ids
         keys = {s['jig_id'] for s in steps if s.get('jig_id')} | inspection_jig_ids(steps)
         if not keys: return {}
@@ -448,7 +505,7 @@ class Runner:
                 if resumed:
                     started = begin(); detected.clear()
                     until = started + bundle['acquisition_seconds'] * bundle['acquisition_attempts']
-                frame = self.link.post('/camera', {'after_at': after_at, 'after_preview_at': after_preview_at})
+                frame = self.camera_frame({'after_at': after_at, 'after_preview_at': after_preview_at})
                 after_at, after_preview_at = frame.get('at'), frame.get('preview_at')
                 if frame.get('error'): raise RuntimeError(frame['error'])
                 now = time.monotonic(); results = frame.get('detection', {}).get('by_jig', {}); current = {}
@@ -467,6 +524,7 @@ class Runner:
                                 **({'mesh_yaw_offset_deg': metric['mesh_yaw_offset_deg']} if metric.get('mesh_yaw_offset_deg') else {})}
                 if keys == current.keys():
                     self.link.rpc('detect_freeze', {'enabled': True})
+                    self.failure_images.confirm_jigs(current)
                     for key in sorted(keys):
                         self.emit('JIG_CONFIRMED:' + key)
                         x, y, yaw = current[key]['pose']
@@ -482,14 +540,15 @@ class Runner:
         import cv2
         import numpy as np
         from so101_teach.configuration import JigCatalog
-        from so101_teach.workcell_preview import load_placement
+        from so101_teach.workcell_placement import load_placement
         from so101_teach.episode_inspection import InspectionDecision
         from so101_teach.episode_inspection_runtime import FrameInspection
         data=ROOT/('data' if bundle['profile'].get('robot_id','arm2')=='arm2' else 'data/arm3-runtime')
         placement=load_placement(ROOT/'data')
         if placement and self.linear_target is not None:
             placement['linear_stage']['startup_state']={'known':not self.linear_active,'commanded_mm':self.linear_target,'moving':self.linear_active}
-        worker=None
+        worker=None;observed=None
+        self.failure_context['phase']='checkpoint_inspection'
         def begin():
             product=step.get('inspection_product',self.inspection_product)
             return FrameInspection(data,bundle['profile'],catalog,placement,step['inspection'],product,fixed_jigs=self.inspection_jigs),InspectionDecision(step['inspection'],product,time.monotonic(),evidence=self.assembly_evidence)
@@ -511,7 +570,7 @@ class Runner:
                     linear=self.linear.call('status');expected=placement['linear_stage']['startup_state']['commanded_mm']
                     if linear.get('phase')!='TIMED_COMPLETE' or linear.get('target_mm')!=expected:raise RuntimeError('시작 전 검사 중 리니어 상태 변경')
                 if resumed:worker.close();worker,decision=begin();after_at=after_preview=None
-                frame=self.link.post('/camera',{'after_at':after_at,'after_preview_at':after_preview})
+                frame=self.camera_frame({'after_at':after_at,'after_preview_at':after_preview})
                 if frame.get('error'):raise RuntimeError('안착 검사 카메라 오류: '+frame['error'])
                 image=frame.get('preview_image') or frame.get('image')
                 at=frame.get('preview_at') if frame.get('preview_image') else frame.get('at')
@@ -521,7 +580,8 @@ class Runner:
                     if decoded is None:raise RuntimeError('안착 검사 영상 해독 실패')
                     worker.submit(decoded,at)
                 after_at,after_preview=frame.get('at'),frame.get('preview_at')
-                if decision.observe(worker.result,now):
+                observed=worker.result
+                if decision.observe(observed,now):
                     if decision.basis:step={**step,'inspection_basis':deepcopy(decision.basis)}
                     if self.assembly_evidence:self.assembly_evidence.record(step,decision.product)
                     self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
@@ -530,6 +590,7 @@ class Runner:
                 time.sleep(.05)
         except Exception as exc:
             self.emergency()
+            self.failure_inspection={'steps':[deepcopy(step)],'result':deepcopy(observed),'result_role':'last_consumed_inspection_result'}
             self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],'result':'FAIL','error':str(exc),'at':time.time()})
             try:atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
             finally:self.emit('INSPECTION_FAILED:'+step['id']+':'+str(exc))
@@ -541,12 +602,13 @@ class Runner:
     def inspect_startup_group(self,steps,bundle):
         import base64,cv2,numpy as np
         from so101_teach.configuration import JigCatalog
-        from so101_teach.workcell_preview import load_placement
+        from so101_teach.workcell_placement import load_placement
         from so101_teach.episode_inspection import GroupInspectionDecision
         from so101_teach.episode_inspection_runtime import FrameInspections
         data=ROOT/('data' if bundle['profile'].get('robot_id','arm2')=='arm2' else 'data/arm3-runtime')
         placement=load_placement(ROOT/'data');catalog=JigCatalog(data,profile=bundle['profile'])
-        worker=None;linear_target=None;counts={};was_resumed=False
+        worker=None;linear_target=None;counts={};was_resumed=False;observed=None
+        self.failure_context['phase']='startup_inspection'
         try:
             if any(s['inspection']['station']=='linear' for s in steps):
                 state=self.linear.call('status') if self.linear else {}
@@ -571,7 +633,7 @@ class Runner:
                     was_resumed=True
                     worker.close();worker,decision=begin();after_at=after_preview=submitted=None;counts.clear()
                     self.emit('INSPECTION_GROUP_RESTARTED')
-                frame=self.link.post('/camera',{'after_at':after_at,'after_preview_at':after_preview})
+                frame=self.camera_frame({'after_at':after_at,'after_preview_at':after_preview})
                 if frame.get('error'):raise RuntimeError('안착 검사 카메라 오류: '+frame['error'])
                 image=frame.get('preview_image') or frame.get('image')
                 at=frame.get('preview_at') if frame.get('preview_image') else frame.get('at')
@@ -581,7 +643,8 @@ class Runner:
                     if decoded is None:raise RuntimeError('안착 검사 영상 해독 실패')
                     worker.submit(decoded,at);submitted=at
                 after_at,after_preview=frame.get('at'),frame.get('preview_at')
-                passed=decision.observe(worker.result,now)
+                observed=worker.result
+                passed=decision.observe(observed,now)
                 for step in passed:
                     self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'product':step['inspection_product'],'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
                     self.emit('INSPECTION_PASS:'+step['id'])
@@ -593,7 +656,9 @@ class Runner:
                 if not decision.pending:return was_resumed
                 time.sleep(.05)
         except Exception as exc:
-            self.emergency();self.inspection_records.append({'result':'FAIL','error':str(exc),'at':time.time()})
+            self.emergency()
+            self.failure_inspection={'steps':deepcopy(steps),'result':deepcopy(observed),'result_role':'last_consumed_inspection_result'}
+            self.inspection_records.append({'result':'FAIL','error':str(exc),'at':time.time()})
             try:atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
             finally:self.emit('INSPECTION_FAILED:'+str(exc))
             raise
@@ -605,7 +670,7 @@ class Runner:
         from so101_teach.episode_inspection import inspection_schedule
         from so101_teach.episode_inspection_runtime import InspectionBatch,FrameInspection
         from so101_teach.configuration import JigCatalog
-        from so101_teach.workcell_preview import load_placement
+        from so101_teach.workcell_placement import load_placement
         self.inspection_due=inspection_schedule(steps);self.inspection_started=set()
         data=ROOT/('data' if bundle['profile'].get('robot_id','arm2')=='arm2' else 'data/arm3-runtime')
         catalog=JigCatalog(data,profile=bundle['profile']);placement=load_placement(ROOT/'data')
@@ -618,6 +683,7 @@ class Runner:
             self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
             atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
             self.emit('INSPECTION_PASS:'+step['id'])
+            self.inspection_passed.add(step['id'])
             for stage,key in events.items():
                 if key==step['id']:self.emit('STAGE_DONE:'+stage)
         self.inspection_batch=InspectionBatch(self.inspection_product,worker,passed,evidence=self.assembly_evidence)
@@ -625,10 +691,12 @@ class Runner:
         self.link.rpc('camera_start',{'processing_enabled':False,'preview_fps':10})
 
     def poll_inspections(self):
-        if not self.inspection_batch or not self.inspection_batch.pending:return
+        if not self.inspection_batch:return
+        if not self.inspection_batch.pending:
+            self.start_finished_return();return
         import base64,cv2,numpy as np
         # Read the already captured preview; the native classifier runs in its worker.
-        frame=self.link.post('/camera',{'after_at':self.inspection_after_at,'after_preview_at':self.inspection_after_preview})
+        frame=self.camera_frame({'after_at':self.inspection_after_at,'after_preview_at':self.inspection_after_preview})
         if frame.get('error'):raise RuntimeError('안착 검사 카메라 오류: '+frame['error'])
         image=frame.get('preview_image') or frame.get('image')
         at=frame.get('preview_at') if frame.get('preview_image') else frame.get('at')
@@ -638,16 +706,34 @@ class Runner:
             if decoded is None:raise RuntimeError('안착 검사 영상 해독 실패')
             view=(decoded,at)
         self.inspection_after_at,self.inspection_after_preview=frame.get('at'),frame.get('preview_at')
-        self.inspection_batch.poll(view)
+        try:self.inspection_batch.poll(view)
+        except Exception as exc:
+            self.failure_context['phase']='motion_inspection'
+            self.failure_inspection=getattr(exc,'inspection_snapshot',None)
+            raise
+        self.start_finished_return()
+
+    def start_finished_return(self, *, defer_pause=True):
+        # Finish earlier linear checks at the unload position before moving their
+        # inspection target. The finished-pallet PASS can overlap arm safe return.
+        linear_checks = {step['id'] for _, step in self.inspection_due
+                         if step['inspection']['station'] == 'linear'}
+        if (self.finished_return_step in self.inspection_passed
+                and not self.linear_return_started
+                and linear_checks <= self.inspection_passed):
+            if not self.start_linear(100.,defer_pause=defer_pause):return
+            self.linear_return_started = True
+            self.emit('CHAIN_RETURN_STARTED:target_mm=100:target_position=ASSEMBLY')
 
     def execute(self, episode, bundle, speed, target):
+        self.failure_context.update(episode_id=episode.get('id'),episode_name=episode.get('name'),product_type=episode.get('product_type'),profile=deepcopy(bundle.get('profile')),jigs=deepcopy(bundle.get('jigs')),mesh_hashes=deepcopy(bundle.get('mesh_hashes')))
         from so101_teach.episode_inspection import validate_inspection,has_inspections
         validate_inspection(episode)
         from so101_teach.episode_inspection import inspection_schedule,startup_steps
         inspection_schedule(episode['steps'])
         if has_inspections(episode):
             from so101_teach.assembly_evidence import AssemblyEvidence,geometry_scope
-            from so101_teach.workcell_preview import load_placement
+            from so101_teach.workcell_placement import load_placement
             self.assembly_evidence=AssemblyEvidence(ROOT/'data/assembly-evidence.json',scope=geometry_scope(load_placement(ROOT/'data')),
                 episode_id=episode['id'])
             from so101_teach.episode_inspection_runtime import require_resources
@@ -668,6 +754,7 @@ class Runner:
             self.emit('SAFE_POSE_STARTED')
             self.move('move', [steps.pop(0)['ticks']])
             self.emit('SAFE_POSE_REACHED')
+        self.failure_context['phase']='planning'
         self.emit('PLAN_STARTED')
         plan = self.link.rpc('plan', {'steps': steps, 'current': current})['plan']
         self.emit('PLAN_READY')
@@ -686,6 +773,7 @@ class Runner:
                 while self.inspection_batch.pending:
                     state,resumed=self.check()
                     if not settled(state):raise RuntimeError('최종 검사 중 자세 유지 상태 변경')
+                    if self.linear_active:self.poll_linear()
                     if resumed:self.inspection_batch.restart()
                     self.poll_inspections();time.sleep(.05)
             except Exception as exc:
@@ -697,6 +785,13 @@ class Runner:
                 if self.inspection_batch:self.inspection_batch.close();self.inspection_batch=None
                 self.link.rpc('camera_stop')
         else:self.move('play', [point['ticks'] for point in plan], steps, episode.get('completion_events'))
+        if self.finished_return_step is not None:
+            self.start_finished_return(defer_pause=False)
+            if not self.linear_return_started:
+                raise RuntimeError('완제품 팔레트 안착 확인 전 · 리니어 조립 위치 복귀를 시작하지 않았습니다.')
+            self.emit('CHAIN_RETURN_WAIT:target_mm=100:target_position=ASSEMBLY')
+            self.wait_linear()
+            self.emit('CHAIN_RETURN_DONE:target_mm=100:position_measured=false')
         self.emit('EPISODE_DONE')
         if self.assembly_evidence:self.assembly_evidence.commit()
         self.emit('DONE')
@@ -875,6 +970,7 @@ def main(argv=None):
         if not slide_only: data, episode, bundle, speed, timeout = load_job(arm, letter)
         else: timeout = 60
         next_job=load_job('arm3',letter) if chained else None
+        return_step=finished_return_step(next_job[1]) if chained else None
         if args.check:
             if chained:
                 print(f'CHECK_OK {command} build={len(episode["steps"])} load={len(next_job[1]["steps"])} steps');return 0
@@ -894,7 +990,7 @@ def main(argv=None):
         link.open(); peer.open()
         linear = LinearClient(); linear.open()
         status = Status(arm, letter, not args.no_ros);status.managed=args.managed_completion
-        control.info = {'run_id': status.run_id, 'arm': arm}
+        control.info = {'run_id': status.run_id, 'arm': arm, 'command': command}
         if chained:status.emit('CHAIN_STARTED:'+command)
         runner = Runner(None if slide_only else link, status.emit, control, timeout, peer=peer, linear=linear)
         if slide_only:
@@ -914,8 +1010,9 @@ def main(argv=None):
                 data,episode,bundle,speed,timeout=next_job
                 invalidate(ROOT,arm)
                 status=Status(arm,letter,not args.no_ros);status.managed=args.managed_completion
-                control.info={'run_id':status.run_id,'arm':arm}
+                control.info={'run_id':status.run_id,'arm':arm,'command':command}
                 runner=Runner(link,status.emit,control,timeout,peer=peer,linear=linear)
+                runner.finished_return_step=return_step
                 status.emit('CHAIN_LOAD_STARTED:'+command)
                 last=episode['steps'][-1]
                 if last.get('safe_boundary')=='end' and not last.get('jig_id'):
@@ -928,6 +1025,8 @@ def main(argv=None):
             status.emit('IDLE_RELEASE_SCHEDULED:seconds=3')
         return 0
     except ResetRequested:
+        if runner:
+            runner.failure_context['phase']='reset';runner.failure_inspection=None
         try:
             from episode_recovery import workcell_records,reset_workcell
             records=workcell_records(SimpleNamespace(**globals()))
@@ -935,6 +1034,7 @@ def main(argv=None):
             return 130
         except Exception as exc:
             runner.emergency()
+            runner.save_failure_images(exc)
             if not slide_only:
                 try:
                     from episode_recovery import save_failure
@@ -942,7 +1042,9 @@ def main(argv=None):
                 except Exception as error:print('실패 복귀 정보 저장 실패: '+str(error),file=sys.stderr)
             status.emit('FAILED:RESET:' + str(exc));return 1
     except BaseException as exc:
-        if runner: runner.emergency()
+        if runner:
+            runner.emergency()
+            runner.save_failure_images(exc)
         if runner and status and not slide_only:
             try:
                 from episode_recovery import save_failure

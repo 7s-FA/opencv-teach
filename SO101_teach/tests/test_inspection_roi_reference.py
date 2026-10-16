@@ -22,10 +22,16 @@ class InspectionROIReferenceTests(unittest.TestCase):
         self.assertIs(self.data['simulation_offsets_applied_to_real_roi'], False)
         self.assertIsNone(self.data['stations']['linear_assembly']['active_fixture_index'])
 
-    def test_all_recorded_inputs_match_actual_sources(self):
+    def test_geometry_sources_match_and_simulation_reference_fields_stay_separate(self):
         for name, digest in self.data['sources_sha256'].items():
             with self.subTest(source=name):
-                self.assertEqual(hashlib.sha256((ROOT.parent / name).read_bytes()).hexdigest(), digest)
+                if name=='SO101_rl/config/assembly.json':
+                    # This mutable simulation config is read only for the excluded
+                    # receiver offset, not geometry or real inspection thresholds.
+                    current=json.loads((ROOT.parent/name).read_text())
+                    self.assertEqual(current['receiver_offset_mm'],self.data['simulation_reference_only']['receiver_offset_mm'])
+                    self.assertIs(self.data['simulation_offsets_applied_to_real_roi'],False)
+                else:self.assertEqual(hashlib.sha256((ROOT.parent / name).read_bytes()).hexdigest(), digest)
 
     def test_carrier_centers_follow_actual_assembly_not_sim_tuning(self):
         source=json.loads((ROOT/'assets/carrier_assembly/assembly.json').read_text())

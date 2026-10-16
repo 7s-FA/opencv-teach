@@ -97,7 +97,7 @@ class CameraInspectionUITests(unittest.TestCase):
                     p.update_frame(frame,{},frame_at=time.monotonic())
                 keys.append(submit.call_args.args[0])
             self.assertTrue(all(key==keys[0] for key in keys))
-            p.endpoint.set('전진 목표');p.last_submit_at=0
+            p.endpoint.set('조립 위치');p.last_submit_at=0
             with patch('so101_teach.camera_inspection_ui.all_anchors',return_value=(anchors,messages)):p.update_frame(frame,{},frame_at=time.monotonic())
             self.assertNotEqual(submit.call_args.args[0],keys[0])
 
@@ -134,7 +134,7 @@ class CameraInspectionUITests(unittest.TestCase):
 
     def test_tabs_overlay_stale_and_cad_switch(self):
         frame,data=self.camera();a=self.app;p=a.camera_inspection
-        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사'])
+        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사','오류 기록','영상 저장'])
         self.assertNotIn('inspection',a.pages)
         a.camera_tabs.select(p);p.station.set('완성품 팔레트');p.change();a.root.update()
         self.assertIn('전체 영역 자동 비교',p.status.get());self.assertTrue(p.canvas.find_withtag('image'))
@@ -184,12 +184,12 @@ class CameraInspectionUITests(unittest.TestCase):
             time.sleep(.12)
         self.assertEqual(len(p.table.get_children()),9)
         self.assertTrue(all('중단 삽입' in p.table.item(k,'values')[1] for k in ('linear_1.5_0','linear_1.5_1')))
-        self.assertIn('후진 목표',p.status.get());self.assertIn('전체 9',p.title.get())
+        self.assertIn('1.5 mm',p.status.get());self.assertIn('전체 9',p.title.get())
         self.assertGreater(p.canvas.winfo_height(),180)
         self.assertLessEqual(p.legend.winfo_rooty()+p.legend.winfo_height(),self.root.winfo_rooty()+self.root.winfo_height())
         out=ROOT/'verification/part-inspection';out.mkdir(exist_ok=True)
         x,y=self.root.winfo_rootx(),self.root.winfo_rooty();ImageGrab.grab(bbox=(x,y,x+self.root.winfo_width(),y+self.root.winfo_height())).save(out/'middle-stage-1180x760.png')
-        p.endpoint.set('전진 목표');p.change();p.update_frame(frame,{},frame_at=time.monotonic())
+        p.endpoint.set('조립 위치');p.change();p.update_frame(frame,{},frame_at=time.monotonic())
         self.assertIn('미리보기',p.status.get())
         self.assertTrue(all(p.table.item(k,'values')[1]=='분석 중' for k in ('linear_100_0','linear_100_1')))
         self.assertNotIn('중단 삽입',p.parts.get())

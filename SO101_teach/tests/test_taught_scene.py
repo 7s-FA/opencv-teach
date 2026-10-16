@@ -19,14 +19,21 @@ class TaughtSceneTests(unittest.TestCase):
         with patch.object(a,'motion_request',return_value=17):a.execute_taught_episode()
 
     def render_request(self,a):
+        import time
         renderer=Mock();renderer.submit.return_value=True;renderer.poll.return_value=None;a.renderer=renderer;a.render_enabled=True
-        self.root.after_cancel(a.render_job);a.render_tick()
+        # These tests inspect jig scene selection; solver parity is covered by
+        # AutoStepPreviewTests using the real execution solver and real teaching.
+        with patch('so101_teach.geometry.corrected_plan',return_value=[{'ticks':a.target.copy()}]):
+            until=time.monotonic()+5
+            while not renderer.submit.called and time.monotonic()<until:
+                self.root.after_cancel(a.render_job);a.render_tick();time.sleep(.01)
+        self.assertTrue(renderer.submit.called,a.message.get())
         return renderer.submit.call_args.args[2]
 
-    def test_raw_execution_renders_saved_pose_not_camera_pose(self):
+    def test_step_view_after_raw_execution_still_previews_current_detection(self):
         a=self.teach();before=deepcopy(a.episode);self.start(a)
         scene=self.render_request(a)
-        self.assertEqual(scene['jigs'][0]['pose'],[228,-138,67])
+        self.assertEqual(scene['jigs'][0]['pose'],[250,-90,12])
         self.assertIn('지그: 티칭 저장 기준',a.preview_caption.get());self.assertEqual(a.episode,before)
         self.assertEqual(a.current_jig_reference()['pose'],[250,-90,12])
 
@@ -58,10 +65,12 @@ class TaughtSceneTests(unittest.TestCase):
         self.assertEqual(scene['jigs'][0]['pose'],[230,-137,68])
         self.assertNotIn('티칭 저장 기준',a.preview_caption.get())
 
-    def test_fixed_only_raw_run_does_not_show_unrelated_camera_jig(self):
+    def test_fixed_only_raw_run_shows_detected_surroundings_without_adding_a_saved_basis(self):
         a=self.app;self.fake_jig_camera();a.follow_jig.set(False);a.commit_target();self.start(a)
         self.assertEqual(a.saved_scene_references(),{})
-        self.assertIsNone(self.render_request(a)['jigs'][0]['pose'])
+        self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[228,-138,67])
+        self.assertIn('탐지 확정',a.preview_jig_caption.get())
+        self.assertEqual(a.saved_scene_references(),{})
 
     def test_failed_dispatch_does_not_switch_to_saved_jig_scene(self):
         a=self.teach()

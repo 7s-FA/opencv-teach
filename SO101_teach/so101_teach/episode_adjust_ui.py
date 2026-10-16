@@ -4,6 +4,7 @@ import math
 import tkinter as tk
 from tkinter import ttk
 from .episode_events import EVENT_LABELS,event_label,set_event
+from .ui_status import StatusText
 
 class EpisodeAdjustPanel:
     @property
@@ -14,7 +15,7 @@ class EpisodeAdjustPanel:
         self.app=app;self.loaded=None;self.dirty=False;self.loading=False;self.drafts={}
         parent.rowconfigure(1,weight=1);parent.columnconfigure(0,weight=1)
         self.common=ttk.Frame(parent,style='Card.TFrame',padding=(8,4));self.common.grid(row=0,column=0,sticky='ew',pady=(0,8))
-        self.tabs=ttk.Notebook(parent);self.tabs.grid(row=1,column=0,sticky='nsew')
+        self.tabs=ttk.Notebook(parent,style="Card.TNotebook");self.tabs.grid(row=1,column=0,sticky='nsew')
         main=ttk.Frame(self.tabs,style='Card.TFrame',padding=(8,10));self.tabs.add(main,text='완료 알림·실행 설정')
         from .episode_inspection_ui import EpisodeInspectionPanel
         self.inspection=EpisodeInspectionPanel(self.tabs,app,product_parent=self.common);self.tabs.add(self.inspection,text='스텝 도착 후 검사')
@@ -26,11 +27,11 @@ class EpisodeAdjustPanel:
         right=ttk.Frame(parent,style='Card.TFrame');right.grid(row=0,column=1,sticky='nsew');right.columnconfigure(1,weight=1)
         ttk.Label(left,text='작업별 완료 알림',style='Section.TLabel').grid(row=0,column=0,sticky='w')
         self.selected=tk.StringVar(value='왼쪽에서 스텝을 선택하세요.')
-        ttk.Label(left,textvariable=self.selected,wraplength=280,justify='left').grid(row=1,column=0,sticky='ew',pady=12)
+        StatusText(left,self.selected,height=2,font=('Noto Sans CJK KR',11)).grid(row=1,column=0,sticky='ew',pady=12)
         self.choice=ttk.Combobox(left,textvariable=app.completion_event,values=['없음',*EVENT_LABELS.values()],state='readonly',width=15);self.choice.grid(row=2,column=0,sticky='ew')
         self.marker_button=app.button(left,'선택 스텝에 알림 저장',self.save_marker,True);self.marker_button.grid(row=3,column=0,sticky='ew',pady=8)
         ttk.Label(left,text='스텝의 실제 도착 확인 후 발생합니다.\n스텝 이름·순서가 바뀌어도 지정은 유지됩니다.',style='Small.TLabel',wraplength=280).grid(row=4,column=0,sticky='w',pady=(0,12))
-        ttk.Label(left,textvariable=app.episode_policy,wraplength=280,justify='left',style='Small.TLabel').grid(row=5,column=0,sticky='nw')
+        StatusText(left,app.episode_policy,height=10).grid(row=5,column=0,sticky='new')
         ttk.Label(right,text='Pi 실행 설정',style='Section.TLabel').grid(row=0,column=0,columnspan=2,sticky='w')
         self.values={}
         fields=[('speed','속도 · 틱/초',400,300,400),('acquisition_seconds','지그 측정 · 초',5,3,10),('acquisition_attempts','측정 횟수',3,1,5),('timeout_seconds','작업 제한 · 초',900,1,86400)]
@@ -43,7 +44,7 @@ class EpisodeAdjustPanel:
         self.save_button=app.button(right,'실행 설정 초안 저장',self.save_settings,True);self.save_button.grid(row=7,column=0,columnspan=2,sticky='ew')
         ttk.Label(right,text='초안 저장 후 에피소드 전송 탭에서 실행 설정 적용을 선택하세요.\n정상 종료: 안전 자세 → 5초 유지 → 토크 해제.\n리니어 목표·종료 순서는 Pi 기존 방식을 유지합니다.',style='Small.TLabel',wraplength=280).grid(row=8,column=0,columnspan=2,sticky='w',pady=12)
         self.draft_status=tk.StringVar(value='실행 설정 변경 없음')
-        ttk.Label(right,textvariable=self.draft_status,style='Small.TLabel',wraplength=280).grid(row=9,column=0,columnspan=2,sticky='w')
+        StatusText(right,self.draft_status,height=2).grid(row=9,column=0,columnspan=2,sticky='ew')
         self.reset_button=app.button(right,'실행 설정 입력 되돌리기',self.discard);self.reset_button.grid(row=10,column=0,columnspan=2,sticky='w',pady=6)
     def changed(self,*args):
         if not self.loading:

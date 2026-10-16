@@ -133,6 +133,7 @@ class StableCandidate:
         return out
     @staticmethod
     def candidate(result):
+        if result.get('inspection_only'):return None
         if result.get('status') in ('ambiguous','orientation_unconfirmed','calibration_mismatch','settings_changed','error'):return None
         candidates=[c for c in result.get('candidates',[]) if c.get('metric') and c.get('outer_shape',{}).get('valid') and c.get('area_px',0)>0]
         current=result.get('selected')

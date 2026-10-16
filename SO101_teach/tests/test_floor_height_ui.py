@@ -16,13 +16,14 @@ class FloorHeightUITests(unittest.TestCase):
         from PIL import ImageGrab
         self.root.update();x=self.root.winfo_rootx();y=self.root.winfo_rooty()
         ImageGrab.grab(bbox=(x,y,x+self.root.winfo_width(),y+self.root.winfo_height())).save('/tmp/floor-height-'+name+'.png')
-    def test_blank_save_new_copy_and_floor_labels(self):
+    def test_blank_save_and_registered_jig_height_persist(self):
         a=self.app;s=a.settings;a.show_page('settings');s.tabs.select(s.pages['jigs']);self.root.update()
         self.assertEqual(s.vars['jig_z'].get(),'0');self.shot('zero')
         s.vars['jig_z'].set('');s.save_jig();self.assertEqual(s.vars['jig_z'].get(),'0')
         self.assertEqual(read_json(self.data/'jigs.json')['pallet']['support_height_mm'],0)
-        s.vars['jig_z'].set('5');s.save_jig();s.copy_jig();self.assertEqual(s.vars['jig_z'].get(),'5');self.shot('five')
-        s.new_jig();self.assertEqual(s.vars['jig_z'].get(),'0')
+        s.vars['jig_z'].set('5');s.save_jig();s.fill_jig();self.assertEqual(s.vars['jig_z'].get(),'5');self.shot('five')
+        self.assertEqual(JigCatalog(self.data).items['pallet']['support_height_mm'],5)
+        self.assertFalse(hasattr(s,'copy_jig'));self.assertFalse(hasattr(s,'new_jig'))
     def test_model_zero_and_height_display_do_not_change_ticks(self):
         a=self.app;before=a.kin.fk(a.target).copy();ticks=a.target.copy();a.commit_target()
         self.assertEqual(a.table_z.get(),'5');a.show_page('model');self.shot('model')

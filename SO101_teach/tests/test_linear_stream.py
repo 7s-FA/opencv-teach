@@ -5,6 +5,18 @@ from so101_teach.linear_state import StateStream,decode_report,decode_state,appl
 from so101_teach.preview import scene_signature
 
 class LinearStreamTests(unittest.TestCase):
+    def test_controller_stream_queries_only_status_and_reports_movement_truthfully(self):
+        args,script=stream_command({'host':'localhost','user':'robot'},{'transport':'controller'})
+        self.assertIn("{'op':'status'}",script);self.assertNotIn('ensure',script);self.assertNotIn('claim',script)
+        self.assertNotIn('rclpy',script);self.assertIn('python3 -u -',args[-1])
+        for phase in ('MOVING','TIMED_COMPLETE'):
+            report=decode_report({'controller':{'phase':phase,'target_mm':100.}})
+            self.assertTrue(report['known']);self.assertFalse(report['measured'])
+            self.assertEqual(report['moving'],phase=='MOVING')
+            self.assertEqual(state_label(apply_state({'linear_stage':{}},report)),'리니어 : 조립 위치 100 mm')
+        self.assertFalse(decode_report({'controller':{'phase':'UNKNOWN','target_mm':None}})['known'])
+        for bad in (None,True,-1,101,float('nan')):
+            with self.assertRaises(ValueError):decode_report({'controller':{'phase':'TIMED_COMPLETE','target_mm':bad}})
     def wait_state(self,stream,predicate,seconds=5):
         end=time.monotonic()+seconds;seen=[]
         while time.monotonic()<end:
@@ -33,9 +45,9 @@ class LinearStreamTests(unittest.TestCase):
         p={'linear_stage':{'stroke_mm':0}}
         p=apply_state(p,decode_report({'pulse_us':2000,'age_s':.1}));signature=scene_signature({'jigs':[],'workcell':p})
         p=apply_state(p,decode_report({'pulse_us':2000,'age_s':2}));self.assertEqual(p['linear_stage']['stroke_mm'],100)
-        self.assertIn('수신 끊김',state_label(p));self.assertIn('마지막 전진',state_label(p))
+        self.assertIn('수신 끊김',state_label(p));self.assertIn('마지막 명령 100 mm',state_label(p))
         self.assertEqual(signature,scene_signature({'jigs':[],'workcell':p}))
-        p=apply_state(p,decode_report({'pulse_us':1015,'age_s':.1}));self.assertIn('후진 목표',state_label(p));self.assertEqual(p['linear_stage']['stroke_mm'],1.5)
+        p=apply_state(p,decode_report({'pulse_us':1015,'age_s':.1}));self.assertEqual(state_label(p),'리니어 : 하차 위치 1.5 mm');self.assertEqual(p['linear_stage']['stroke_mm'],1.5)
         self.assertNotEqual(signature,scene_signature({'jigs':[],'workcell':p}))
     def test_stream_reconnects_after_eof_and_close_reaps_subprocess(self):
         with tempfile.TemporaryDirectory() as folder:

@@ -2,6 +2,7 @@
 import time,tkinter as tk
 from copy import deepcopy
 from tkinter import ttk
+from .ui_status import StatusText
 from . import pi_connection
 from .domain import Calibration
 
@@ -24,13 +25,14 @@ class PiSettingsPanel:
         self.local_btn=self.app.button(actions,'이 PC 사용',self.use_local)
         for button in (self.save_btn,self.probe_btn,self.connect_btn,self.local_btn):button.pack(side='left',padx=(0,8))
         self.status=tk.StringVar(value='저장 설정 읽기 실패: '+error if error else 'Pi 연결·사용을 누르면 장치 연결 대상이 Pi로 바뀝니다.')
-        ttk.Label(p,textvariable=self.status,wraplength=780,style='Muted.TLabel').grid(row=10,column=0,columnspan=3,sticky='w',pady=10)
+        StatusText(p,self.status,height=4,font=('Noto Sans CJK KR',11)).grid(row=10,column=0,columnspan=3,sticky='ew',pady=10)
         settings.label(p,11,'시작·저장\n저장된 모드로 자동 연결합니다. 연결만으로 토크나 리더 따라가기를 켜지 않습니다.\n장치 설정·영점·지그는 연결 시 동기화합니다. 에피소드는 시작 시 Pi에서 불러오고, 편집본은 내보내기를 눌러야 Pi에 저장됩니다.')
         settings.label(p,12,'통신·복구\n통신이 끊기면 이동을 멈추고 자세를 유지합니다. 1·2·5·최대 10초 간격으로 재연결하되, 중단된 동작은 자동 재개하지 않습니다.\n카메라는 확인·측정할 때 연결합니다. 촬영·검출·전송은 10 FPS(지연 시 감소), 3D는 최대 30 FPS입니다.\n영상과 제어는 별도로 전송합니다. 리더 값은 최대 초당 50회 보내며, Pi가 팔로워 기준으로 변환합니다.')
     def values(self):return {key:self.s.value('pi_'+key) for key in pi_connection.DEFAULTS}
     def save(self):
         pi_connection.save(self.app.data_dir,self.values());self.status.set('연결 설정 저장됨');self.app.notice('라즈베리파이 연결 설정 저장')
     def probe(self):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         if self.job:return
         values=pi_connection.validate(self.values(),True);self.job_kind='probe';self.job=self.s.pool.submit(pi_connection.probe,values)
         self.probe_btn.state(['disabled']);self.status.set(f"SSH 확인 중 · {values['user']}@{values['host']}:{values['port']}")
@@ -49,6 +51,7 @@ class PiSettingsPanel:
         self.auto_enabled=True
         a.device_target.set('장치: Pi · 자동 재연결 대기')
     def connect(self,automatic=False):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         if self.job:return
         a=self.app
         if not automatic:self.s.require_idle()

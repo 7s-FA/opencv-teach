@@ -12,6 +12,10 @@ class TransportTests(unittest.TestCase):
     setUp=fixtures.RemoteTests.setUp
     tearDown=fixtures.RemoteTests.tearDown
     rpc=fixtures.RemoteTests.rpc
+    def test_runtime_contract_accepts_different_desktop_build(self):
+        from so101_teach.remote_client import server_version_supported
+        from so101_teach.remote_config import PROTOCOL
+        self.assertTrue(server_version_supported('different-desktop-build',PROTOCOL,runtime=self.runtime.runtime_version))
     def connected(self):
         result=self.rpc('connect',{'speed':SPEED_PRESETS['보통']});self.assertTrue(result['ok'],result)
         self.runtime.session.state='HOLD';self.runtime.leader=LeaderBridge(self.runtime.cal)

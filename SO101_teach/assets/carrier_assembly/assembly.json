@@ -68,7 +68,7 @@
       "yaw_deg": 90,
       "orientation_evidence": "photo support direction",
       "contact_z_mm": 4.800000190734863,
-      "source_sha256": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+      "source_sha256": "42c7eba76105d8f5a1ad33de19dc5629665ed24503388c211a4c0e686c5d8ba1",
       "bounds_mm": [
         [
           -106.0,
@@ -122,7 +122,7 @@
       "yaw_deg": 90,
       "orientation_evidence": "inferred; fixture corners partly hidden by product",
       "contact_z_mm": 4.800000190734863,
-      "source_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+      "source_sha256": "e231e0172904452a9ac85e02ad0cb46f7217cf336b32bd238892dbfcdf74423b",
       "bounds_mm": [
         [
           38.0,
@@ -132,7 +132,7 @@
         [
           106.0,
           70.0,
-          13.300000190734863
+          20.300000190734863
         ]
       ]
     },
@@ -234,5 +234,5 @@
     "basis": "user-specified heights; floor-to-robot transform inferred from existing tabletop datum",
     "app_support_height_mm": 0.0
   },
-  "revision": "2026-10-02 B upper fixture updated"
+  "revision": "2026-10-11 B carrier upper and lower fixtures updated; linear fixtures unchanged"
 }

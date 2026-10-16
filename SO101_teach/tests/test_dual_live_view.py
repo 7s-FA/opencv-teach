@@ -16,9 +16,9 @@ class DualLiveViewTests(unittest.TestCase):
         for a in (self.a,self.b):self.connected(a);a.set_mode('live')
         self.b.target['shoulder_pan']+=100
         p=self.manager.live_workcell(self.a)
-        np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.b.reference.angles(self.b.latest.ticks));self.assertEqual(p['other_arm_pose_kind'],'live')
+        np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.b.preview_reference.angles(self.b.latest.ticks));self.assertEqual(p['other_arm_pose_kind'],'live')
         self.b.set_mode('target');self.manager.select('arm3');self.assertEqual(self.b.mode,'live')
-        p=self.manager.live_workcell(self.b);np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.a.reference.angles(self.a.latest.ticks))
+        p=self.manager.live_workcell(self.b);np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.a.preview_reference.angles(self.a.latest.ticks))
     def test_stale_disconnected_or_wrong_calibration_is_never_presented_as_live(self):
         self.connected(self.a);self.connected(self.b);self.a.set_mode('live');sample=self.b.latest
         for kind in ('stale','disconnected','mismatch'):
@@ -34,7 +34,7 @@ class DualLiveViewTests(unittest.TestCase):
         self.b.episode['steps']=[{'safe_boundary':'start','ticks':ticks}]
         self.b.target['shoulder_pan']-=60
         self.a.set_mode('target');p=self.manager.live_workcell(self.a)
-        np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.b.reference.angles(ticks));self.assertEqual(p['other_arm_pose_kind'],'safe')
+        np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.b.preview_reference.angles(ticks));self.assertEqual(p['other_arm_pose_kind'],'safe')
         self.a.set_mode('live');panel=self.a.settings.calibration_panel;self.a.settings.vars['cal_role'].set('팔로워');p=panel.preview_placement()
         np.testing.assert_allclose(p['other_arm_joint_angles_rad'],self.b.reference.angles(ticks));self.assertFalse(p.get('other_arm_dynamic',False))
     def test_missing_safe_pose_keeps_previous_fixed_reference_without_claiming_safe(self):
@@ -45,18 +45,18 @@ class DualLiveViewTests(unittest.TestCase):
         safe=next(s for s in self.a.episode['steps'] if s.get('safe_boundary')=='start')
         before=deepcopy((self.a.episode,self.b.episode));self.a.set_mode('target')
         placement=self.manager.live_workcell(self.a)
-        np.testing.assert_allclose(placement['other_arm_joint_angles_rad'],self.a.reference.angles(safe['ticks']))
+        np.testing.assert_allclose(placement['other_arm_joint_angles_rad'],self.a.preview_reference.angles(safe['ticks']))
         self.assertEqual(placement['other_arm_pose_kind'],'safe');self.assertEqual(before,(self.a.episode,self.b.episode))
         self.a.set_mode('live');self.connected(self.b)
-        live=self.manager.live_workcell(self.a);np.testing.assert_allclose(live['other_arm_joint_angles_rad'],self.b.reference.angles(self.b.latest.ticks))
+        live=self.manager.live_workcell(self.a);np.testing.assert_allclose(live['other_arm_joint_angles_rad'],self.b.preview_reference.angles(self.b.latest.ticks))
     def test_live_mujoco_tcp_matches_each_arms_own_calibrated_fk(self):
         import mujoco
         for app in (self.a,self.b):self.connected(app);app.set_mode('live')
         for app in (self.a,self.b):
             p=self.manager.live_workcell(app);m=mujoco.MjModel.from_xml_string(configured_scene([],app.profile['tcp'],workcell=p));d=mujoco.MjData(m)
-            for n,angle in zip(JOINTS,app.reference.angles(app.latest.ticks)):d.qpos[m.joint(n).qposadr[0]]=angle
+            for n,angle in zip(JOINTS,app.preview_reference.angles(app.latest.ticks)):d.qpos[m.joint(n).qposadr[0]]=angle
             apply_other_arm_pose(m,d,p);mujoco.mj_forward(m,d)
-            expected=tcp_positions(app.kin.fk(app.latest.ticks),app.profile,p);active=app.profile['robot_id'];other='arm3' if active=='arm2' else 'arm2'
+            expected=tcp_positions(app.kin.fk_angles(app.preview_reference.angles(app.latest.ticks)),app.profile,p);active=app.profile['robot_id'];other='arm3' if active=='arm2' else 'arm2'
             np.testing.assert_allclose(d.site('active_tcp').xpos*1000,expected[active],atol=.002)
             np.testing.assert_allclose(d.site('arm3_preview_tcp').xpos*1000,expected[other],atol=.002)
     def test_other_live_arm_remains_visible_when_selected_arm_is_disconnected(self):

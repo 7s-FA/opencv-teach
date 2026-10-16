@@ -1,0 +1,790 @@
+{
+  "source_photo": "/tmp/codex-remote-attachments/01a0c1bd-1c8b-7a10-a9e0-b8c99a9433cb/75b32ce9-150a-411d-9cc6-7663f4a352f0/2-1000015416.jpg",
+  "assembly_photo": "/tmp/codex-remote-attachments/01a0c1bd-1c8b-7a10-a9e0-b8c99a9433cb/75b32ce9-150a-411d-9cc6-7663f4a352f0/1-1000015415.jpg",
+  "marker_horizontal_measurements": "P1 from right1500mm, P2 from right1860mm; ASM face-left205mm, MAT face-left300mm",
+  "image_to_floor_m": [
+    [
+      0.003023994519536617,
+      0.002348396956260009,
+      0.43491705482037035
+    ],
+    [
+      -8.138358783307433e-05,
+      -0.0028462451118057516,
+      2.6975263663282134
+    ],
+    [
+      -8.364692961322084e-05,
+      0.000953491019920046,
+      1.0
+    ]
+  ],
+  "floor_anchor_points": [
+    {
+      "pixel": [
+        367.9727428999834,
+        201.4759779841285
+      ],
+      "world_xy_m": [
+        1.74,
+        1.8
+      ]
+    },
+    {
+      "pixel": [
+        498.15189350646637,
+        205.29086065726997
+      ],
+      "world_xy_m": [
+        2.1,
+        1.8
+      ]
+    },
+    {
+      "pixel": [
+        1021.0,
+        212.0
+      ],
+      "world_xy_m": [
+        3.6,
+        1.8
+      ]
+    }
+  ],
+  "floor_registration": "Measured parking X centers, wall-plane marker correspondences and parallel floor-tape direction; floor depth/height remain estimates",
+  "white": [
+    {
+      "name": "parking_left_to_assembly",
+      "px": [
+        [
+          354,
+          284
+        ],
+        [
+          307,
+          498
+        ]
+      ],
+      "xy": [
+        [
+          1.74,
+          1.5
+        ],
+        [
+          1.74,
+          0.85
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.74,
+          1.5
+        ],
+        [
+          1.74,
+          0.85
+        ]
+      ]
+    },
+    {
+      "name": "parking_right_to_rest",
+      "px": [
+        [
+          497,
+          286
+        ],
+        [
+          489,
+          413
+        ],
+        [
+          235,
+          411
+        ]
+      ],
+      "xy": [
+        [
+          2.1,
+          1.5
+        ],
+        [
+          2.1,
+          1.1
+        ],
+        [
+          1.56,
+          1.1
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          2.1,
+          1.5
+        ],
+        [
+          2.1,
+          1.1
+        ],
+        [
+          1.56,
+          1.1
+        ]
+      ]
+    },
+    {
+      "name": "parking_right_outline",
+      "px": [
+        [
+          438,
+          283
+        ],
+        [
+          447,
+          221
+        ],
+        [
+          538,
+          245
+        ],
+        [
+          532,
+          286
+        ]
+      ],
+      "xy": [
+        [
+          1.98,
+          1.5
+        ],
+        [
+          1.98,
+          1.66
+        ],
+        [
+          2.22,
+          1.66
+        ],
+        [
+          2.22,
+          1.5
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.98,
+          1.5
+        ],
+        [
+          1.98,
+          1.66
+        ],
+        [
+          2.23,
+          1.66
+        ],
+        [
+          2.23,
+          1.5
+        ]
+      ]
+    },
+    {
+      "name": "mat_upper_approach",
+      "px": [
+        [
+          538,
+          245
+        ],
+        [
+          528,
+          378
+        ],
+        [
+          868,
+          385
+        ]
+      ],
+      "xy": [
+        [
+          2.22,
+          1.66
+        ],
+        [
+          2.22,
+          1.18
+        ],
+        [
+          3.12,
+          1.18
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          2.23,
+          1.66
+        ],
+        [
+          2.23,
+          1.19
+        ],
+        [
+          3.06,
+          1.19
+        ]
+      ]
+    },
+    {
+      "name": "mat_lower_approach",
+      "px": [
+        [
+          496,
+          644
+        ],
+        [
+          514,
+          466
+        ],
+        [
+          903,
+          481
+        ]
+      ],
+      "xy": [
+        [
+          2.22,
+          0.52
+        ],
+        [
+          2.22,
+          0.94
+        ],
+        [
+          3.12,
+          0.94
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          2.2,
+          0.52
+        ],
+        [
+          2.2,
+          0.95
+        ],
+        [
+          3.12,
+          0.95
+        ]
+      ]
+    },
+    {
+      "name": "assembly_inner_approach",
+      "px": [
+        [
+          405,
+          413
+        ],
+        [
+          379,
+          569
+        ]
+      ],
+      "xy": [
+        [
+          1.93,
+          1.1
+        ],
+        [
+          1.93,
+          0.7
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.93,
+          1.1
+        ],
+        [
+          1.93,
+          0.69
+        ]
+      ]
+    },
+    {
+      "name": "rest_outline",
+      "px": [
+        [
+          192,
+          366
+        ],
+        [
+          258,
+          370
+        ],
+        [
+          231,
+          451
+        ],
+        [
+          162,
+          449
+        ],
+        [
+          192,
+          366
+        ]
+      ],
+      "xy": [
+        [
+          1.4,
+          1.22
+        ],
+        [
+          1.56,
+          1.22
+        ],
+        [
+          1.56,
+          0.98
+        ],
+        [
+          1.4,
+          0.98
+        ],
+        [
+          1.4,
+          1.22
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.4,
+          1.23
+        ],
+        [
+          1.56,
+          1.23
+        ],
+        [
+          1.56,
+          0.99
+        ],
+        [
+          1.4,
+          0.99
+        ],
+        [
+          1.4,
+          1.23
+        ]
+      ]
+    },
+    {
+      "name": "mat_stop_upper_tab",
+      "px": [
+        [
+          844,
+          395
+        ],
+        [
+          879,
+          396
+        ]
+      ],
+      "xy": [
+        [
+          2.97,
+          1.14
+        ],
+        [
+          3.12,
+          1.14
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          3.005,
+          1.15
+        ],
+        [
+          3.12,
+          1.15
+        ]
+      ]
+    },
+    {
+      "name": "mat_stop_lower_tab",
+      "px": [
+        [
+          839,
+          465
+        ],
+        [
+          898,
+          466
+        ]
+      ],
+      "xy": [
+        [
+          2.97,
+          0.98
+        ],
+        [
+          3.12,
+          0.98
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          2.97,
+          0.985
+        ],
+        [
+          3.13,
+          0.985
+        ]
+      ]
+    }
+  ],
+  "black": [
+    {
+      "name": "park_stop",
+      "px": [
+        [
+          312,
+          283
+        ],
+        [
+          534,
+          287
+        ]
+      ],
+      "xy": [
+        [
+          1.62,
+          1.5
+        ],
+        [
+          2.22,
+          1.5
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.64,
+          1.5
+        ],
+        [
+          2.23,
+          1.5
+        ]
+      ]
+    },
+    {
+      "name": "rest_stop",
+      "px": [
+        [
+          246,
+          372
+        ],
+        [
+          224,
+          446
+        ]
+      ],
+      "xy": [
+        [
+          1.53,
+          1.0
+        ],
+        [
+          1.53,
+          1.2
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.535,
+          1.215
+        ],
+        [
+          1.535,
+          1.005
+        ]
+      ]
+    },
+    {
+      "name": "assembly_stop",
+      "px": [
+        [
+          309,
+          572
+        ],
+        [
+          430,
+          575
+        ]
+      ],
+      "xy": [
+        [
+          1.79,
+          0.7
+        ],
+        [
+          2.07,
+          0.7
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          1.77,
+          0.69
+        ],
+        [
+          2.05,
+          0.69
+        ]
+      ]
+    },
+    {
+      "name": "mat_stop",
+      "px": [
+        [
+          827,
+          384
+        ],
+        [
+          842,
+          459
+        ]
+      ],
+      "xy": [
+        [
+          2.97,
+          0.94
+        ],
+        [
+          2.97,
+          1.18
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          2.96,
+          1.19
+        ],
+        [
+          2.97,
+          0.985
+        ]
+      ]
+    },
+    {
+      "name": "mat_upper_registration",
+      "px": [
+        [
+          857,
+          394
+        ],
+        [
+          871,
+          395
+        ]
+      ],
+      "xy": [
+        [
+          3.06,
+          1.14
+        ],
+        [
+          3.09,
+          1.14
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          3.06,
+          1.15
+        ],
+        [
+          3.086,
+          1.15
+        ]
+      ]
+    },
+    {
+      "name": "mat_lower_registration",
+      "px": [
+        [
+          874,
+          463
+        ],
+        [
+          885,
+          464
+        ]
+      ],
+      "xy": [
+        [
+          3.06,
+          0.98
+        ],
+        [
+          3.09,
+          0.98
+        ]
+      ],
+      "photo_estimated_xy_before_alignment": [
+        [
+          3.085,
+          0.985
+        ],
+        [
+          3.11,
+          0.985
+        ]
+      ]
+    }
+  ],
+  "floor_alignment": {
+    "basis": "User requested approximate alignment on 2026-10-12; local straightening of photo-derived floor tape, not surveyed coordinates.",
+    "rules": [
+      "All segments horizontal or vertical; right-angle bends.",
+      "Parking guides retain measured marker-center X=1.74/2.10 m; right parking box centered on P1.",
+      "Right parking box and both material-approach vertical runs share X=2.22 m.",
+      "Material upper/lower routes end at X=3.12 m; stops/tabs paired about MAT marker Y=1.06 m.",
+      "REST white rectangle stays closed; its black stop is inset inside the right border with end gaps. The branch meets the outer white border.",
+      "Assembly black stop centers on the white approach."
+    ],
+    "width_mm": 20,
+    "unchanged": "Table/robot/jig positions, measured ArUco centers, route topology and intentional gaps."
+  },
+  "boards": [
+    {
+      "name": "MAT",
+      "label": "자재창고",
+      "ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "center": [
+        3.1485,
+        1.06,
+        0.115
+      ],
+      "yaw": -90,
+      "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+      "distance_from_face_left_mm": 300,
+      "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+    },
+    {
+      "name": "ASM",
+      "label": "조립대",
+      "ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "center": [
+        1.895,
+        0.5158,
+        0.115
+      ],
+      "yaw": 180,
+      "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+      "distance_from_face_left_mm": 205,
+      "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+    },
+    {
+      "name": "P2",
+      "label": "M2 주차",
+      "ids": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": [
+        1.74,
+        1.798,
+        0.1105
+      ],
+      "yaw": 0,
+      "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+      "distance_from_right_corner_mm": 1860,
+      "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+    },
+    {
+      "name": "P1",
+      "label": "M1 주차",
+      "ids": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "center": [
+        2.1,
+        1.798,
+        0.1105
+      ],
+      "yaw": 0,
+      "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+      "distance_from_right_corner_mm": 1500,
+      "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+    }
+  ],
+  "decoded_generated_board_ids": {
+    "MAT": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "ASM": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "P2": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "P1": [
+      4,
+      5,
+      6,
+      7
+    ]
+  },
+  "source_docs": [
+    {
+      "title": "ArUco 마커 + IR 센서를 활용한 정밀 도킹",
+      "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/18776065/ArUco+IR",
+      "used": "DICT_4X4_50; 30 mm marker, 40 mm center pitch, 90 mm board; IDs 0,1 / 2,3"
+    },
+    {
+      "title": "AMR(버거1·2) 진행 정리 및 1차 목표 기준 완료 사항",
+      "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/30900268/AMR+1+2+1",
+      "used": "MAT/ASM IDs 0–3; M1 PARK 4–7; M2 PARK 8–11; REST has no ArUco"
+    },
+    {
+      "title": "9.30 Solo Waypoint + Docking 주행 테스트",
+      "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/24346649/9.30+Solo+Waypoint+Docking",
+      "used": "Independent confirmation of normal and parking ID groups; Nav2 coordinates not imported without a frame transform"
+    }
+  ],
+  "limitations": [
+    "Absolute line coordinates and panel heights are photo estimates.",
+    "All four horizontal marker-group positions are user measured. Heights remain photo estimates; ASM front is visible in 1000015415.jpg.",
+    "The older 300x200 whiteboard draft is superseded by user-confirmed 360x180 cm.",
+    "No Nav2 frame transform was available, so team waypoint coordinates were not treated as this world frame."
+  ]
+}

@@ -20,8 +20,8 @@ from host_pkg.action import Arm
 
 ROOT = Path(os.environ.get('SO101_APP_DIR', '/home/ubuntu/OpenCV_teach'))
 COMMANDS = {
-    'arm2': {'BUILD_A', 'BUILD_B', 'BUILD_LOAD_A', 'BUILD_LOAD_B', 'SLIDE_BUILD'},
-    'arm3': {'LOAD_A', 'LOAD_B', 'SLIDE_LOAD'},
+    'arm2': {'BUILD_A', 'BUILD_B', 'BUILD_LOAD_A', 'BUILD_LOAD_B', 'BUILD_SLIDE'},
+    'arm3': {'LOAD_A', 'LOAD_B', 'LOAD_SLIDE'},
 }
 CONTROLS = {
     'EMER_STOP': 'estop', 'RESTART': 'restart', 'RESET': 'reset',
@@ -101,7 +101,7 @@ class ArmActionServer(Node):
                 state = {'estop': 'PAUSED', 'restart': 'RUNNING', 'reset': 'IDLE'}[control]
             else:
                 reservation=self.dispatch_lock
-                args = [str(ROOT / 'run_episode.sh'), command.lower(), '--managed-completion','--execution-lock-fd',str(reservation.fileno())]
+                args = [str(ROOT / 'run_episode.sh'), {'BUILD_SLIDE': 'slide_build', 'LOAD_SLIDE': 'slide_load'}.get(command, command.lower()), '--managed-completion','--execution-lock-fd',str(reservation.fileno())]
                 if self.check_only:
                     args += ['--check', '--no-ros']
                 process = subprocess.Popen(

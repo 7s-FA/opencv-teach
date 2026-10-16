@@ -1,0 +1,14 @@
+{
+  "articulations": 3,
+  "revolute_joints": 18,
+  "matched_static_pose_error_m": {
+    "base_link": 0.0,
+    "gripper_link": 5.551115123125783e-17,
+    "arm1_base_link": 0.0,
+    "arm1_gripper_link": 1.1102230246251565e-16,
+    "arm3_preview_base_link": 0.0,
+    "arm3_preview_gripper_link": 2.220446049250313e-16
+  },
+  "geoms": 814,
+  "physics_steps": 0
+}

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "name": "SO-101 팔로워",
-  "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+  "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B91027630-if00",
   "calibration_file": "calibration/follower.json",
   "model_reference": {
     "ticks": {
@@ -218,7 +218,7 @@
   },
   "mode": "leader",
   "leader": {
-    "port": "/dev/serial/by-id/usb-YOUR_ROBOT-if00",
+    "port": "/dev/serial/by-id/usb-1a86_USB_Single_Serial_5B79015205-if00",
     "calibration_file": "calibration/leader-f89be2824a1e3bb0-abb3e75e82ce8.json",
     "angle_mapping_sha256": "30b0338656beeca88d6f0a9d01b9a8e72f7b6a5c6aa3ef55b5ef760a7308fddc"
   },

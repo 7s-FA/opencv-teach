@@ -41,5 +41,6 @@ class StationaryDetectionTests(unittest.TestCase):
         missing={'selected':None,'candidates':[],'status':'not_found'}
         c.observation=(frame,{'live_by_jig':{'pallet':missing}},10.1)
         self.assertIsNone(c.preview_observation[1]['live_by_jig']['pallet']['selected'])
-        c.preview_frame=(frame,12.)
+        from so101_teach.camera_lifecycle import MEASUREMENT_MAX_AGE_SECONDS
+        c.preview_frame=(frame,10.1+MEASUREMENT_MAX_AGE_SECONDS+.1)
         self.assertEqual(c.preview_observation[1]['live_by_jig'],{})

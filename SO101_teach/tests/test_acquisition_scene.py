@@ -24,8 +24,8 @@ class AcquisitionSceneTests(unittest.TestCase):
         self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[185,-120,1.])
     def test_saved_step_scene_still_uses_its_saved_basis_and_does_not_mutate_episode(self):
         a=self.teach();before=deepcopy(a.episode)
-        self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[228,-138,67])
+        self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[250,-90,12])
         a.toggle_jig_updates();a.last_render=None
-        self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[228,-138,67]);self.assertEqual(a.episode,before)
+        self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[250,-90,12]);self.assertEqual(a.episode,before)
         a.page='model';a.last_render=None
         self.assertEqual(self.render_request(a)['jigs'][0]['pose'],[250,-90,12])

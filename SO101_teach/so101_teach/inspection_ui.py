@@ -3,27 +3,29 @@ import io,tkinter as tk
 from tkinter import ttk
 from PIL import Image,ImageTk
 from .preview import pan_view
+from .ui_status import StatusText
 
 class ModelView(ttk.Frame):
     def __init__(self,parent,kind):
-        super().__init__(parent,padding=(12,12),style='Card.TFrame',width=430)
-        self.kind=kind;self.spec=None;self.version=0;self.view='whole';self.actual_view=None;self.request=None;self.image=None;self.meta=None;self.photo=None;self.drag=None
+        super().__init__(parent,padding=(12,12),style='Surface.TFrame',width=430)
+        self.kind=kind;self.spec=None;self.spec_error=None;self.version=0;self.view='whole';self.actual_view=None;self.request=None;self.image=None;self.meta=None;self.photo=None;self.drag=None
         self.columnconfigure(0,weight=1);self.rowconfigure(2,weight=1)
         ttk.Label(self,text='집게 모델과 기준점' if kind=='tcp' else '선택한 지그 모델',style='Section.TLabel').grid(row=0,column=0,sticky='w')
-        self.caption=tk.StringVar(value='모델을 준비합니다.');ttk.Label(self,textvariable=self.caption,wraplength=400,style='Small.TLabel').grid(row=1,column=0,sticky='w',pady=8)
+        self.caption=tk.StringVar(value='모델을 준비합니다.');StatusText(self,self.caption,height=2).grid(row=1,column=0,sticky='ew',pady=8)
         self.canvas=tk.Canvas(self,bg='#e6ecf2',highlightthickness=0,width=400,height=300);self.canvas.grid(row=2,column=0,sticky='nsew')
         self.canvas.bind('<Configure>',lambda e:self.paint())
         bar=ttk.Frame(self,style='Card.TFrame');bar.grid(row=3,column=0,sticky='ew',pady=8)
         for text,preset in [('집게 전체' if kind=='tcp' else '입체로 보기','whole'),('끝부분 확대' if kind=='tcp' else '위에서 보기','detail')]:
             ttk.Button(bar,text=text,command=lambda p=preset:self.preset(p)).pack(side='left',padx=(0,5))
         ttk.Label(self,text='왼쪽: 회전 · 오른쪽: 이동 · 휠: 확대/축소',style='Small.TLabel').grid(row=4,column=0,sticky='w')
-        self.details=tk.StringVar(value='');ttk.Label(self,textvariable=self.details,wraplength=400,style='Muted.TLabel').grid(row=5,column=0,sticky='w',pady=(10,0))
+        self.details=tk.StringVar(value='');StatusText(self,self.details,height=5,font=('Noto Sans CJK KR',11)).grid(row=5,column=0,sticky='ew',pady=(10,0))
         for button in (1,2,3):
             self.canvas.bind(f'<ButtonPress-{button}>',lambda e:self.begin_drag(e))
         self.canvas.bind('<B1-Motion>',self.rotate);self.canvas.bind('<B2-Motion>',self.pan);self.canvas.bind('<B3-Motion>',self.pan)
         self.canvas.bind('<Button-4>',lambda e:self.zoom(.88));self.canvas.bind('<Button-5>',lambda e:self.zoom(1.12))
     def set_spec(self,spec,error=None):
-        if spec==self.spec and not error:return
+        if spec==self.spec and error==self.spec_error:return
+        self.spec_error=error
         if self.kind=='jig':self.view='whole';self.actual_view=None
         self.spec=spec;self.version+=1;self.request=None;self.image=None;self.meta=None
         self.caption.set(error or '모델 읽는 중…');self.details.set('');self.paint()

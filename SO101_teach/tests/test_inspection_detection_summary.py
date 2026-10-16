@@ -27,13 +27,13 @@ class InspectionSummaryTests(unittest.TestCase):
         self.assertEqual(report['projected_parts'],['finished'])
         p.update_frame(frame,{},detection_fresh=False)
         self.assertIn('갱신 대기',p.detected.get());self.assertNotIn('검출됨',p.detected.get());self.assertNotIn('합격',p.parts.get())
-    def test_three_part_summary_and_legend_fit_small_window(self):
+    def test_three_part_summary_and_legend_fit_maximized_window(self):
         from PIL import ImageGrab
-        frame,data=self.camera();a=self.app;p=a.camera_inspection;a.camera_tabs.select(p);p.station.set('운반용 지그');p.product.set('전체');self.root.geometry('1180x760');self.root.update()
+        frame,data=self.camera();a=self.app;p=a.camera_inspection;a.camera_tabs.select(p);p.station.set('운반용 지그');p.product.set('전체');self.root.geometry('1920x1043');self.root.update()
         a.camera.observation=(frame,data,time.monotonic());a.draw_camera_frame(time.monotonic());self.root.update()
         for part in ('A 하단','A 중단','A 상단','B 하단','B 중단','B 상단'):self.assertIn(part,p.parts.get())
         self.assertGreater(p.canvas.winfo_height(),180)
-        self.assertLessEqual(p.legend.winfo_rooty()+p.legend.winfo_height(),p.summary.winfo_rooty()+p.summary.winfo_height())
+        self.assertLessEqual(p.legend.winfo_rooty()+p.legend.winfo_height(),p.winfo_rooty()+p.winfo_height())
         out=Path(__file__).parents[1]/'verification/inspection-summary';out.mkdir(exist_ok=True)
         x,y=self.root.winfo_rootx(),self.root.winfo_rooty()
         ImageGrab.grab(bbox=(x,y,x+self.root.winfo_width(),y+self.root.winfo_height())).save(out/'carrier-1180x760.png')

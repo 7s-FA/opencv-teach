@@ -88,11 +88,11 @@ def status_text(line):
     kind,_,value=detail.partition(':')
     if kind=='STAGE_DONE':return STAGES.get(value,value)+' 완료'
     if kind in ('LINEAR_CHECK','LINEAR_STARTED','LINEAR_READY','LINEAR_DONE'):
-        from .linear_state import direction_label
+        from .linear_state import position_label
         target=re.search(r'target_mm=([0-9.]+)',value)
-        label=direction_label({},float(target[1])) if target else '목표 위치'
+        label=position_label({},float(target[1])) if target else '명령 위치 미확인'
         stage={'LINEAR_CHECK':'확인 중','LINEAR_STARTED':'이동 중','LINEAR_READY':'구동 완료 확인','LINEAR_DONE':'구동 시간 완료'}[kind]
-        return '리니어 '+label+' · '+stage+(' · 위치 미측정' if kind in ('LINEAR_READY','LINEAR_DONE') else '')
+        return '리니어 : '+label+' · '+stage
     if kind=='STEP_DONE':return '스텝 완료 · '+value
     return LABELS.get(kind,kind)+(' · '+value if value else '')
 

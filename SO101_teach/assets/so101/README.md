@@ -21,6 +21,12 @@ TCP 계산 기준은 `gripper_frame_link`다. 고정 집게 끝단은 이 프레
 | 본체 | TheRobotStudio/SO-ARM100, 로컬 vendor HEAD `eecbe3e0a9ebb23e25ad7b2759b03884c6660903` | LICENSE-SO-ARM100 |
 | TPU 그리퍼 | Vector-Wangel/XLeRobot, `3d14695e40c9c68229c0aacffca6053c75cd3eb6` | LICENSE-XLeRobot |
 
-두 원본 모두 Apache-2.0입니다. RealSense CAD는 현재 배포 모델에서 제거되었습니다.
+두 원본 모두 Apache-2.0입니다. 이 폴더의 팔 모델에는 RealSense CAD를 포함하지 않습니다. 전체 작업 셀의 보관대 D435는 `../full_map/`에서 별도로 조립합니다.
 
 현재 프로그램은 이 모델의 질량·마찰로 실물 모터 토크를 보정하지 않는다. 이 폴더의 URDF/XML은 위치·자세 표시와 기구학 계산의 기준이다.
+
+2026-10-13: 앱의 세 팔에는 `so101_teach/gripper_pads.py`로 검정 고정·이동 패드를 표시합니다. 형상과 위치의 원본은 `Test_teach/assets/so101/so101_teach.urdf`와 이 URDF가 참조하는 메시입니다. 해당 자산은 PC 미리보기의 외부 의존성이며, 표시용 패드가 이 폴더의 기구학·질량·충돌 기준을 바꾸지는 않습니다.
+
+## 현재 계산·표시 구분 · 2026-10-15
+
+실물 실행 FK·IK는 기존 URDF와 `ModelReference`를 사용한다. 3D 화면은 해당 틱에 `assets/joint_alignment/`의 표시 보정을 추가로 적용할 수 있다. 표시용 각도 보정과 사용자가 설정한 TCP·모델 기준은 구분하며, 표시 보정을 변경해도 실제 모터 목표 틱이나 영점·EEPROM을 변경하지 않는다.

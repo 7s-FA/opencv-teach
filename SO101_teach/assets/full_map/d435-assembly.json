@@ -1,0 +1,78 @@
+{
+  "module": "RealSense D435",
+  "stock_upper_part_reversed_deg": 180,
+  "mount": "Downloaded mount base + tilting mount; original geometry",
+  "tilt_from_vertical_down_deg": 20.0,
+  "tilt_source": "Photo 1000015418 side view; approximate, not measured",
+  "estimated_tilt_uncertainty_deg": 5,
+  "mount_material": "robot_and_camera_mount_plastic",
+  "cap_seating_height_stock_stl_mm": 357.6000061035156,
+  "cap_origin_in_mast_frame_m": [
+    -0.002275058471081998,
+    0.1160326636358576,
+    0.5383000061035156
+  ],
+  "hinge_in_cap_frame_mm": [
+    10.7,
+    0.0,
+    23.0
+  ],
+  "camera_rear_seat_in_untilted_cap_frame_mm": [
+    37.699999999999996,
+    0.0,
+    20.75
+  ],
+  "camera_rear_point_source_mm": [
+    -10.154699999999998,
+    0.0,
+    12.5
+  ],
+  "source_files": {
+    "base": "/path/to/Final_Arm/SO101_teach/assets/full_map/sources/d435_mount_base_source.stl",
+    "tilt": "/path/to/Final_Arm/SO101_teach/assets/full_map/sources/d435_tilt_source.stl",
+    "camera": "/path/to/Final_Arm/Test_IL/assets/camera_mounts/d435_body_mm.stl"
+  },
+  "source_sha256": {
+    "base": "d18860eb1e6fa061d944680baea6bb0fa0be77f40f2435ab8d65785ac4ea4d3b",
+    "tilt": "1bf0ee4bc932207f0476acd89401cddd9d0f43a1915b2bd9f1ef4c6d13cb6c1d",
+    "camera": "0116caa453d3a942bdd6c3c37061ae0115c0cef9ca6e82d2190a29d3bf25ce3d"
+  },
+  "source_bounds": {
+    "base": {
+      "source_mm": [
+        [
+          -12.7,
+          -18.312,
+          0.0
+        ],
+        [
+          17.7,
+          18.312,
+          35.0
+        ]
+      ],
+      "encoding_max_error_mm": 9.063720689539423e-07
+    },
+    "tilt": {
+      "source_mm": [
+        [
+          5.2,
+          -29.0,
+          17.5
+        ],
+        [
+          45.7,
+          29.0,
+          28.5
+        ]
+      ],
+      "encoding_max_error_mm": 1.8981933607165047e-06
+    }
+  },
+  "camera_mesh_encoding": "Original triangles split into two STL files; no mesh simplification",
+  "photographs": [
+    "1000015417.jpg",
+    "1000015418.jpg"
+  ],
+  "assembly_status": "CAD mating-plane placement with photo-estimated tilt; physical fit and optical calibration not verified"
+}

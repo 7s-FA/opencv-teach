@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "robot_id": "arm2",
+  "calibration_sha256": "eaea825f770f1859a0c66e486ec3538d31280dfa16b3c7a0dc2d7e9ee89d356b",
+  "angle_mapping_sha256": "92e6a896c1c72c8c180643600a61048a5de28f9cd4faaee556565ea10886445b",
+  "joint_order": [
+    "shoulder_pan",
+    "shoulder_lift",
+    "elbow_flex",
+    "wrist_flex",
+    "wrist_roll",
+    "gripper"
+  ],
+  "source_model_reference": {
+    "ticks": {
+      "shoulder_pan": 2047,
+      "shoulder_lift": 2047,
+      "elbow_flex": 2047,
+      "wrist_flex": 2047,
+      "wrist_roll": 2047,
+      "gripper": 2047
+    },
+    "radians": {
+      "shoulder_pan": 8.739856416340758e-06,
+      "shoulder_lift": 3.999987902844018e-06,
+      "elbow_flex": -4.242636587726078e-06,
+      "wrist_flex": 9.82706428323083e-06,
+      "wrist_roll": 0.04868213401890373,
+      "gripper": 1.5707963267948966
+    },
+    "trim_ticks": {
+      "shoulder_pan": 0,
+      "shoulder_lift": 0,
+      "elbow_flex": 0,
+      "wrist_flex": 0,
+      "wrist_roll": 0,
+      "gripper": 0
+    }
+  },
+  "offset_deg": [
+    1.4529001855415953,
+    -1.9630646770077618,
+    3.1299114322591586,
+    -2.6329293664784306,
+    3.8090222275835925,
+    3.592909381298876
+  ],
+  "gains_negative": [
+    1.0020797648613355,
+    1.0104476731250938,
+    0.968636250321787,
+    1.0070144673918133,
+    1.0155281954333337,
+    0.999999063415469
+  ],
+  "gains_positive": [
+    1.0020797648613355,
+    1.0104476731250938,
+    0.968636250321787,
+    1.0070144673918133,
+    1.0155281954333337,
+    0.999999063415469
+  ],
+  "correction_knots_deg": {},
+  "scope": "ARM2 simulation only. Six constant offsets and uniform gains shared across A/B; real FK/IK and source motor ticks unchanged.",
+  "physically_calibrated": false,
+  "hardware_commands": false,
+  "execution_trial_enabled": true,
+  "basis": "Four phone captures; clean visible finger outer hulls and manually annotated joint axes. Self-occlusion rendered; background blue objects and clipped-mask frames excluded. No simulated contact, grasp or placement objective.",
+  "evidence": [
+    "SO101_teach/verification/arm2_video_20261014/video_first/pose_freeze.json",
+    "SO101_teach/verification/arm2_video_20261014/video_first/clean_affine_four.json",
+    "SO101_teach/verification/arm2_video_20261014/video_first/clean_feature_audit.json"
+  ],
+  "result": "Video and encoder response fitted. Current A/B complete replay performed; full assembly criteria not passed. See video_first/current_summary.json. No hardware angle or material metrology.",
+  "validation": {
+    "production_applied": true,
+    "production_scope": "Local ARM2 simulation and teaching preview only. Real execution constructors remain original Kinematics.",
+    "A_assembly_success": false,
+    "B_assembly_success": false,
+    "physical_joint_metrology": false,
+    "status": "video_and_encoder_recalibration_applied_contact_reproduction_incomplete",
+    "numeric_mapping_sha256": "cfaa6bf8f41c549132cf37401639091fdeab2e8dfd04bc2c4a3d9878a758faf9"
+  }
+}

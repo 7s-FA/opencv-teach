@@ -1,0 +1,1789 @@
+{
+  "revision": "2026-10-12 release 1: approved full map for teaching app and Isaac Sim",
+  "display_only": true,
+  "unit": "mm",
+  "origin": "Simulation world lower left; drawing measurement datum O is lower right at (3600,0,0)",
+  "measurement_datum_O_world_mm": [
+    3600,
+    0,
+    0
+  ],
+  "axes": {
+    "X": "World right; assembly offset is measured leftward from O",
+    "Y": "Up the right/storage wall from O",
+    "Z": "Up from floor"
+  },
+  "map_inner_size_mm": [
+    3600,
+    1800
+  ],
+  "assembly_near_corner_mm": [
+    2100,
+    0
+  ],
+  "storage_near_corner_mm": [
+    3150,
+    910
+  ],
+  "storage_size_mm": [
+    450,
+    450
+  ],
+  "storage_local_axes": "u = -world X away from right wall; v = -world Y toward assembly; distance w from Q is 450-v",
+  "storage_from_local": {
+    "origin_world_mm": [
+      3600,
+      1360,
+      0
+    ],
+    "yaw_deg": 180
+  },
+  "storage_jig_reference": "Q=(u=0,v=450), wall-side corner on the ARM1-right side; offsets are (u,w)",
+  "storage_photo_reference": "1000015414.jpg and codex-clipboard-727594a1-0fbd-4f7e-a015-2fe254d9ebf6.png; assembly bottom, storage right, waiting robots top; photos not mirrored",
+  "jigs": {
+    "B": {
+      "offset_from_Q_uw_mm": [
+        80,
+        40
+      ],
+      "near_corner_uv_mm": [
+        80,
+        190
+      ],
+      "extent_uv_mm": [
+        148,
+        220
+      ],
+      "center_uv_mm": [
+        154,
+        300
+      ],
+      "yaw_deg": 90
+    },
+    "A": {
+      "offset_from_Q_uw_mm": [
+        230,
+        160
+      ],
+      "near_corner_uv_mm": [
+        230,
+        142
+      ],
+      "extent_uv_mm": [
+        220,
+        148
+      ],
+      "center_uv_mm": [
+        340,
+        216
+      ],
+      "yaw_deg": 180
+    }
+  },
+  "arm1": {
+    "edge": "v=450",
+    "front_corner_u_mm": 450,
+    "nearest_base_edge_u_mm": 370,
+    "corner_gap_mm": 80,
+    "yaw_deg": -90,
+    "pose_source": "Illustrative SO-101 posture",
+    "wrist_camera": {
+      "module": "32x32 UVC",
+      "mount": "Original XLeRobot wrist bracket from Test_IL",
+      "parent_body": "arm1_gripper_link",
+      "source_assembly": "/path/to/Final_Arm/Test_IL/assets/camera_mounts/assembly.json",
+      "source_sha256": {
+        "Test_IL/assets/camera_mounts/assembly.json": "310388575d21ff4048d5e6df936e636d6ec5e7d58fc528bac2b49e112f564eec",
+        "Test_IL/assets/camera_mounts/wrist_xlerobot_mount.stl": "b3655d8d97a9ae10bddb5da22c8ac0b7558c432da36a67fc83968331bf49a47a",
+        "Test_IL/assets/camera_mounts/wrist_xlerobot_camera.stl": "67bbea618c949872ad9509986a39816a65b956d4f79262f23be401c7d49435ac"
+      },
+      "attachments": [
+        {
+          "name": "wrist_xlerobot_mount",
+          "file": "/path/to/Final_Arm/Test_IL/assets/camera_mounts/wrist_xlerobot_mount.stl",
+          "transform_mm": [
+            [
+              0.0007308130035790843,
+              -0.0012980110908674585,
+              0.9999988902875581,
+              0.01747884330886766
+            ],
+            [
+              -0.002492252210978192,
+              0.9999960497506832,
+              0.0012998289357620705,
+              25.872682595646907
+            ],
+            [
+              -0.9999966271162218,
+              -0.0024931990070327158,
+              0.000727575125947824,
+              -6.036351427073821
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "link": "gripper_link",
+          "color": "black"
+        },
+        {
+          "name": "wrist_32x32_camera",
+          "file": "/path/to/Final_Arm/Test_IL/assets/camera_mounts/wrist_xlerobot_camera.stl",
+          "transform_mm": [
+            [
+              0.0007308130035790843,
+              -0.0012980110908674585,
+              0.9999988902875581,
+              0.0177872639050842
+            ],
+            [
+              -0.002492252210978192,
+              0.9999960497506832,
+              0.0012998289357620705,
+              25.893930384103534
+            ],
+            [
+              -0.9999966271162218,
+              -0.0024931990070327158,
+              0.000727575125947824,
+              -5.991091772163371
+            ],
+            [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          ],
+          "link": "gripper_link",
+          "color": "camera"
+        }
+      ],
+      "optical_transform_in_gripper_mm": [
+        [
+          0.9998692309984214,
+          -0.014948949586610607,
+          -0.006168411924330756,
+          3.8548276883594563
+        ],
+        [
+          -0.016153259907972544,
+          -0.9050699789898223,
+          -0.424955769132535,
+          66.66279887782646
+        ],
+        [
+          0.0007697978923633078,
+          0.4249998376666257,
+          -0.9051930982090061,
+          -13.121959836108577
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "optical_status": "Existing CAD nominal frame, not measured hand-eye calibration",
+      "mesh_note": "Original visual mesh retained; its simplified PCB outline is approximately 34 mm."
+    },
+    "appearance": {
+      "printed_parts": "gray filament",
+      "rgba": [
+        0.68,
+        0.7,
+        0.71,
+        1
+      ],
+      "material_properties": "copied from robot_and_camera_mount_plastic",
+      "camera_mounts": "same dark material/color as ARM2/3 mounts"
+    },
+    "base_origin_storage_mm": [
+      314.5373915118412,
+      422.8353625437005,
+      197.4
+    ],
+    "base_outline_storage_mm": [
+      [
+        259.07497150144377,
+        358.19988971680505
+      ],
+      [
+        370.0,
+        450.0
+      ]
+    ]
+  },
+  "camera": {
+    "edge": "v=0",
+    "front_corner_u_mm": 450,
+    "nearest_mast_edge_u_mm": 420,
+    "mast_corner_gap_mm": 30,
+    "mount": "Downloaded mount base + tilting mount; original geometry",
+    "arm_base_opposite_socket_shift_mm": 232.06414794921875,
+    "mount_origin_storage_mm": [
+      517.7211630865412,
+      20.97505847108198,
+      202.4
+    ],
+    "mast_outline_storage_mm": [
+      [
+        383.3759994506836,
+        6.0000001907348635
+      ],
+      [
+        419.99999999999994,
+        31.400001716613787
+      ]
+    ],
+    "module": "RealSense D435",
+    "stock_upper_part_reversed_deg": 180,
+    "tilt_from_vertical_down_deg": 20.0,
+    "tilt_source": "Photo 1000015418 side view; approximate, not measured",
+    "estimated_tilt_uncertainty_deg": 5,
+    "mount_material": "robot_and_camera_mount_plastic",
+    "cap_seating_height_stock_stl_mm": 357.6000061035156,
+    "cap_origin_in_mast_frame_m": [
+      -0.002275058471081998,
+      0.1160326636358576,
+      0.5383000061035156
+    ],
+    "hinge_in_cap_frame_mm": [
+      10.7,
+      0.0,
+      23.0
+    ],
+    "camera_rear_seat_in_untilted_cap_frame_mm": [
+      37.699999999999996,
+      0.0,
+      20.75
+    ],
+    "camera_rear_point_source_mm": [
+      -10.154699999999998,
+      0.0,
+      12.5
+    ],
+    "source_files": {
+      "base": "/path/to/Final_Arm/SO101_teach/assets/full_map/sources/d435_mount_base_source.stl",
+      "tilt": "/path/to/Final_Arm/SO101_teach/assets/full_map/sources/d435_tilt_source.stl",
+      "camera": "/path/to/Final_Arm/Test_IL/assets/camera_mounts/d435_body_mm.stl"
+    },
+    "source_sha256": {
+      "base": "d18860eb1e6fa061d944680baea6bb0fa0be77f40f2435ab8d65785ac4ea4d3b",
+      "tilt": "1bf0ee4bc932207f0476acd89401cddd9d0f43a1915b2bd9f1ef4c6d13cb6c1d",
+      "camera": "0116caa453d3a942bdd6c3c37061ae0115c0cef9ca6e82d2190a29d3bf25ce3d"
+    },
+    "source_bounds": {
+      "base": {
+        "source_mm": [
+          [
+            -12.7,
+            -18.312,
+            0.0
+          ],
+          [
+            17.7,
+            18.312,
+            35.0
+          ]
+        ],
+        "encoding_max_error_mm": 9.063720689539423e-07
+      },
+      "tilt": {
+        "source_mm": [
+          [
+            5.2,
+            -29.0,
+            17.5
+          ],
+          [
+            45.7,
+            29.0,
+            28.5
+          ]
+        ],
+        "encoding_max_error_mm": 1.8981933607165047e-06
+      }
+    },
+    "camera_mesh_encoding": "Original triangles split into two STL files; no mesh simplification",
+    "photographs": [
+      "1000015417.jpg",
+      "1000015418.jpg"
+    ],
+    "assembly_status": "CAD mating-plane placement with photo-estimated tilt; physical fit and optical calibration not verified"
+  },
+  "confirmed": [
+    "3600x1800 inner map",
+    "Distances to nearest table edges",
+    "Jig offsets to nearest carrier corners",
+    "450x450 storage table",
+    "Tables against walls",
+    "Same table height and material",
+    "Storage overhead is D435; stock 32x32-mount top reversed, downloaded base and tilt mount installed",
+    "ARM1 also has the 32x32 UVC wrist camera and XLeRobot bracket used in Test_IL",
+    "Storage mast left and ARM1 right in a front view, without mirroring the photograph",
+    "Entire map: assembly at bottom middle, storage at right middle, waiting robots along top wall"
+  ],
+  "draft_assumptions": [
+    "8 cm measured to robot base outline, 3 cm to vertical mast outline",
+    "ARM1 posture and gray filament tone are photo estimates; plastic material properties match other arms",
+    "Q is the wall-side corner on ARM1 right, now corrected to u=0,v=450",
+    "Floor tape coordinates, parking poses and marker mounting heights are photograph estimates; marker pattern/size/ID groups follow team documentation",
+    "All four perimeter panels use existing 400 mm height and remain visible"
+  ],
+  "rl_ready": false,
+  "limitations": "Visual geometry draft only. No dynamics, collision, grasp, camera extrinsic or RL validation.",
+  "assembly_size_mm": [
+    600.0,
+    514.2877335531805
+  ],
+  "floor_from_arm2": {
+    "xyz_mm": [
+      2017.1281748900358,
+      401.9155007388521,
+      202.4
+    ],
+    "yaw_deg": -210.061118452126
+  },
+  "table_top_height_mm": 195,
+  "room_floor": {
+    "size_mm": [
+      12000,
+      10000
+    ],
+    "center_mm": [
+      1800,
+      900,
+      -7
+    ],
+    "top_z_mm": 0,
+    "same_surface_inside_and_outside": true,
+    "basis": "Illustrative room extension requested by user; map working bounds remain 3600x1800 mm."
+  },
+  "storage_previous_fixture_versions": {
+    "b_cap": {
+      "source": "/path/to/Final_Arm/SO101_teach/assets/full_map/assets/storage_previous_b_cap_jig.stl",
+      "source_sha256": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f",
+      "version": "Immediately before the 2026-10-11 B fixture replacement",
+      "backup_source": "/path/to/Final_Arm/SO101_teach/verification/b-jigs-20261011/before/SO101_teach/assets/carrier_assembly/source/current/b_cap_jig.stl",
+      "yaw_deg": 90,
+      "height_mm": 26.5,
+      "count": 2
+    },
+    "b_housing": {
+      "source": "/path/to/Final_Arm/SO101_teach/assets/full_map/assets/storage_previous_b_housing_jig.stl",
+      "source_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
+      "version": "Immediately before the 2026-10-11 B fixture replacement",
+      "backup_source": "/path/to/Final_Arm/SO101_teach/verification/b-jigs-20261011/before/SO101_teach/assets/carrier_assembly/source/current/b_housing_jig.stl",
+      "yaw_deg": 90,
+      "height_mm": 8.5,
+      "count": 2
+    },
+    "a_housing": {
+      "source": "/path/to/Final_Arm/SO101_teach/assets/full_map/assets/storage_previous_a_housing_jig.stl",
+      "source_sha256": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d",
+      "version": "Immediately before the 2026-10-11 B fixture replacement",
+      "backup_source": "/path/to/Final_Arm/SO101_teach/verification/b-jigs-20261011/before/SO101_teach/assets/carrier_assembly/source/current/a_housing_jig.stl",
+      "yaw_deg": 90,
+      "height_mm": 8.5,
+      "count": 2
+    }
+  },
+  "storage_lower_fixture_layout": {
+    "photo": "1000015419.jpg",
+    "carrier_local_row_cy_mm": [
+      -36,
+      36
+    ],
+    "fixture_keys_by_row": {
+      "A": [
+        "a_housing",
+        "b_housing"
+      ],
+      "B": [
+        "b_housing",
+        "a_housing"
+      ]
+    },
+    "photo_positions": {
+      "A_upper": "b_housing",
+      "A_lower": "a_housing",
+      "B_left": "b_housing",
+      "B_right": "a_housing"
+    },
+    "all_lower_fixtures_previous_version": true,
+    "note": "Storage groups contain mixed lower fixtures, not exclusively A or B fixtures."
+  },
+  "storage_fixture_instances": {
+    "B_cap_fixture_0": {
+      "fixture_key": "b_cap",
+      "group": "B",
+      "row": 0,
+      "previous_version": true
+    },
+    "B_tpu_fixture_0": {
+      "fixture_key": "b_tpu",
+      "group": "B",
+      "row": 0,
+      "previous_version": false
+    },
+    "B_housing_fixture_0": {
+      "fixture_key": "b_housing",
+      "group": "B",
+      "row": 0,
+      "previous_version": true
+    },
+    "B_cap_fixture_1": {
+      "fixture_key": "b_cap",
+      "group": "B",
+      "row": 1,
+      "previous_version": true
+    },
+    "B_tpu_fixture_1": {
+      "fixture_key": "b_tpu",
+      "group": "B",
+      "row": 1,
+      "previous_version": false
+    },
+    "B_housing_fixture_1": {
+      "fixture_key": "a_housing",
+      "group": "B",
+      "row": 1,
+      "previous_version": true
+    },
+    "A_cap_fixture_0": {
+      "fixture_key": "a_cap",
+      "group": "A",
+      "row": 0,
+      "previous_version": false
+    },
+    "A_ball_fixture_0": {
+      "fixture_key": "a_ball",
+      "group": "A",
+      "row": 0,
+      "previous_version": false
+    },
+    "A_housing_fixture_0": {
+      "fixture_key": "a_housing",
+      "group": "A",
+      "row": 0,
+      "previous_version": true
+    },
+    "A_cap_fixture_1": {
+      "fixture_key": "a_cap",
+      "group": "A",
+      "row": 1,
+      "previous_version": false
+    },
+    "A_ball_fixture_1": {
+      "fixture_key": "a_ball",
+      "group": "A",
+      "row": 1,
+      "previous_version": false
+    },
+    "A_housing_fixture_1": {
+      "fixture_key": "b_housing",
+      "group": "A",
+      "row": 1,
+      "previous_version": true
+    }
+  },
+  "floor_tape": {
+    "white": [
+      {
+        "name": "parking_left_to_assembly",
+        "px": [
+          [
+            354,
+            284
+          ],
+          [
+            307,
+            498
+          ]
+        ],
+        "xy": [
+          [
+            1.74,
+            1.5
+          ],
+          [
+            1.74,
+            0.85
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.74,
+            1.5
+          ],
+          [
+            1.74,
+            0.85
+          ]
+        ]
+      },
+      {
+        "name": "parking_right_to_rest",
+        "px": [
+          [
+            497,
+            286
+          ],
+          [
+            489,
+            413
+          ],
+          [
+            235,
+            411
+          ]
+        ],
+        "xy": [
+          [
+            2.1,
+            1.5
+          ],
+          [
+            2.1,
+            1.1
+          ],
+          [
+            1.56,
+            1.1
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            2.1,
+            1.5
+          ],
+          [
+            2.1,
+            1.1
+          ],
+          [
+            1.56,
+            1.1
+          ]
+        ]
+      },
+      {
+        "name": "parking_right_outline",
+        "px": [
+          [
+            438,
+            283
+          ],
+          [
+            447,
+            221
+          ],
+          [
+            538,
+            245
+          ],
+          [
+            532,
+            286
+          ]
+        ],
+        "xy": [
+          [
+            1.98,
+            1.5
+          ],
+          [
+            1.98,
+            1.66
+          ],
+          [
+            2.22,
+            1.66
+          ],
+          [
+            2.22,
+            1.5
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.98,
+            1.5
+          ],
+          [
+            1.98,
+            1.66
+          ],
+          [
+            2.23,
+            1.66
+          ],
+          [
+            2.23,
+            1.5
+          ]
+        ]
+      },
+      {
+        "name": "mat_upper_approach",
+        "px": [
+          [
+            538,
+            245
+          ],
+          [
+            528,
+            378
+          ],
+          [
+            868,
+            385
+          ]
+        ],
+        "xy": [
+          [
+            2.22,
+            1.66
+          ],
+          [
+            2.22,
+            1.18
+          ],
+          [
+            3.12,
+            1.18
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            2.23,
+            1.66
+          ],
+          [
+            2.23,
+            1.19
+          ],
+          [
+            3.06,
+            1.19
+          ]
+        ]
+      },
+      {
+        "name": "mat_lower_approach",
+        "px": [
+          [
+            496,
+            644
+          ],
+          [
+            514,
+            466
+          ],
+          [
+            903,
+            481
+          ]
+        ],
+        "xy": [
+          [
+            2.22,
+            0.52
+          ],
+          [
+            2.22,
+            0.94
+          ],
+          [
+            3.12,
+            0.94
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            2.2,
+            0.52
+          ],
+          [
+            2.2,
+            0.95
+          ],
+          [
+            3.12,
+            0.95
+          ]
+        ]
+      },
+      {
+        "name": "assembly_inner_approach",
+        "px": [
+          [
+            405,
+            413
+          ],
+          [
+            379,
+            569
+          ]
+        ],
+        "xy": [
+          [
+            1.93,
+            1.1
+          ],
+          [
+            1.93,
+            0.7
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.93,
+            1.1
+          ],
+          [
+            1.93,
+            0.69
+          ]
+        ]
+      },
+      {
+        "name": "rest_outline",
+        "px": [
+          [
+            192,
+            366
+          ],
+          [
+            258,
+            370
+          ],
+          [
+            231,
+            451
+          ],
+          [
+            162,
+            449
+          ],
+          [
+            192,
+            366
+          ]
+        ],
+        "xy": [
+          [
+            1.4,
+            1.22
+          ],
+          [
+            1.56,
+            1.22
+          ],
+          [
+            1.56,
+            0.98
+          ],
+          [
+            1.4,
+            0.98
+          ],
+          [
+            1.4,
+            1.22
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.4,
+            1.23
+          ],
+          [
+            1.56,
+            1.23
+          ],
+          [
+            1.56,
+            0.99
+          ],
+          [
+            1.4,
+            0.99
+          ],
+          [
+            1.4,
+            1.23
+          ]
+        ]
+      },
+      {
+        "name": "mat_stop_upper_tab",
+        "px": [
+          [
+            844,
+            395
+          ],
+          [
+            879,
+            396
+          ]
+        ],
+        "xy": [
+          [
+            2.97,
+            1.14
+          ],
+          [
+            3.12,
+            1.14
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            3.005,
+            1.15
+          ],
+          [
+            3.12,
+            1.15
+          ]
+        ]
+      },
+      {
+        "name": "mat_stop_lower_tab",
+        "px": [
+          [
+            839,
+            465
+          ],
+          [
+            898,
+            466
+          ]
+        ],
+        "xy": [
+          [
+            2.97,
+            0.98
+          ],
+          [
+            3.12,
+            0.98
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            2.97,
+            0.985
+          ],
+          [
+            3.13,
+            0.985
+          ]
+        ]
+      }
+    ],
+    "black": [
+      {
+        "name": "park_stop",
+        "px": [
+          [
+            312,
+            283
+          ],
+          [
+            534,
+            287
+          ]
+        ],
+        "xy": [
+          [
+            1.62,
+            1.5
+          ],
+          [
+            2.22,
+            1.5
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.64,
+            1.5
+          ],
+          [
+            2.23,
+            1.5
+          ]
+        ]
+      },
+      {
+        "name": "rest_stop",
+        "px": [
+          [
+            246,
+            372
+          ],
+          [
+            224,
+            446
+          ]
+        ],
+        "xy": [
+          [
+            1.53,
+            1.0
+          ],
+          [
+            1.53,
+            1.2
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.535,
+            1.215
+          ],
+          [
+            1.535,
+            1.005
+          ]
+        ]
+      },
+      {
+        "name": "assembly_stop",
+        "px": [
+          [
+            309,
+            572
+          ],
+          [
+            430,
+            575
+          ]
+        ],
+        "xy": [
+          [
+            1.79,
+            0.7
+          ],
+          [
+            2.07,
+            0.7
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            1.77,
+            0.69
+          ],
+          [
+            2.05,
+            0.69
+          ]
+        ]
+      },
+      {
+        "name": "mat_stop",
+        "px": [
+          [
+            827,
+            384
+          ],
+          [
+            842,
+            459
+          ]
+        ],
+        "xy": [
+          [
+            2.97,
+            0.94
+          ],
+          [
+            2.97,
+            1.18
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            2.96,
+            1.19
+          ],
+          [
+            2.97,
+            0.985
+          ]
+        ]
+      },
+      {
+        "name": "mat_upper_registration",
+        "px": [
+          [
+            857,
+            394
+          ],
+          [
+            871,
+            395
+          ]
+        ],
+        "xy": [
+          [
+            3.06,
+            1.14
+          ],
+          [
+            3.09,
+            1.14
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            3.06,
+            1.15
+          ],
+          [
+            3.086,
+            1.15
+          ]
+        ]
+      },
+      {
+        "name": "mat_lower_registration",
+        "px": [
+          [
+            874,
+            463
+          ],
+          [
+            885,
+            464
+          ]
+        ],
+        "xy": [
+          [
+            3.06,
+            0.98
+          ],
+          [
+            3.09,
+            0.98
+          ]
+        ],
+        "photo_estimated_xy_before_alignment": [
+          [
+            3.085,
+            0.985
+          ],
+          [
+            3.11,
+            0.985
+          ]
+        ]
+      }
+    ],
+    "width_mm": 20,
+    "position_source": "Photo-derived topology with user-requested alignment of bends, endpoints and stops",
+    "alignment": {
+      "basis": "User requested approximate alignment on 2026-10-12; local straightening of photo-derived floor tape, not surveyed coordinates.",
+      "rules": [
+        "All segments horizontal or vertical; right-angle bends.",
+        "Parking guides retain measured marker-center X=1.74/2.10 m; right parking box centered on P1.",
+        "Right parking box and both material-approach vertical runs share X=2.22 m.",
+        "Material upper/lower routes end at X=3.12 m; stops/tabs paired about MAT marker Y=1.06 m.",
+        "REST white rectangle stays closed; its black stop is inset inside the right border with end gaps. The branch meets the outer white border.",
+        "Assembly black stop centers on the white approach."
+      ],
+      "width_mm": 20,
+      "unchanged": "Table/robot/jig positions, measured ArUco centers, route topology and intentional gaps."
+    }
+  },
+  "aruco": {
+    "dictionary": "DICT_4X4_50",
+    "marker_side_mm": 30,
+    "center_pitch_mm": 40,
+    "paper_size_mm": 90,
+    "boards": [
+      {
+        "name": "MAT",
+        "label": "자재창고",
+        "ids": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "center": [
+          3.1485,
+          1.06,
+          0.115
+        ],
+        "yaw": -90,
+        "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+        "distance_from_face_left_mm": 300,
+        "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+      },
+      {
+        "name": "ASM",
+        "label": "조립대",
+        "ids": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "center": [
+          1.895,
+          0.5158,
+          0.115
+        ],
+        "yaw": 180,
+        "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+        "distance_from_face_left_mm": 205,
+        "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+      },
+      {
+        "name": "P2",
+        "label": "M2 주차",
+        "ids": [
+          8,
+          9,
+          10,
+          11
+        ],
+        "center": [
+          1.74,
+          1.798,
+          0.1105
+        ],
+        "yaw": 0,
+        "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+        "distance_from_right_corner_mm": 1860,
+        "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+      },
+      {
+        "name": "P1",
+        "label": "M1 주차",
+        "ids": [
+          4,
+          5,
+          6,
+          7
+        ],
+        "center": [
+          2.1,
+          1.798,
+          0.1105
+        ],
+        "yaw": 0,
+        "evidence": "Measured horizontal offset; height estimated from photographs; ID group retained from team documentation",
+        "distance_from_right_corner_mm": 1500,
+        "horizontal_position_source": "User measured 2026-10-12; refers to center of four-marker group"
+      }
+    ],
+    "rest_has_marker": false,
+    "sources": [
+      {
+        "title": "ArUco 마커 + IR 센서를 활용한 정밀 도킹",
+        "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/18776065/ArUco+IR",
+        "used": "DICT_4X4_50; 30 mm marker, 40 mm center pitch, 90 mm board; IDs 0,1 / 2,3"
+      },
+      {
+        "title": "AMR(버거1·2) 진행 정리 및 1차 목표 기준 완료 사항",
+        "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/30900268/AMR+1+2+1",
+        "used": "MAT/ASM IDs 0–3; M1 PARK 4–7; M2 PARK 8–11; REST has no ArUco"
+      },
+      {
+        "title": "9.30 Solo Waypoint + Docking 주행 테스트",
+        "url": "https://rorobot.atlassian.net/wiki/spaces/robot3/pages/24346649/9.30+Solo+Waypoint+Docking",
+        "used": "Independent confirmation of normal and parking ID groups; Nav2 coordinates not imported without a frame transform"
+      }
+    ],
+    "pose_verified_for_navigation": false
+  },
+  "route_source": "Photo floor tracing with local manual alignment; not surveyed coordinates",
+  "illustrative_tape_polylines_m": [
+    [
+      [
+        1.74,
+        1.5
+      ],
+      [
+        1.74,
+        0.85
+      ]
+    ],
+    [
+      [
+        2.1,
+        1.5
+      ],
+      [
+        2.1,
+        1.1
+      ],
+      [
+        1.56,
+        1.1
+      ]
+    ],
+    [
+      [
+        1.98,
+        1.5
+      ],
+      [
+        1.98,
+        1.66
+      ],
+      [
+        2.22,
+        1.66
+      ],
+      [
+        2.22,
+        1.5
+      ]
+    ],
+    [
+      [
+        2.22,
+        1.66
+      ],
+      [
+        2.22,
+        1.18
+      ],
+      [
+        3.12,
+        1.18
+      ]
+    ],
+    [
+      [
+        2.22,
+        0.52
+      ],
+      [
+        2.22,
+        0.94
+      ],
+      [
+        3.12,
+        0.94
+      ]
+    ],
+    [
+      [
+        1.93,
+        1.1
+      ],
+      [
+        1.93,
+        0.7
+      ]
+    ],
+    [
+      [
+        1.4,
+        1.22
+      ],
+      [
+        1.56,
+        1.22
+      ],
+      [
+        1.56,
+        0.98
+      ],
+      [
+        1.4,
+        0.98
+      ],
+      [
+        1.4,
+        1.22
+      ]
+    ],
+    [
+      [
+        2.97,
+        1.14
+      ],
+      [
+        3.12,
+        1.14
+      ]
+    ],
+    [
+      [
+        2.97,
+        0.98
+      ],
+      [
+        3.12,
+        0.98
+      ]
+    ]
+  ],
+  "waiting_robot_centers_mm": [
+    [
+      1740,
+      1600
+    ],
+    [
+      2100,
+      1600
+    ]
+  ],
+  "parking_robots": [
+    {
+      "name": "P2",
+      "robot": "M2",
+      "ids": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "center": [
+        1.74,
+        1.6
+      ]
+    },
+    {
+      "name": "P1",
+      "robot": "M1",
+      "ids": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "center": [
+        2.1,
+        1.6
+      ]
+    }
+  ],
+  "appearance": {
+    "reference": "User photographs 1000015414–5419 for colors and 1000015420 for ceiling panels; not a calibrated photometric reconstruction",
+    "user_finish_confirmation": "Matte parts and ARM1 lightened to match photos. User clarified many evenly distributed ceiling panels and very faint shadows, not only three lights. Continuous room floor and all four map walls retained. 2026-10-12.",
+    "surfaces": {
+      "robot_and_camera_mount_plastic": {
+        "color_srgb": [
+          0.18,
+          0.2,
+          0.215
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "arm1_gray_filament": {
+        "color_srgb": [
+          0.68,
+          0.7,
+          0.71
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "workcell_white_board": {
+        "color_srgb": [
+          0.88,
+          0.885,
+          0.875
+        ],
+        "roughness": 0.97,
+        "metallic": 0,
+        "specular": 0.02
+      },
+      "workcell_white_pla": {
+        "color_srgb": [
+          0.91,
+          0.915,
+          0.9
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "gripper_rubber": {
+        "color_srgb": [
+          0.025,
+          0.025,
+          0.025
+        ],
+        "roughness": 0.9,
+        "metallic": 0,
+        "specular": 0.05
+      },
+      "photo_servo": {
+        "color_srgb": [
+          0.095,
+          0.105,
+          0.115
+        ],
+        "roughness": 0.9,
+        "metallic": 0,
+        "specular": 0.04
+      },
+      "photo_blue_tpu": {
+        "color_srgb": [
+          0.1,
+          0.57,
+          0.84
+        ],
+        "roughness": 0.95,
+        "metallic": 0,
+        "specular": 0.03,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "photo_purple_pla": {
+        "color_srgb": [
+          0.58,
+          0.4,
+          0.76
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "photo_orange_pla": {
+        "color_srgb": [
+          1.0,
+          0.52,
+          0.075
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "normal_texture": "textures/filament-normal.png",
+        "normal_strength": 0.055,
+        "layer_appearance": "fine printed plastic"
+      },
+      "photo_green_ball": {
+        "color_srgb": [
+          0.28,
+          0.34,
+          0.15
+        ],
+        "roughness": 0.9,
+        "metallic": 0,
+        "specular": 0.04
+      },
+      "photo_d435_aluminum": {
+        "color_srgb": [
+          0.68,
+          0.7,
+          0.7
+        ],
+        "roughness": 0.58,
+        "metallic": 0.65,
+        "specular": 0.3
+      },
+      "workcell_silver_metal": {
+        "color_srgb": [
+          0.64,
+          0.67,
+          0.69
+        ],
+        "roughness": 0.42,
+        "metallic": 0.8,
+        "specular": 0.4
+      },
+      "workcell_stone": {
+        "color_srgb": [
+          0.72,
+          0.72,
+          0.72
+        ],
+        "roughness": 0.42,
+        "metallic": 0,
+        "specular": 0.48,
+        "texture": "/path/to/Final_Arm/SO101_teach/assets/textures/grey-stone-tiles.png",
+        "texture_scale": 2,
+        "source": "Existing real-stone reference texture; visible broad sheen without mirror reflection. Updated 2026-10-12."
+      },
+      "burger_frame_plastic": {
+        "color_srgb": [
+          0.18,
+          0.2,
+          0.215
+        ],
+        "roughness": 0.94,
+        "metallic": 0,
+        "specular": 0.035,
+        "shininess": 0.027,
+        "source": "https://www.robotis.com/shop/item.php?it_id=901-0118-201",
+        "basis": "User selected ARM2/3 frame color, with separate dark rubber, green PCB and metallic supports; manufacturer photographs are the component reference, not measured material values."
+      },
+      "burger_tire_rubber": {
+        "color_srgb": [
+          0.055,
+          0.06,
+          0.065
+        ],
+        "roughness": 0.96,
+        "metallic": 0,
+        "specular": 0.025,
+        "shininess": 0.03,
+        "source": "https://www.robotis.com/shop/item.php?it_id=901-0118-201",
+        "basis": "User selected ARM2/3 frame color, with separate dark rubber, green PCB and metallic supports; manufacturer photographs are the component reference, not measured material values."
+      },
+      "burger_sensor_plastic": {
+        "color_srgb": [
+          0.12,
+          0.13,
+          0.14
+        ],
+        "roughness": 0.7,
+        "metallic": 0,
+        "specular": 0.12,
+        "shininess": 0.12,
+        "source": "https://www.robotis.com/shop/item.php?it_id=901-0118-201",
+        "basis": "User selected ARM2/3 frame color, with separate dark rubber, green PCB and metallic supports; manufacturer photographs are the component reference, not measured material values."
+      },
+      "burger_pcb_green": {
+        "color_srgb": [
+          0.12,
+          0.18,
+          0.145
+        ],
+        "roughness": 0.8,
+        "metallic": 0,
+        "specular": 0.06,
+        "shininess": 0.08,
+        "source": "https://www.robotis.com/shop/item.php?it_id=901-0118-201",
+        "basis": "User selected ARM2/3 frame color, with separate dark rubber, green PCB and metallic supports; manufacturer photographs are the component reference, not measured material values."
+      }
+    },
+    "lighting": {
+      "type": "evenly distributed rectangular diffuse ceiling panel grid",
+      "color_temperature_k": 5000,
+      "ceiling_height_m": 2.4,
+      "measured": false,
+      "reference_photo": "1000015420.jpg",
+      "panels": [
+        {
+          "name": "Ceiling_0_0",
+          "center_m": [
+            -0.9,
+            -1.3,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_0_1",
+          "center_m": [
+            0.9,
+            -1.3,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_0_2",
+          "center_m": [
+            2.7,
+            -1.3,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_0_3",
+          "center_m": [
+            4.5,
+            -1.3,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_1_0",
+          "center_m": [
+            -0.9,
+            0.9,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_1_1",
+          "center_m": [
+            0.9,
+            0.9,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_1_2",
+          "center_m": [
+            2.7,
+            0.9,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_1_3",
+          "center_m": [
+            4.5,
+            0.9,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_2_0",
+          "center_m": [
+            -0.9,
+            3.1,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_2_1",
+          "center_m": [
+            0.9,
+            3.1,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_2_2",
+          "center_m": [
+            2.7,
+            3.1,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        },
+        {
+          "name": "Ceiling_2_3",
+          "center_m": [
+            4.5,
+            3.1,
+            2.4
+          ],
+          "size_xy_m": [
+            0.3,
+            1.2
+          ]
+        }
+      ],
+      "actual_fixture_count": null,
+      "mujoco_proxy_lights": 6,
+      "headlight_ambient": 0.48,
+      "headlight_diffuse": 0.04,
+      "per_light_ambient": 0,
+      "isaac_panel_intensity": 900.0,
+      "isaac_room_bounce_intensity": 500.0,
+      "geometry_basis": "Panel shape and even distribution follow the photograph and user clarification. The 4x3 grid, sizes, spacing and height are illustrative, not measured.",
+      "reason": "Strong distributed fill and a weak shadow component produce only faint shadows while retaining white surface detail."
+    },
+    "fasteners": [
+      {
+        "name": "photo_d435_rear_screw_0",
+        "basis": "Original downloaded tilting-mount rear holes",
+        "nominal": "M3",
+        "axis_local": "Z"
+      },
+      {
+        "name": "photo_d435_rear_screw_1",
+        "basis": "Original downloaded tilting-mount rear holes",
+        "nominal": "M3",
+        "axis_local": "Z"
+      },
+      {
+        "name": "photo_d435_hinge_bolt",
+        "basis": "Coincident 4.4/4.5 mm hinge holes in downloaded parts",
+        "nominal": "M4 with washer and hex nut",
+        "axis_local": "Y"
+      },
+      {
+        "name": "photo_assembly_pcb_screw_0",
+        "basis": "27 mm corner pitch from the existing camera-mount CAD",
+        "nominal": "M2"
+      },
+      {
+        "name": "photo_assembly_pcb_screw_1",
+        "basis": "27 mm corner pitch from the existing camera-mount CAD",
+        "nominal": "M2"
+      },
+      {
+        "name": "photo_assembly_pcb_screw_2",
+        "basis": "27 mm corner pitch from the existing camera-mount CAD",
+        "nominal": "M2"
+      },
+      {
+        "name": "photo_assembly_pcb_screw_3",
+        "basis": "27 mm corner pitch from the existing camera-mount CAD",
+        "nominal": "M2"
+      }
+    ],
+    "retained_fastener_heads": 41,
+    "scope": "Only supported mounting axes are populated. Intentional carrier openings, gripper clearance and unused mounting slots remain open."
+  }
+}

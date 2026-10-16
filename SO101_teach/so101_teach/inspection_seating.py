@@ -31,13 +31,16 @@ def apply_quality(row,anchor,seating=None):
     if anchor.get('part')=='finished' and state in ('housing_seated','insert_added'):
         row.update(quality='abnormal',label='미완성 · '+row['label'],reason='상단 결합 필요'+(' · ROI 경계 걸침' if seating=='boundary' else '')+' · '+row['reason']);return row
     if seating=='boundary':row.update(quality='abnormal',label='부정확한 안착',reason='부품이 ROI 경계에 걸침 · '+row['reason']);return row
-    if state=='unknown':row['quality']='abnormal' if row.get('score') is not None else 'waiting';return row
+    # A similarity score without enough separation from the competing state
+    # is inconclusive evidence, not an observed seating defect. Confirmed ROI
+    # violations above still remain abnormal/outside.
+    if state=='unknown':row['quality']='waiting';return row
     if state=='empty':row.update(quality='abnormal',label='부품 없음');return row
     expected=anchor.get('expected_product')
     if expected in ('A','B'):
         row['expected_product']=expected
         if not row.get('product_certain'):
-            row.update(quality='abnormal',label='제품 구분 미확인',reason=f'{expected}용 팔레트 · A/B 구분 근거 부족 · '+row['reason']);return row
+            row.update(quality='waiting',label='제품 구분 미확인',reason=f'{expected}용 팔레트 · A/B 구분 근거 부족 · '+row['reason']);return row
         if row.get('product')!=expected:
             row.update(quality='abnormal',label='다른 제품 · '+row['label'],reason=f'{expected}용 팔레트에 {row.get("product")} 제품 감지 · '+row['reason']);return row
     if row.get('missing_visible_parts'):

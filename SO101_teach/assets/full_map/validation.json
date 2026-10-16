@@ -1,0 +1,163 @@
+{
+  "passed": true,
+  "table_and_jig_dimension_checks": true,
+  "table_wall_contact": true,
+  "arm1_edge_gap_mm": 80,
+  "mast_edge_gap_mm": 30,
+  "storage_fixture_count": 12,
+  "storage_product_count": 12,
+  "static_scene_no_actuators": true,
+  "physics_steps_executed": 0,
+  "geoms": 826,
+  "arm1_wrist_camera": {
+    "wrist_xlerobot_mount": {
+      "parent": "arm1_gripper_link",
+      "source_bounds_error_mm": 1.2683695480575352e-06
+    },
+    "wrist_32x32_camera": {
+      "parent": "arm1_gripper_link",
+      "source_bounds_error_mm": 7.128246473087074e-07
+    }
+  },
+  "floor_tape": {
+    "white_polylines": 9,
+    "black_polylines": 6,
+    "within_map": true,
+    "all_segments_axis_aligned": true,
+    "paired_endpoints_and_stop_centers_aligned": true
+  },
+  "rest_stop_inside_closed_white_box": true,
+  "aruco_boards": {
+    "MAT": {
+      "ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "paper_mm": 90,
+      "position": [
+        3.1485,
+        1.06,
+        0.115
+      ]
+    },
+    "ASM": {
+      "ids": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "paper_mm": 90,
+      "position": [
+        1.895,
+        0.5158,
+        0.115
+      ]
+    },
+    "P2": {
+      "ids": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "paper_mm": 90,
+      "position": [
+        1.74,
+        1.798,
+        0.1105
+      ]
+    },
+    "P1": {
+      "ids": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "paper_mm": 90,
+      "position": [
+        2.1,
+        1.798,
+        0.1105
+      ]
+    }
+  },
+  "rest_has_no_aruco": true,
+  "user_measured_marker_centers_verified": true,
+  "arm1_gray_same_plastic_properties": true,
+  "storage_d435": {
+    "downloaded_dimensions_preserved": true,
+    "tilt_pivot_coincident": true,
+    "camera_rear_seated_on_tilting_plate": true,
+    "stock_top_reversed": true,
+    "optical_axis_from_down_deg": 20.000000000000032,
+    "optical_axis_world": [
+      -1.1102230246251565e-16,
+      -0.3420201433256686,
+      -0.9396926207859082
+    ],
+    "angle_is_photo_estimate": true
+  },
+  "storage_previous_fixtures": {
+    "b_cap": {
+      "instances": [
+        "B_cap_fixture_0",
+        "B_cap_fixture_1"
+      ],
+      "height_mm": 26.5,
+      "matches_previous_source_sha256": "866f9a7f6a2eeaf4ab3ae007a3680a9eae806afaf97e33146334b19255194f5f"
+    },
+    "b_housing": {
+      "instances": [
+        "B_housing_fixture_0",
+        "A_housing_fixture_1"
+      ],
+      "height_mm": 8.5,
+      "matches_previous_source_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341"
+    },
+    "a_housing": {
+      "instances": [
+        "B_housing_fixture_1",
+        "A_housing_fixture_0"
+      ],
+      "height_mm": 8.5,
+      "matches_previous_source_sha256": "09a9b5487c0cef3282760a47781811e222c72fdbd156ef840bc0345333723f2d"
+    }
+  },
+  "storage_mixed_lower_fixture_positions": {
+    "A_upper": "b_housing",
+    "A_lower": "a_housing",
+    "B_left": "b_housing",
+    "B_right": "a_housing"
+  },
+  "storage_orientation": {
+    "photo": "1000015414.jpg + user clipboard photo",
+    "whole_map": {
+      "assembly": "bottom center",
+      "storage": "right middle",
+      "waiting_robots": "top wall"
+    },
+    "datum_O_world_mm": [
+      3600,
+      0,
+      0
+    ],
+    "assembly_distance_from_O_mm": 1500,
+    "storage_distance_from_O_mm": 910,
+    "mast": "front-view left / map upper side",
+    "arm1": "front-view right / map lower side",
+    "A": "front / map left",
+    "B": "rear / map right",
+    "photo_or_mesh_mirrored": false,
+    "jig_offsets_from_corrected_Q_verified": true
+  },
+  "live_calibration_and_teaching_changed": false,
+  "sources_sha256": {
+    "data/workcell-preview.json": "3b3ececec6d154144eb732c7ff4c227d93c4bc4bf5fcc1dde94ff7d1637f39b6",
+    "assets/so101/inspection_scene.xml": "576bbdef0d720cbf0e7d635a4b6a972d4987d7cd1b2fbac0dc357cb787178971",
+    "assets/carrier_assembly/assembly.json": "78ed8c533ab02efd4a649e02e4e70fdec892c8679d7e533a763fbd21d18327aa"
+  }
+}

@@ -26,7 +26,7 @@ class LinearCommandMemoryTests(unittest.TestCase):
         self.clock=100.;self.timer=patch.object(self.m.time,'monotonic',side_effect=lambda:self.clock);self.timer.start();self.addCleanup(self.timer.stop)
         self.gpio=gpio
     def test_restore_publishes_history_without_starting_motor(self):
-        self.m.store_command(self.path,2000);node=self.m.LinearController();node._publish_state()
+        self.m.store_command(self.path,2000);self.assertEqual(json.loads(self.path.read_text())['target_label'],'조립 위치');node=self.m.LinearController();node._publish_state()
         self.gpio.tx_servo.assert_not_called();self.assertEqual(node.publisher.publish.call_args.args[0].data,2000);self.assertIsNone(node._stop_at)
     def test_idle_close_never_sends_redundant_zero_pwm(self):
         self.m.store_command(self.path,1015)
@@ -62,7 +62,7 @@ class LinearCommandMemoryTests(unittest.TestCase):
         with patch.object(self.m,'store_command',side_effect=PermissionError('read only')):node._command(Message(100.))
         self.gpio.tx_servo.assert_not_called();self.assertEqual(node._position,-1)
     def test_failed_pwm_preserves_previous_accepted_command(self):
-        self.m.store_command(self.path,2000);node=self.m.LinearController();self.gpio.tx_servo.return_value=-1
+        self.m.store_command(self.path,2000);self.assertEqual(json.loads(self.path.read_text())['target_label'],'조립 위치');node=self.m.LinearController();self.gpio.tx_servo.return_value=-1
         node._command(Message(1.5));self.assertEqual(node._position,2000);self.assertEqual(self.m.load_last_command(self.path),2000)
         self.gpio.tx_servo.side_effect=RuntimeError('GPIO failed');node._command(Message(1.5));self.assertEqual(self.m.load_last_command(self.path),2000)
     def test_interrupted_pending_record_is_not_restored_as_accepted(self):

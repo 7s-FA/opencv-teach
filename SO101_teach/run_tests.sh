@@ -18,5 +18,11 @@ cleanup() {
 trap cleanup EXIT
 cd "$SO101_TEST_ROOT"
 unset PYTHONPATH PYTHONHOME
-if [[ $# -eq 0 ]]; then set -- discover -s tests -t .; fi
-"${SO101_TEACH_PYTHON:-python3}" tools/test_runner.py "$@" -v
+# Render offscreen without hidden GLFW windows; allow an explicit backend override.
+export MUJOCO_GL="${MUJOCO_GL:-egl}"
+"${SO101_TEACH_PYTHON:-python3}" tools/pi_runtime.py local
+if [[ $# -eq 0 ]]; then
+  "${SO101_TEACH_PYTHON:-python3}" tools/test_suite.py
+else
+  "${SO101_TEACH_PYTHON:-python3}" tools/test_runner.py "$@" -v
+fi

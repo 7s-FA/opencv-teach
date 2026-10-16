@@ -4,10 +4,17 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from .arm_workspace import ARM_NAMES,arm_id,calibration_pending,scene_placement
-from .domain import read_json
+from .domain import read_json,JOINTS,Calibration,ModelReference
+from pathlib import Path
+import json
+from .joint_alignment import CONFIG_DIR,CONFIG_NAMES,reference_basis,load_alignment
 
 
 class ArmSelectionControls:
+    @property
+    def preview_reference(self):
+        return preview_reference(self)
+
     def build_arm_selector(self,header):
         self.arm_switch_job=None;self.arm_choice=tk.StringVar()
         self.arm_selector=ttk.Combobox(header,textvariable=self.arm_choice,state='readonly',width=19)
@@ -97,3 +104,46 @@ class ArmSelectionControls:
             else:self.workcell_preview['base_xyz_mm'][2]=z
         if self.workcell_preview and other_profile.get('tcp'):self.workcell_preview['other_arm_tcp']=deepcopy(other_profile['tcp'])
         self.refresh_arm_selector()
+
+
+def load_preview_mapping(profile,reference,config_dir=CONFIG_DIR):
+    try:return load_alignment(profile,reference,config_dir), '시뮬 각도 보정 적용 · 실행은 기존 식'
+    except (OSError,ValueError,KeyError,TypeError) as exc:
+        return reference,'시뮬 각도 보정 미적용: '+str(exc)
+
+
+def preview_reference(app):
+    # Calibration/profile edits invalidate the cache; live samples never do.
+    key=(id(app.reference),app.profile.get('robot_id','arm2'),json.dumps(reference_basis(app.reference),sort_keys=True))
+    if key!=getattr(app,'_preview_reference_key',None):
+        app._preview_reference,app.preview_alignment_status=load_preview_mapping(app.profile,app.reference)
+        app._preview_reference_key=key
+    return app._preview_reference
+
+
+def standalone_placement(app,placement):
+    """Convert cached poses only at rendering, leaving saved profiles untouched."""
+    if not placement:return placement
+    other='arm2' if app.profile.get('robot_id','arm2')=='arm3' else 'arm3'
+    library=app.settings.library.items
+    profile=next((p for p in library.values() if p.get('robot_id','arm2')==other),None)
+    if not profile:return placement
+    key=json.dumps(profile,sort_keys=True)
+    if key!=getattr(app,'_other_preview_key',None):
+        try:
+            cal=Calibration(app.data_dir/profile['calibration_file'])
+            ref=ModelReference(cal,profile['model_reference'])
+            app._other_preview_mapping=load_preview_mapping(profile,ref)[0]
+        except (OSError,ValueError,KeyError):app._other_preview_mapping=None
+        app._other_preview_key=key
+    mapping=app._other_preview_mapping
+    if mapping is not None and hasattr(mapping,'align_angles'):
+        placement=deepcopy(placement)
+        angles=placement.get('other_arm_joint_angles_rad',placement['joint_angles_rad'])
+        placement['other_arm_joint_angles_rad']=list(mapping.align_angles(angles))
+    return placement
+
+
+def alignment_module():
+    from . import joint_alignment
+    return joint_alignment

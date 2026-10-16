@@ -10,7 +10,9 @@ class UITests(unittest.TestCase):
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.data=Path(self.temp.name)
         shutil.copy2(DATA/'profile.json',self.data/'profile.json');shutil.copytree(DATA/'calibration',self.data/'calibration')
-        self.root=tk.Tk();self.app=App(self.root,self.data,render=False,auto_camera=False);self.root.geometry('1280x800');self.root.update()
+        self.root=tk.Tk();self.app=App(self.root,self.data,render=False,auto_camera=False);self.root.geometry('1920x1043');self.root.update()
+        # Historical fixture geometry stays fixed; current trial UI has its own tests.
+        self.app.kin.reference=self.app.reference;self.app.kin.alignment_error=None
     def tearDown(self):
         from types import SimpleNamespace
         for device in (self.app.camera,self.app.session,self.app.leader_session,self.app.settings.worker):
@@ -225,11 +227,11 @@ class UITests(unittest.TestCase):
 
 
 
-    def test_jig_follow_states_fit_joint_container_and_actions_at_minimum_window(self):
+    def test_jig_follow_states_fit_joint_container_and_actions_when_maximized(self):
         from so101_teach.domain import LABELS
         a=self.app
         for n,label in zip(JOINTS,LABELS):a.current_vars[n].set(f'{label} · 현재 4095')
-        for width,height in ((1180,760),(1280,800),(1480,920)):
+        for width,height in ((1920,1043),(1920,1080)):
             self.root.geometry(f'{width}x{height}')
             for state in ('off','new','saved'):
                 with self.subTest(size=(width,height),state=state):

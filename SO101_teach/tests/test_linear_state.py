@@ -12,17 +12,18 @@ class LinearStateTests(unittest.TestCase):
     def setUp(self):
         self.placement={'linear_stage':{'stroke_mm':100.,'carriage_home_x_mm':-45.65,
                          'endpoint_reference':{'forward':{'commanded_mm':100.},'retracted':{'commanded_mm':1.5}}}}
-        self.connection={'host':'192.0.2.10','user':'ubuntu','port':22,'identity_file':'',
+        self.connection={'host':'10.10.142.113','user':'ubuntu','port':22,'identity_file':'',
                          'app_dir':'/home/ubuntu/OpenCV_teach','python':'python3'}
         self.source={'environment_script':'/home/ubuntu/project/arm3_ros_env.bash'}
 
     def test_direction_shortcuts_use_100_and_1_point_5_mm_as_targets_not_feedback(self):
         before=deepcopy(self.placement)
-        for pulse,mm,label in ((2000,100.,'전진'),(1015,1.5,'후진'),(1500,50.,'50mm')):
+        for pulse,mm,label in ((2000,100.,'조립 위치'),(1015,1.5,'하차 위치'),(1500,50.,'50mm')):
             state=decode_state(pulse);value=apply_state(self.placement,state)
             self.assertEqual(value['linear_stage']['stroke_mm'],mm)
             self.assertFalse(value['linear_stage']['startup_state']['measured'])
-            self.assertIn(label,state_label(value));self.assertIn('위치 미측정',state_label(value))
+            expected=f'{label} {mm:g} mm' if label in ('조립 위치','하차 위치') else f'{mm:g} mm'
+            self.assertEqual(state_label(value),'리니어 : '+expected)
         self.assertEqual(self.placement,before)
 
     def test_unknown_and_timeout_keep_reference_explicitly_unverified(self):

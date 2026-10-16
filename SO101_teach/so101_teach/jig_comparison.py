@@ -52,7 +52,8 @@ class JigComparisonPanel(ttk.Frame):
         self.columnconfigure(0,weight=1);self.groups=[]
         self.collapsed=bool(collapsed);self.on_toggle=on_toggle or (lambda collapsed:None)
         self.caption=tk.StringVar(value='지그 이동 비교 · 실행 전')
-        ttk.Label(self,textvariable=self.caption,style='Small.TLabel',width=1).grid(row=0,column=0,sticky='ew')
+        from .ui_status import StatusText
+        StatusText(self,self.caption,height=2).grid(row=0,column=0,sticky='ew')
         self.view=tk.StringVar(value='감지값 비교')
         self.view_choice=ttk.Combobox(self,textvariable=self.view,values=['감지값 비교','최근 실행'],state='readonly',width=9)
         self.view_choice.grid(row=0,column=1,sticky='e',padx=(5,0))
@@ -83,15 +84,18 @@ class JigComparisonPanel(ttk.Frame):
 
     def show(self,groups,caption,*,live=False):
         title='확정 위치' if live else '실행 측정'
-        if groups==self.groups and self.caption.get()=='지그 이동 비교 · '+caption and self.table.heading('measured','text')==title:return
-        old=self.choice.current();self.groups=deepcopy(groups);self.caption.set('지그 이동 비교 · '+caption)
-        self.table.heading('measured',text=title)
-        self.choice.configure(values=[g['jig_name']+f" · {g['reference']['symmetry_deg']}° 대칭 · "+', '.join(s['name'] for s in g['steps']) for g in groups])
-        if groups:self.grid();self.choice.current(min(max(old,0),len(groups)-1));self.draw()
+        text='지그 이동 비교 · '+caption
+        if self.caption.get()!=text:self.caption.set(text)
+        if self.table.heading('measured','text')!=title:self.table.heading('measured',text=title)
+        if groups==self.groups:return
+        old=self.choice.current();had_groups=bool(self.groups);self.groups=deepcopy(groups)
+        labels=[g['jig_name']+f" · {g['reference']['symmetry_deg']}° 대칭 · "+', '.join(s['name'] for s in g['steps']) for g in groups]
+        if tuple(self.choice.cget('values'))!=tuple(labels):self.choice.configure(values=labels)
+        if groups:self.choice.current(min(max(old,0),len(groups)-1));self.draw()
         else:
             self.choice.set('')
             for row in self.table.get_children():self.table.delete(row)
-        self.grid();self.update_visibility()
+        if had_groups!=bool(groups):self.update_visibility()
 
     def select_step(self,step_id):
         for i,g in enumerate(self.groups):
@@ -109,5 +113,6 @@ class JigComparisonPanel(ttk.Frame):
             measured=f"{measured_pose[axis]:.1f}" if measured_pose else '—'
             delta=f"{difference[axis]:+.1f}" if difference is not None else '—'
             values=(f'{name} ({unit})',f"{reference[axis]:.1f}",measured,delta)
-            if self.table.exists(str(axis)):self.table.item(str(axis),values=values)
+            if self.table.exists(str(axis)):
+                if self.table.item(str(axis),'values')!=values:self.table.item(str(axis),values=values)
             else:self.table.insert('','end',iid=str(axis),values=values)

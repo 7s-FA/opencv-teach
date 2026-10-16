@@ -28,7 +28,7 @@
       9.4
     ]
   ],
-  "fixture_source": "assets/carrier_assembly/source/current/b_housing_jig.stl",
+  "fixture_source": "assets/linear_stage/assembly_fixture.stl",
   "fixture_sha256": "9b82afd407ac857653f7e00ca23ba96059648c1abba3ff152998c87cd3a39341",
   "ear_rotation_from_print_deg": [
     -90,

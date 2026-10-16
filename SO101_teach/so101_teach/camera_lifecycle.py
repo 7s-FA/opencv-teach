@@ -40,9 +40,13 @@ class CameraLifecycle:
             except OSError:pass
         return message
 
+    def camera_history_visible(self):
+        panel=getattr(self,'camera_errors',None)
+        return panel is not None and self.camera_tabs.select()==str(panel)
+
     def camera_needed(self):
         return bool(getattr(getattr(self,'inspection_run',None),'busy',False) or self.pending_execution or self.camera_task or
-                    getattr(self,'workspace_visible',True) and self.page=='camera' and (self.camera_auto_view or self.camera_view_requested) and not self.camera_manual_off)
+                    getattr(self,'workspace_visible',True) and self.page=='camera' and not self.camera_history_visible() and (self.camera_auto_view or self.camera_view_requested) and not self.camera_manual_off)
 
     def update_camera_mode(self):
         camera=self.camera
@@ -58,7 +62,7 @@ class CameraLifecycle:
     def camera_page_changed(self,previous):
         if self.page=='camera' and previous!='camera':
             self.camera_manual_off=False
-            if self.camera_auto_view and self.profile.get('mode')!='demo':
+            if not self.camera_history_visible() and self.camera_auto_view and (getattr(self,'demo_mode',False) or self.profile.get('mode')!='demo'):
                 if not self.remote_mode or self.remote and not self.remote.error:self.guard(self.start_camera)
         elif previous=='camera' and self.page!='camera':
             self.camera_view_requested=False
@@ -142,17 +146,18 @@ class CameraLifecycle:
             accepted[key]=deepcopy(result)
         return accepted
 
-    def request_jig_read(self,*,keys=None,pause_all=False):
+    def request_jig_read(self,*,keys=None,pause_all=False,pause_after_read=False,pause_episode=False,pause_adopted=None):
         if self.pending_execution or self.camera_task:raise ValueError('카메라 측정이 진행 중입니다.')
         if self.page=='teach' and self.teaching_jig_id()!=self.active_jig:self.select_camera_jig(self.teaching_jig_id())
         keys=list(keys) if keys is not None else [self.active_jig]
         if not keys or any(key not in self.catalog.items for key in keys):raise ValueError('측정할 지그를 확인하세요.')
         started=time.monotonic();self.refresh_jig_reference()
-        self.camera_task={'kind':'jig','jig':keys[0],'jigs':keys,'pause_all':pause_all,'started':started,'budget_started':time.monotonic(),'page':self.page}
+        self.camera_task={'kind':'jig','jig':keys[0],'jigs':keys,'pause_all':pause_all,'pause_after_read':pause_after_read,'pause_episode':pause_episode,'started':started,'budget_started':time.monotonic(),'page':self.page}
+        if pause_all or pause_after_read:self.camera_task['pause_adopted']=deepcopy(pause_adopted or {})
         try:self.start_camera();self.show_page('camera')
         except Exception:
             self.camera_task=None;self.suspend_camera()
-            if pause_all:self.jig_updates_paused=False;self.teaching_jig_results.clear()
+            if pause_all or pause_after_read:self.jig_updates_paused=False;self.teaching_jig_results.clear()
             raise
         self.notice('지그 다시 읽기 · 측정 후 이전 화면으로 돌아갑니다.')
 
@@ -250,8 +255,14 @@ class CameraLifecycle:
             preview=getattr(self.camera,'preview_frame',None)
             if preview:obs=(preview[0],None,preview[1])
         pause_results=None
-        if task['kind']=='jig' and self.jig_updates_paused and not self.camera_sleeping:
+        if task['kind']=='jig' and (self.jig_updates_paused or task.get('pause_all') or task.get('pause_after_read')) and not self.camera_sleeping:
             pause_results=self.teaching_pause_results(now,since=task['started'])
+            if task.get('pause_all') or task.get('pause_after_read'):
+                # Required jigs decide when to stop. Every valid adoption is
+                # retained from the pause request onward, including other jigs.
+                retained=task.setdefault('pause_adopted',{})
+                retained.update({key:deepcopy(value) for key,value in pause_results.items() if self.measurement_within_attempts(value)})
+                pause_results=retained
             ready=all(pause_results.get(key,{}).get('selected') and self.measurement_within_attempts(pause_results[key]) for key in keys)
         elif obs and not self.camera_sleeping and 0<=now-obs[2]<(1. if task['kind']=='photo' else MEASUREMENT_MAX_AGE_SECONDS) and obs[2]>=task['started']:
             if task['kind']=='photo':ready=True
@@ -260,25 +271,30 @@ class CameraLifecycle:
                 ready=all(self.measurement_within_attempts(results.get(key,{})) and results.get(key,{}).get('selected') and results[key].get('pose_measured_at') is not None and results[key]['pose_measured_at']>=task['started'] for key in keys)
         error=self.camera.error if self.camera else None
         if error or getattr(self.camera,'recovering',False):ready=False
-        failure=None if ready else self.measurement_failure(task,now,keys) if task['kind']!='photo' else ('사진 수신 시간 초과' if now-task['started']>=10 else None)
+        missing=[key for key in keys if key not in task.get('pause_adopted',{})]
+        failure=None if ready else self.measurement_failure(task,now,missing) if task['kind']!='photo' else ('사진 수신 시간 초과' if now-task['started']>=10 else None)
         if not ready and not error and not failure:return
         self.camera_task=None
         try:
             if not ready:raise ValueError(error or failure)
             if task['kind']=='photo':task['done'](obs[0].copy())
             else:
+                if task.get('pause_all') or task.get('pause_after_read'):
+                    self.teaching_jig_results.clear();self.jig_updates_paused=True
                 if self.jig_updates_paused:
                     results=pause_results if pause_results is not None else obs[1].get('by_jig',{self.active_jig:obs[1]})
-                    self.remember_teaching_jigs({key:results.get(key,{}) for key in keys},since=task['started'])
+                    if task.get('pause_all') or task.get('pause_after_read'):self.remember_teaching_jigs(results)
+                    else:self.remember_teaching_jigs({key:results.get(key,{}) for key in keys},since=task['started'])
                     self.notice(f'전체 지그 {len(keys)}개 채택 완료 · 자동 갱신 정지' if task.get('pause_all') else '지그 다시 읽기 완료 · 자동 갱신 정지 상태로 위치를 유지합니다.')
                 else:self.notice('지그 위치 읽기 완료 · 설정한 위치 유지 시간 동안 사용합니다.')
         except Exception as exc:
-            if task.get('pause_all'):
+            if task.get('pause_all') or task.get('pause_after_read'):
                 self.jig_updates_paused=False;self.teaching_jig_results.clear()
-                self.notice(str(exc)+' · 전체 지그 채택 미완료 · 자동 갱신을 계속합니다.',True)
+                self.notice(str(exc)+' · 지그 채택 미완료 · 자동 갱신을 계속합니다.',True)
             else:self.notice(str(exc),True)
         finally:
             self.update_camera_mode()
+            self.update_jig_pause_button();self.update_jig_hint();self.last_render=None
             self.show_page(task['page'])
             if self.page!='camera':self.suspend_camera()
 
@@ -301,8 +317,9 @@ class CameraLifecycle:
                                            'pose_frozen':False,'hold_remaining_s':0.}
 
     def update_jig_pause_button(self):
-        text='전체 지그 채택 중' if (self.camera_task or {}).get('pause_all') else '● 갱신 정지 중 · 재개' if self.jig_updates_paused else '자동 갱신 정지'
-        style='Primary.TButton' if self.jig_updates_paused else 'TButton'
+        task=self.camera_task or {}
+        text='에피소드 지그 채택 중' if task.get('pause_episode') else '전체 지그 채택 중' if task.get('pause_all') else '선택 지그 채택 중' if task.get('pause_after_read') else '● 갱신 정지 중 · 재개' if self.jig_updates_paused else '자동 갱신 정지'
+        style='Shell.Primary.TButton' if self.jig_updates_paused else 'Shell.TButton'
         if self.jig_pause_btn.cget('text')!=text or self.jig_pause_btn.cget('style')!=style:
             self.jig_pause_btn.configure(text=text,style=style)
         self.jig_pause_btn.state(['disabled'] if self.jig_measurement_in_use() else ['!disabled'])
@@ -323,19 +340,23 @@ class CameraLifecycle:
             self.jig_updates_paused=False;self.teaching_jig_results.clear();self.teaching_resume_at=time.monotonic()
             self.notice('지그 자동 갱신 재개 · 카메라 사용 중 새 측정값을 반영합니다.')
         else:
-            results=self.teaching_pause_results();self.teaching_jig_results.clear()
-            self.remember_teaching_jigs(results,since=max(getattr(self,'measurement_valid_after',0.),getattr(self,'teaching_resume_at',0.)))
-            self.jig_updates_paused=True
             key=self.teaching_jig_id() if self.page=='teach' else self.active_jig
-            keys=list(self.catalog.items) if self.page=='camera' else [key]
-            missing=[key for key in keys if key not in self.teaching_jig_results]
+            episode_jigs=list(dict.fromkeys(step['jig_id'] for step in self.episode['steps'] if step.get('jig_id')))
+            episode_scope=bool(self.episode['steps'])
+            all_jigs=not episode_scope and self.page=='camera' and self.camera_all.get()
+            # The viewed step/camera filter does not narrow an existing episode.
+            # A new episode without any jig steps still needs a first teaching basis.
+            keys=episode_jigs if episode_scope else (list(self.catalog.items) if all_jigs else [key])
+            since=max(getattr(self,'measurement_valid_after',0.),getattr(self,'teaching_resume_at',0.))
+            results={name:value for name,value in self.teaching_pause_results(since=since).items()
+                     if self.measurement_within_attempts(value)}
+            self.teaching_jig_results.clear()
+            missing=[name for name in keys if name not in results]
             if missing:
-                if self.page=='camera':
-                    self.request_jig_read(keys=keys,pause_all=True)
-                    names=' / '.join(self.catalog.items[key]['name'] for key in missing)
-                    self.notice('전체 지그 채택 대기 · '+names+' · 모두 확정된 뒤 갱신을 정지합니다.')
-                else:
-                    self.request_jig_read()
-                    self.notice('현재 확정값이 없어 한 번 측정한 뒤 자동 갱신을 정지합니다.')
-            else:self.notice('지그 위치 확정 · 새 스텝은 이 위치를 기준으로 저장합니다. 기존 스텝은 유지됩니다.')
+                self.request_jig_read(keys=keys,pause_all=all_jigs,pause_after_read=True,pause_episode=bool(episode_jigs),pause_adopted=results)
+                names=' / '.join(self.catalog.items[name]['name'] for name in missing)
+                self.notice(('에피소드' if episode_jigs else '전체' if all_jigs else '선택')+' 지그 채택 대기 · '+names+' · 채택 완료 뒤 갱신을 정지합니다.')
+            else:
+                self.remember_teaching_jigs(results,since=since);self.jig_updates_paused=True
+                self.notice('지그 채택 완료 · 새 스텝은 이 위치를 기준으로 저장합니다. 기존 스텝은 유지됩니다.' if keys else '지그를 사용하지 않는 에피소드 · 자동 갱신 정지')
         self.update_camera_mode();self.update_jig_pause_button();self.update_jig_hint();self.last_render=None

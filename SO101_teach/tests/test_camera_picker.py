@@ -31,7 +31,7 @@ class CameraPickerTests(unittest.TestCase):
     def test_picker_layout(self):
         a=self.app;s=a.settings;a.show_page('settings');s.tabs.select(s.pages['camera']);s.set_camera_choices(DETAILS);self.root.update()
         self.assertGreater(s.camera_source_choice.winfo_width(),300)
-        self.assertLess(s.camera_refresh_btn.winfo_rootx()+s.camera_refresh_btn.winfo_width(),self.root.winfo_rootx()+1280)
+        self.assertLess(s.camera_refresh_btn.winfo_rootx()+s.camera_refresh_btn.winfo_width(),self.root.winfo_rootx()+self.root.winfo_width())
         s.camera_source_choice.event_generate('<Button-1>');self.root.update()
         from PIL import ImageGrab
         ImageGrab.grab().save('/tmp/so101-camera-picker.png')

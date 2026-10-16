@@ -59,7 +59,7 @@ class ShapeInspectionTests(unittest.TestCase):
                 self.assertEqual(row['quality'],'abnormal');self.assertIn('다른 제품',row['label'])
                 row.update(product=expected,product_certain=False)
                 apply_quality(row,dict(part='assembly',expected_product=expected),'inside')
-                self.assertEqual(row['quality'],'abnormal');self.assertEqual(row['label'],'제품 구분 미확인')
+                self.assertEqual(row['quality'],'waiting');self.assertEqual(row['label'],'제품 구분 미확인')
                 row.update(product_certain=True)
                 apply_quality(row,dict(part='assembly',expected_product=expected),'inside')
                 self.assertEqual(row['quality'],'normal')

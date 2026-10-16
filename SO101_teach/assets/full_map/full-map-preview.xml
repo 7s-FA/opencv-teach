@@ -1,0 +1,1158 @@
+<mujoco model="so101_teaching_preview">
+  <statistic center="1.8 .9 .1" extent="4" />
+  <visual>
+    <global offwidth="1920" offheight="1080" />
+    <headlight diffuse=".04 .04 .04" ambient=".48 .48 .48" specular=".08 .08 .08" />
+    <quality shadowsize="4096" offsamples="4" />
+    <rgba haze="0.86 0.90 0.93 1" />
+    <map shadowscale="0.7" />
+  </visual>
+  <asset>
+    <texture type="skybox" builtin="flat" rgb1=".89 .93 .95" width="128" height="768" rgb2=".89 .93 .95" />
+    <texture name="floor" type="2d" builtin="flat" rgb1="0.84 0.75 0.62" width="512" height="512" />
+    <material name="floor" texture="floor" texrepeat="1 1" texuniform="true" reflectance="0" specular="0" shininess="0" />
+    <mesh name="overhead_arm_base" file="../../calibration/mount_geometry/source/arm_base.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_bottom" file="../../calibration/mount_geometry/source/cam_mount_bottom.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_middle" file="../../calibration/mount_geometry/source/cam_mount_middle.stl" scale="0.001 0.001 0.001" />
+    <mesh name="overhead_cam_mount_top" file="../../calibration/mount_geometry/source/cam_mount_top.stl" scale="0.001 0.001 0.001" />
+    <mesh name="inspection_pallet" file="../jigs/pallet.stl" scale=".001 .001 .001" />
+    <mesh name="base_motor_holder_so101_v1" content_type="model/stl" file="../so101/assets/base_motor_holder_so101_v1.stl" />
+    <mesh name="base_so101_v2" content_type="model/stl" file="../so101/assets/base_so101_v2.stl" />
+    <mesh name="sts3215_03a_v1" content_type="model/stl" file="../so101/assets/sts3215_03a_v1.stl" />
+    <mesh name="waveshare_mounting_plate_so101_v2" content_type="model/stl" file="../so101/assets/waveshare_mounting_plate_so101_v2.stl" />
+    <mesh name="motor_holder_so101_base_v1" content_type="model/stl" file="../so101/assets/motor_holder_so101_base_v1.stl" />
+    <mesh name="rotation_pitch_so101_v1" content_type="model/stl" file="../so101/assets/rotation_pitch_so101_v1.stl" />
+    <mesh name="upper_arm_so101_v1" content_type="model/stl" file="../so101/assets/upper_arm_so101_v1.stl" />
+    <mesh name="under_arm_so101_v1" content_type="model/stl" file="../so101/assets/under_arm_so101_v1.stl" />
+    <mesh name="motor_holder_so101_wrist_v1" content_type="model/stl" file="../so101/assets/motor_holder_so101_wrist_v1.stl" />
+    <mesh name="sts3215_03a_no_horn_v1" content_type="model/stl" file="../so101/assets/sts3215_03a_no_horn_v1.stl" />
+    <mesh name="wrist_roll_pitch_so101_v2" content_type="model/stl" file="../so101/assets/wrist_roll_pitch_so101_v2.stl" />
+    <mesh name="xlerobot_fixed_holder" content_type="model/stl" file="../so101/assets/xlerobot_fixed_holder.stl" scale="0.001 0.001 0.001" />
+    <mesh name="xlerobot_fixed_finger" content_type="model/stl" file="../so101/assets/xlerobot_fixed_finger.stl" scale="0.001 0.001 0.001" />
+    <mesh name="xlerobot_moving_holder" content_type="model/stl" file="../so101/assets/xlerobot_moving_holder.stl" scale="0.001 0.001 0.001" />
+    <mesh name="xlerobot_moving_finger" content_type="model/stl" file="../so101/assets/xlerobot_moving_finger.stl" scale="0.001 0.001 0.001" />
+    <material name="gripper_rubber" rgba="0.025 0.025 0.025 1.0" specular="0.05" shininess="0.04499999999999999" reflectance="0" emission="0" />
+    <mesh name="razer_fixed_pad" file="assets/external_1aa2865545f5.stl" scale="1 1 1" />
+    <mesh name="razer_moving_pad" file="assets/external_022754be8694.stl" scale="1 1 1" />
+    <material name="workcell_white_board" rgba="0.88 0.885 0.875 1.0" emission="0" specular="0.02" shininess="0.02" reflectance="0" />
+    <mesh name="workcell_leg_assembly" file="../table_legs/table_leg_185mm_assembly.stl" scale=".001 .001 .001" />
+    <texture name="workcell_stone_texture" type="2d" file="../textures/grey-stone-tiles.png" />
+    <material name="workcell_stone" texture="workcell_stone_texture" texrepeat="2 2" texuniform="true" reflectance="0" specular=".48" shininess=".16" rgba=".72 .72 .72 1" />
+    <material name="workcell_silver_metal" rgba="0.64 0.67 0.69 1.0" specular="0.4" shininess="0.26100000000000007" reflectance="0" emission="0" />
+    <mesh name="fastener_countersunk_4.65_2.3" file="../fasteners/countersunk_head.stl" scale="0.0046500000000000005 0.0046500000000000005 0.0023" />
+    <mesh name="linear_rail" file="../linear_stage/source/02_rail_segment_150mm_PRINT_4.stl" scale=".001 .001 .001" />
+    <mesh name="linear_rail_mirror" file="../linear_stage/rail_mirrored.stl" scale=".001 .001 .001" />
+    <mesh name="linear_carriage" file="../linear_stage/source/01_carriage_2jigs.stl" scale=".001 .001 .001" />
+    <mesh name="linear_ear" file="../linear_stage/ear_assembled.stl" scale=".001 .001 .001" />
+    <mesh name="linear_ear_mirror" file="../linear_stage/ear_assembled_mirrored.stl" scale=".001 .001 .001" />
+    <mesh name="linear_stop" file="../linear_stage/source/05_end_stop_PRINT_2.stl" scale=".001 .001 .001" />
+    <mesh name="linear_a_jig" file="../linear_stage/assembly_fixture.stl" scale=".001 .001 .001" />
+    <mesh name="linear_l12_tube" file="../linear_stage/l12_tube.stl" scale=".001 .001 .001" />
+    <mesh name="linear_l12_motor_housing" file="../linear_stage/l12_motor_housing.stl" scale=".001 .001 .001" />
+    <mesh name="linear_l12_screws" file="../linear_stage/l12_screws.stl" scale=".001 .001 .001" />
+    <mesh name="linear_l12_rod" file="../linear_stage/l12_rod.stl" scale=".001 .001 .001" />
+    <mesh name="linear_top_mount" file="../linear_stage/top_mount_assembled.stl" scale=".001 .001 .001" />
+    <mesh name="fastener_pan_3.2_2.1" file="../fasteners/pan_head.stl" scale="0.0032 0.0032 0.0021000000000000003" />
+    <material name="workcell_white_pla" rgba="0.91 0.915 0.9 1.0" emission="0" specular="0.035" shininess="0.027000000000000024" reflectance="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <material name="robot_and_camera_mount_plastic" rgba="0.18 0.2 0.215 1.0" specular="0.035" shininess="0.027000000000000024" reflectance="0" emission="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <mesh name="map_finished_pallet" file="../jigs/pallet.stl" scale="0.001 0.001 0.001" />
+    <mesh name="arm1_camera_mesh_wrist_xlerobot_mount" file="assets/external_b3655d8d97a9.stl" scale="0.001 0.001 0.001" />
+    <mesh name="arm1_camera_mesh_wrist_32x32_camera" file="assets/external_67bbea618c94.stl" scale="0.001 0.001 0.001" />
+    <material name="arm1_gray_filament" rgba="0.68 0.7 0.71 1.0" specular="0.035" shininess="0.027000000000000024" reflectance="0" emission="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <mesh name="storage_d435_base" file="assets/d435_base.stl" scale=".001 .001 .001" />
+    <mesh name="storage_d435_tilt" file="assets/d435_tilt.stl" scale=".001 .001 .001" />
+    <mesh name="storage_d435_body_mesh_0" file="assets/d435_body_0.stl" scale=".001 .001 .001" />
+    <mesh name="storage_d435_body_mesh_1" file="assets/d435_body_1.stl" scale=".001 .001 .001" />
+    <mesh name="storage_carrier" file="../carrier_assembly/source/current/carrier.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_b_cap" file="assets/storage_previous_b_cap_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_b_cap" file="assets/external_085ef80abee9.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_b_tpu" file="../carrier_assembly/source/current/b_tpu_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_b_tpu" file="assets/external_32a15264042e.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_b_housing" file="assets/storage_previous_b_housing_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_b_housing" file="assets/external_5ffcfee83be6.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_a_housing" file="assets/storage_previous_a_housing_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_a_cap" file="../carrier_assembly/source/current/a_cap_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_a_cap" file="assets/external_fafcaac00380.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_fixture_a_ball" file="../carrier_assembly/source/current/a_ball_jig.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_a_ball" file="assets/external_8952dd391106.stl" scale="0.001 0.001 0.001" />
+    <mesh name="storage_product_a_housing" file="assets/external_95071d47457e.stl" scale="0.001 0.001 0.001" />
+    <mesh name="map_mixed_carrier" file="../carrier_assembly/carrier_assembly.stl" scale="0.001 0.001 0.001" />
+    <material name="burger_frame_plastic" rgba="0.18 0.2 0.215 1.0" specular="0.035" shininess="0.027" reflectance="0" emission="0" />
+    <material name="burger_tire_rubber" rgba="0.055 0.06 0.065 1.0" specular="0.025" shininess="0.03" reflectance="0" emission="0" />
+    <material name="burger_sensor_plastic" rgba="0.12 0.13 0.14 1.0" specular="0.12" shininess="0.12" reflectance="0" emission="0" />
+    <material name="burger_pcb_green" rgba="0.12 0.18 0.145 1.0" specular="0.06" shininess="0.08" reflectance="0" emission="0" />
+    <mesh name="burger_10_base_link" file="../turtlebot3_burger/base_link_frame.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_base_pcb" file="../turtlebot3_burger/base_link_pcb.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_base_posts" file="../turtlebot3_burger/base_link_posts.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_wheel_left_link" file="../turtlebot3_burger/wheel_left_link.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_wheel_right_link" file="../turtlebot3_burger/wheel_right_link.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_base_scan" file="../turtlebot3_burger/base_scan.stl" scale=".001 .001 .001" />
+    <mesh name="burger_10_carrier_standoffs" file="../turtlebot3_burger/carrier_mount_standoffs.stl" scale=".001 .001 .001" />
+    <mesh name="fastener_pan_2.7_2.1" file="../fasteners/pan_head.stl" scale="0.0027 0.0027 0.0021000000000000003" />
+    <mesh name="burger_11_base_link" file="../turtlebot3_burger/base_link_frame.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_base_pcb" file="../turtlebot3_burger/base_link_pcb.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_base_posts" file="../turtlebot3_burger/base_link_posts.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_wheel_left_link" file="../turtlebot3_burger/wheel_left_link.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_wheel_right_link" file="../turtlebot3_burger/wheel_right_link.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_base_scan" file="../turtlebot3_burger/base_scan.stl" scale=".001 .001 .001" />
+    <mesh name="burger_11_carrier_standoffs" file="../turtlebot3_burger/carrier_mount_standoffs.stl" scale=".001 .001 .001" />
+    <texture name="photo_filament_texture" type="2d" file="textures/filament-microcolor.png" />
+    <material name="photo_servo" rgba="0.095 0.105 0.115 1.0" specular="0.04" shininess="0.04499999999999999" reflectance="0" emission="0" />
+    <material name="photo_blue_tpu" rgba="0.1 0.57 0.84 1.0" specular="0.03" shininess="0.02250000000000002" reflectance="0" emission="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <material name="photo_purple_pla" rgba="0.58 0.4 0.76 1.0" specular="0.035" shininess="0.027000000000000024" reflectance="0" emission="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <material name="photo_orange_pla" rgba="1.0 0.52 0.075 1.0" specular="0.035" shininess="0.027000000000000024" reflectance="0" emission="0" texture="photo_filament_texture" texuniform="true" texrepeat="6 6" />
+    <material name="photo_green_ball" rgba="0.28 0.34 0.15 1.0" specular="0.04" shininess="0.04499999999999999" reflectance="0" emission="0" />
+    <material name="photo_d435_aluminum" rgba="0.68 0.7 0.7 1.0" specular="0.3" shininess="0.18900000000000003" reflectance="0" emission="0" />
+    <mesh name="photo_m4_nut_mesh" vertex="0.00404 0.0 -0.0206 0.0020200000000000005 0.003498742631289132 -0.0206 -0.0020199999999999992 0.0034987426312891325 -0.0206 -0.00404 4.947573068555307e-19 -0.0206 -0.002020000000000002 -0.003498742631289131 -0.0206 0.0020200000000000005 -0.003498742631289132 -0.0206 0.00404 0.0 -0.0174 0.0020200000000000005 0.003498742631289132 -0.0174 -0.0020199999999999992 0.0034987426312891325 -0.0174 -0.00404 4.947573068555307e-19 -0.0174 -0.002020000000000002 -0.003498742631289131 -0.0174 0.0020200000000000005 -0.003498742631289132 -0.0174" face="0 1 7 0 7 6 1 2 8 1 8 7 2 3 9 2 9 8 3 4 10 3 10 9 4 5 11 4 11 10 5 0 6 5 6 11 0 2 1 6 7 8 0 3 2 6 8 9 0 4 3 6 9 10 0 5 4 6 10 11" />
+    <mesh name="fastener_pan_2.2_2.1" file="../fasteners/pan_head.stl" scale="0.0022 0.0022 0.0021000000000000003" />
+  </asset>
+  <worldbody>
+    <body name="assembly_workcell" pos="2.017128174890036 0.40191550073885207 0.2024" quat="-0.25933419360535703 0.0 0.0 -0.9657876454102419">
+      <geom name="overhead_arm_base" type="mesh" mesh="overhead_arm_base" pos="0.07294586152891801 -0.053430374313361124 -0.0024000000000000002" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+      <geom name="overhead_cam_mount_bottom" type="mesh" mesh="overhead_cam_mount_bottom" pos="-0.020975058471081998 0.1525446636358576 -0.0074" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+      <geom name="overhead_cam_mount_middle" type="mesh" mesh="overhead_cam_mount_middle" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+      <geom name="overhead_cam_mount_top" type="mesh" mesh="overhead_cam_mount_top" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+      <body name="overhead_camera_pcb" pos="0.025987375015717188 0.11601636143768305 0.5456718787079634" quat="-0.15304311403548485 0.6903491314792695 -0.6903434456659289 0.15304185355069563">
+        <geom name="overhead_pcb" type="box" size=".016 .016 .0008" rgba=".1 .35 .22 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="overhead_lens" type="cylinder" pos="0 0 .010" size=".006 .010" rgba=".02 .025 .03 1" contype="0" conaffinity="0" mass="0" />
+        <site name="overhead_optical_center" size=".0015" rgba="0 0 0 0" />
+        <body name="photo_assembly_pcb_screw_0" pos="-0.0135 -0.0135 0.0">
+          <geom name="photo_assembly_pcb_screw_0_shaft" type="cylinder" size="0.001 0.002" pos="0.0 0.0 -0.0012000000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_0_head" type="mesh" mesh="fastener_pan_2.2_2.1" pos="0.0 0.0 0.0008" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="photo_assembly_pcb_screw_1" pos="-0.0135 0.0135 0.0">
+          <geom name="photo_assembly_pcb_screw_1_shaft" type="cylinder" size="0.001 0.002" pos="0.0 0.0 -0.0012000000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_1_head" type="mesh" mesh="fastener_pan_2.2_2.1" pos="0.0 0.0 0.0008" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="photo_assembly_pcb_screw_2" pos="0.0135 -0.0135 0.0">
+          <geom name="photo_assembly_pcb_screw_2_shaft" type="cylinder" size="0.001 0.002" pos="0.0 0.0 -0.0012000000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_2_head" type="mesh" mesh="fastener_pan_2.2_2.1" pos="0.0 0.0 0.0008" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="photo_assembly_pcb_screw_3" pos="0.0135 0.0135 0.0">
+          <geom name="photo_assembly_pcb_screw_3_shaft" type="cylinder" size="0.001 0.002" pos="0.0 0.0 -0.0012000000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_3_head" type="mesh" mesh="fastener_pan_2.2_2.1" pos="0.0 0.0 0.0008" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="photo_assembly_pcb_screw_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0028950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+      </body>
+      <body name="base_link">
+        <geom pos="-0.00636471 -9.94414e-05 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_motor_holder_so101_v1" material="robot_and_camera_mount_plastic" />
+        <geom pos="-0.00636471 -8.97657e-09 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_so101_v2" material="robot_and_camera_mount_plastic" />
+        <geom pos="0.0263353 -8.97657e-09 0.0437" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+        <geom pos="-0.0309827 -0.000199441 0.0474" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="waveshare_mounting_plate_so101_v2" material="robot_and_camera_mount_plastic" />
+        <body name="shoulder_link" pos="0.0388353 -8.97657e-09 0.0624" quat="1.760359999996901e-12 1.3267899999976644e-06 -0.9999999999982396 -1.3267899999976644e-06">
+          <geom pos="-0.0303992 0.000422241 -0.0417" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+          <geom pos="-0.0675992 -0.000177759 0.0158499" quat="0.499998 0.5 -0.5 0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="motor_holder_so101_base_v1" material="robot_and_camera_mount_plastic" />
+          <geom pos="0.0122008 2.22413e-05 0.0464" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="rotation_pitch_so101_v1" material="robot_and_camera_mount_plastic" />
+          <body name="upper_arm_link" pos="-0.0303992 -0.0182778 -0.0542" quat="0.47438344810138716 -0.4743855455602465 -0.5243647148307249 -0.524366612372907">
+            <geom pos="-0.11257 -0.0155 0.0187" quat="9.38184e-07 -0.707105 0.707108 -9.38187e-07" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+            <geom pos="-0.065085 0.012 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upper_arm_so101_v1" material="robot_and_camera_mount_plastic" />
+            <body name="lower_arm_link" pos="-0.11257 -0.028 0.0" quat="0.9595490327468591 0.0 0.0 0.28154156665502744">
+              <geom pos="-0.0648499 -0.032 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="under_arm_so101_v1" material="robot_and_camera_mount_plastic" />
+              <geom pos="-0.0648499 -0.032 0.018" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="motor_holder_so101_wrist_v1" material="robot_and_camera_mount_plastic" />
+              <geom pos="-0.1224 0.0052 0.0187" quat="1.76034e-12 -1.32679e-06 1 -1.32679e-06" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+              <body name="wrist_link" pos="-0.1349 0.0052 0.0" quat="0.8600644787836911 0.0 0.0 -0.5101853509603523">
+                <geom pos="0 -0.0424 0.0306" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_no_horn_v1" material="photo_servo" />
+                <geom pos="0 -0.028 0.0181" quat="0.499998 -0.5 -0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist_roll_pitch_so101_v2" material="robot_and_camera_mount_plastic" />
+                <body name="gripper_link" pos="0.0 -0.0611 0.0181" quat="-0.00046583695216465687 0.0004679113189106805 0.7071081015886779 0.7071051525215949">
+                  <geom pos="0.0077 0.0001 -0.0234" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+                  <geom name="xlerobot_fixed_holder" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_fixed_holder" material="robot_and_camera_mount_plastic" />
+                  <geom name="xlerobot_fixed_finger" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_fixed_finger" material="photo_blue_tpu" />
+                  <body name="gripper_frame_link" pos="-0.0079 -0.000218121 -0.0981274" quat="1.32679e-06 0 1 0">
+                  </body>
+                  <body name="moving_jaw_so101_v1_link" pos="0.0202 0.0188 -0.0234" quat="0.706221582783106 0.7062245790350836 -0.035340702991113096 0.03534055305364553">
+                    <geom name="xlerobot_moving_holder" pos="0 0 0.0189" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_moving_holder" material="robot_and_camera_mount_plastic" />
+                    <geom name="xlerobot_moving_finger" pos="0 0 0.0189" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_moving_finger" material="photo_blue_tpu" />
+                    <geom name="razer_moving_pad" type="mesh" mesh="razer_moving_pad" material="gripper_rubber" pos="-5.55112e-17 -5.55112e-17 0.0189" quat="1.0 4.765725e-17 3.469445e-18 6.203849998346558e-25" contype="0" conaffinity="0" mass="0" group="1" />
+                  </body>
+                  <geom name="razer_fixed_pad" type="mesh" mesh="razer_fixed_pad" material="gripper_rubber" pos="8.32667e-17 -0.000218214 0.000949706" quat="1.3267948966775328e-06 -0.9999999999991198 -3.6825988434222926e-23 -2.775559999997557e-17" contype="0" conaffinity="0" mass="0" group="1" />
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+        <body name="arm2_base_mount_0" pos="0.055910400000000006 0.0277765 0.0">
+          <geom name="arm2_base_mount_0_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_0_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="arm2_base_mount_1" pos="0.055910400000000006 -0.0277765 0.0">
+          <geom name="arm2_base_mount_1_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_1_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="arm2_base_mount_2" pos="-0.0138646 0.03175 0.0">
+          <geom name="arm2_base_mount_2_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_2_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="arm2_base_mount_3" pos="-0.0138646 -0.03175 0.0">
+          <geom name="arm2_base_mount_3_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_3_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="arm2_base_mount_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <site name="base_origin" pos="0 0 0" size=".0025" rgba="0 0 0 0" />
+      </body>
+      <body name="arm3_preview" pos="0.23632599999999998 0.45773 -0.005" quat="0.602038020790541 0 0 -0.7984674204515849">
+        <body name="arm3_preview_base_link">
+          <geom pos="-0.00636471 -9.94414e-05 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_motor_holder_so101_v1" mass="0" material="robot_and_camera_mount_plastic" />
+          <geom pos="-0.00636471 -8.97657e-09 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" mesh="base_so101_v2" mass="0" material="robot_and_camera_mount_plastic" />
+          <geom pos="0.0263353 -8.97657e-09 0.0437" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_v1" mass="0" material="photo_servo" />
+          <geom pos="-0.0309827 -0.000199441 0.0474" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" mesh="waveshare_mounting_plate_so101_v2" mass="0" material="robot_and_camera_mount_plastic" />
+          <body name="arm3_preview_shoulder_link" pos="0.0388353 -8.97657e-09 0.0624" quat="1.760359999996901e-12 1.3267899999976644e-06 -0.9999999999982396 -1.3267899999976644e-06">
+            <geom pos="-0.0303992 0.000422241 -0.0417" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_v1" mass="0" material="photo_servo" />
+            <geom pos="-0.0675992 -0.000177759 0.0158499" quat="0.499998 0.5 -0.5 0.500002" type="mesh" contype="0" conaffinity="0" group="1" mesh="motor_holder_so101_base_v1" mass="0" material="robot_and_camera_mount_plastic" />
+            <geom pos="0.0122008 2.22413e-05 0.0464" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="rotation_pitch_so101_v1" mass="0" material="robot_and_camera_mount_plastic" />
+            <body name="arm3_preview_upper_arm_link" pos="-0.0303992 -0.0182778 -0.0542" quat="0.47438344810138716 -0.4743855455602465 -0.5243647148307249 -0.524366612372907">
+              <geom pos="-0.11257 -0.0155 0.0187" quat="9.38184e-07 -0.707105 0.707108 -9.38187e-07" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_v1" mass="0" material="photo_servo" />
+              <geom pos="-0.065085 0.012 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="upper_arm_so101_v1" mass="0" material="robot_and_camera_mount_plastic" />
+              <body name="arm3_preview_lower_arm_link" pos="-0.11257 -0.028 0.0" quat="0.9595490327468591 0.0 0.0 0.28154156665502744">
+                <geom pos="-0.0648499 -0.032 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="under_arm_so101_v1" mass="0" material="robot_and_camera_mount_plastic" />
+                <geom pos="-0.0648499 -0.032 0.018" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="motor_holder_so101_wrist_v1" mass="0" material="robot_and_camera_mount_plastic" />
+                <geom pos="-0.1224 0.0052 0.0187" quat="1.76034e-12 -1.32679e-06 1 -1.32679e-06" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_v1" mass="0" material="photo_servo" />
+                <body name="arm3_preview_wrist_link" pos="-0.1349 0.0052 0.0" quat="0.8600644787836911 0.0 0.0 -0.5101853509603523">
+                  <geom pos="0 -0.0424 0.0306" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_no_horn_v1" mass="0" material="photo_servo" />
+                  <geom pos="0 -0.028 0.0181" quat="0.499998 -0.5 -0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" mesh="wrist_roll_pitch_so101_v2" mass="0" material="robot_and_camera_mount_plastic" />
+                  <body name="arm3_preview_gripper_link" pos="0.0 -0.0611 0.0181" quat="-0.00046583695216465687 0.0004679113189106805 0.7071081015886779 0.7071051525215949">
+                    <geom pos="0.0077 0.0001 -0.0234" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="sts3215_03a_v1" mass="0" material="photo_servo" />
+                    <geom name="arm3_preview_xlerobot_fixed_holder" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="xlerobot_fixed_holder" mass="0" material="robot_and_camera_mount_plastic" />
+                    <geom name="arm3_preview_xlerobot_fixed_finger" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="xlerobot_fixed_finger" mass="0" material="photo_blue_tpu" />
+                    <body name="arm3_preview_gripper_frame_link" pos="-0.0079 -0.000218121 -0.0981274" quat="1.32679e-06 0 1 0">
+                      <site name="arm3_preview_tcp" type="sphere" size=".004" pos="0.0017734096759382928 0.0006026567343814877 0.006549653899876567" quat="1.0 0.0 0.0 0.0" rgba="0 0 0 0" />
+                    </body>
+                    <body name="arm3_preview_moving_jaw_so101_v1_link" pos="0.0202 0.0188 -0.0234" quat="0.706221582783106 0.7062245790350836 -0.035340702991113096 0.03534055305364553">
+                      <geom name="arm3_preview_xlerobot_moving_holder" pos="0 0 0.0189" type="mesh" contype="0" conaffinity="0" group="1" mesh="xlerobot_moving_holder" mass="0" material="robot_and_camera_mount_plastic" />
+                      <geom name="arm3_preview_xlerobot_moving_finger" pos="0 0 0.0189" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" mesh="xlerobot_moving_finger" mass="0" material="photo_blue_tpu" />
+                      <geom name="arm3_preview_razer_moving_pad" type="mesh" mesh="razer_moving_pad" material="gripper_rubber" pos="-5.55112e-17 -5.55112e-17 0.0189" quat="1.0 4.765725e-17 3.469445e-18 6.203849998346558e-25" contype="0" conaffinity="0" mass="0" group="1" />
+                    </body>
+                    <geom name="arm3_preview_razer_fixed_pad" type="mesh" mesh="razer_fixed_pad" material="gripper_rubber" pos="8.32667e-17 -0.000218214 0.000949706" quat="1.3267948966775328e-06 -0.9999999999991198 -3.6825988434222926e-23 -2.775559999997557e-17" contype="0" conaffinity="0" mass="0" group="1" />
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+          <body name="arm3_base_mount_0" pos="0.055910400000000006 0.0277765 0.0">
+            <geom name="arm3_base_mount_0_shaft" type="cylinder" size="0.0023 0.012584999999999999" pos="0.0 0.0 0.00018500000000000049" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_0_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm3_base_mount_1" pos="0.055910400000000006 -0.0277765 0.0">
+            <geom name="arm3_base_mount_1_shaft" type="cylinder" size="0.0023 0.012584999999999999" pos="0.0 0.0 0.00018500000000000049" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_1_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm3_base_mount_2" pos="-0.0138646 0.03175 0.0">
+            <geom name="arm3_base_mount_2_shaft" type="cylinder" size="0.0023 0.012584999999999999" pos="0.0 0.0 0.00018500000000000049" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_2_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm3_base_mount_3" pos="-0.0138646 -0.03175 0.0">
+            <geom name="arm3_base_mount_3_shaft" type="cylinder" size="0.0023 0.012584999999999999" pos="0.0 0.0 0.00018500000000000049" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_3_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm3_base_mount_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+        </body>
+        <site name="arm3_preview_origin" type="sphere" size=".008" rgba="0 0 0 0" />
+      </body>
+      <body name="workcell_board" pos="0.11540308453704659 0.2340632359225096 -0.0124" quat="0.4995380263638779 0.0 0.0 0.8662919601476639">
+        <geom name="workcell_board_surface" type="box" size="0.25714386677659024 0.3 0.005" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+        <body name="workcell_leg_0" pos="-0.20714386677659025 -0.25 -0.19">
+          <geom name="workcell_leg_0_visual" type="mesh" mesh="workcell_leg_assembly" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="workcell_leg_1" pos="-0.20714386677659025 0.25 -0.19">
+          <geom name="workcell_leg_1_visual" type="mesh" mesh="workcell_leg_assembly" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="workcell_leg_2" pos="0.20714386677659025 -0.25 -0.19">
+          <geom name="workcell_leg_2_visual" type="mesh" mesh="workcell_leg_assembly" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="workcell_leg_3" pos="0.20714386677659025 0.25 -0.19">
+          <geom name="workcell_leg_3_visual" type="mesh" mesh="workcell_leg_assembly" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <geom name="workcell_side_panel_0" type="box" pos="0.0 -0.2975 -0.0975" size="0.25714386677659024 0.0025 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+        <geom name="workcell_side_panel_1" type="box" pos="0.0 0.2975 -0.0975" size="0.25714386677659024 0.0025 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+        <geom name="workcell_side_panel_2" type="box" pos="-0.25464386677659023 0.0 -0.0975" size="0.0025 0.295 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+        <geom name="workcell_side_panel_3" type="box" pos="0.25464386677659023 0.0 -0.0975" size="0.0025 0.295 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="linear_stage" pos="0.14566976233209858 0.17695721265119535 -0.0074" quat="0.8653770036556339 0.0 0.0 -0.5011213840418277">
+        <body name="linear_rail_-1_0" pos="-0.075 -0.048600000000000004 0.0">
+          <geom name="linear_rail_-1_0_visual" type="mesh" mesh="linear_rail_mirror" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_-1_1" pos="0.075 -0.048600000000000004 0.0">
+          <geom name="linear_rail_-1_1_visual" type="mesh" mesh="linear_rail_mirror" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_1_0" pos="-0.075 0.048600000000000004 0.0">
+          <geom name="linear_rail_1_0_visual" type="mesh" mesh="linear_rail" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_1_1" pos="0.075 0.048600000000000004 0.0">
+          <geom name="linear_rail_1_1_visual" type="mesh" mesh="linear_rail" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_0" pos="-0.135 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_0_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_0_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_0_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_1" pos="-0.075 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_1_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_1_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_1_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_2" pos="-0.015 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_2_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_2_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_2_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_3" pos="0.015 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_3_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_3_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_3_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_4" pos="0.075 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_4_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_4_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_4_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_4_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_4_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_-1_5" pos="0.135 -0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_-1_5_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_5_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_5_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_5_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_-1_5_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_0" pos="-0.135 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_0_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_0_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_0_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_1" pos="-0.075 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_1_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_1_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_1_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_2" pos="-0.015 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_2_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_2_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_2_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_3" pos="0.015 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_3_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_3_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_3_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_4" pos="0.075 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_4_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_4_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_4_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_4_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_4_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_rail_screw_1_5" pos="0.135 0.055600000000000004 0.0">
+          <geom name="linear_rail_screw_1_5_shaft" type="cylinder" size="0.002 0.0072" pos="0.0 0.0 -0.0028" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_5_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.004200000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_5_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0044" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_5_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_rail_screw_1_5_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.006495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_far_stop" pos="0.156 0.0 0.0">
+          <geom name="linear_far_stop_visual" type="mesh" mesh="linear_stop" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_stop_screw_-1" pos="0.156 -0.055600000000000004 0.0">
+          <geom name="linear_stop_screw_-1_shaft" type="cylinder" size="0.002 0.010199999999999999" pos="0.0 0.0 0.00020000000000000017" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_-1_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.010199999999999999" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_-1_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0104" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_-1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.012495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_-1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.012495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_stop_screw_1" pos="0.156 0.055600000000000004 0.0">
+          <geom name="linear_stop_screw_1_shaft" type="cylinder" size="0.002 0.010199999999999999" pos="0.0 0.0 0.00020000000000000017" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_1_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.010199999999999999" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_1_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.0104" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.012495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_stop_screw_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.012495" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        </body>
+        <body name="linear_carriage" pos="0.054348976085516955 0.0 0.0">
+          <body name="linear_carriage_plate" pos="0.0 0.0 0.0044">
+            <geom name="linear_carriage_plate_visual" type="mesh" mesh="linear_carriage" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="linear_front_clevis" pos="0.0 0.0 0.0">
+            <geom name="linear_front_clevis_visual" type="mesh" mesh="linear_top_mount" rgba=".51 .55 .54 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <geom name="linear_front_pin_shaft" type="cylinder" size="0.002 0.01" pos="-0.116 0.0 0.007" quat=".7071067812 .7071067812 0 0" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_front_pin_head" type="cylinder" size="0.0035 0.0012" pos="-0.116 0.0095 0.007" quat=".7071067812 .7071067812 0 0" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <geom name="linear_front_pin_nut" type="cylinder" size="0.0035 0.0012" pos="-0.116 -0.0095 0.007" quat=".7071067812 .7071067812 0 0" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          <body name="linear_a_fixture_0" pos="-0.04 0.0 0.0094">
+            <geom name="linear_a_fixture_0_visual" type="mesh" mesh="linear_a_jig" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+            <site name="linear_pallet_center_1" type="sphere" pos="0.0 0.0 0.00425" size=".004" rgba="0 0 0 0" />
+          </body>
+          <body name="linear_a_fixture_1" pos="0.04 0.0 0.0094">
+            <geom name="linear_a_fixture_1_visual" type="mesh" mesh="linear_a_jig" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+            <site name="linear_pallet_center_2" type="sphere" pos="0.0 0.0 0.00425" size=".004" rgba="0 0 0 0" />
+          </body>
+        </body>
+        <site name="linear_reference_forward" type="sphere" pos="0.09434897608551696 0.0 0.01365" size=".004" rgba="0 0 0 0" />
+        <site name="linear_reference_retracted" type="sphere" pos="-0.0019158542176826786 0.0 0.01365" size=".004" rgba="0 0 0 0" />
+        <body name="linear_actuator" pos="-0.3141510239144831 0.0 0.0078" quat="0.9999987452297163 0.0 0.0015841524525743748 0.0">
+          <body name="linear_housing_orientation" quat="0.7071067811865476 -0.7071067811865475 0.0 0.0">
+            <body name="linear_l12_tube" pos="0.0 0.0 0.0">
+              <geom name="linear_l12_tube_visual" type="mesh" mesh="linear_l12_tube" rgba=".79 .80 .78 1" contype="0" conaffinity="0" mass="0" />
+            </body>
+            <body name="linear_l12_housing" pos="0.0 0.0 0.0">
+              <geom name="linear_l12_housing_visual" type="mesh" mesh="linear_l12_motor_housing" rgba=".09 .10 .11 1" contype="0" conaffinity="0" mass="0" />
+            </body>
+            <body name="linear_l12_screws" pos="0.0 0.0 0.0">
+              <geom name="linear_l12_screws_visual" type="mesh" mesh="linear_l12_screws" contype="0" conaffinity="0" mass="0" material="workcell_silver_metal" />
+            </body>
+          </body>
+          <body name="linear_l12_rod" pos="0.10000126732355227 0.0 0.0">
+            <geom name="linear_l12_rod_visual" type="mesh" mesh="linear_l12_rod" rgba=".66 .70 .72 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <site name="linear_rear_eye" size=".002" rgba="0 0 0 0" />
+        </body>
+        <geom name="linear_rear_mount_shaft" type="cylinder" size="0.002 0.005900000000000001" pos="-0.3141510239144831 0.0 0.005900000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="linear_rear_mount_washer" type="cylinder" size="0.0043 0.0004" pos="-0.3141510239144831 0.0 0.012199999999999999" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="linear_rear_mount_head" type="cylinder" size="0.0035 0.0008" pos="-0.3141510239144831 0.0 0.013300000000000001" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+      </body>
+    </body>
+    <geom name="map_finished_pallet" type="mesh" mesh="map_finished_pallet" pos="1.61 0.38 0.195" quat="1.0 0.0 0.0 0.0" rgba=".96 .96 .94 1" contype="0" conaffinity="0" mass="0" />
+    <geom name="map_floor" type="box" pos="1.8 0.9 -0.007" size="6.0 5.0 0.007" material="workcell_stone" contype="0" conaffinity="0" mass="0" />
+    <geom name="wall_assembly" type="box" pos="1.8 -0.0025 0.2" size="1.805 0.0025 0.2" material="workcell_white_board" contype="0" conaffinity="0" mass="0" group="1" />
+    <geom name="wall_storage" type="box" pos="3.6025 0.9 0.2" size="0.0025 0.9 0.2" material="workcell_white_board" contype="0" conaffinity="0" mass="0" group="1" />
+    <geom name="wall_opposite_assembly" type="box" pos="1.8 1.8025 0.2" size="1.805 0.0025 0.2" material="workcell_white_board" contype="0" conaffinity="0" mass="0" group="1" />
+    <geom name="wall_opposite_storage" type="box" pos="-0.0025 0.9 0.2" size="0.0025 0.9 0.2" material="workcell_white_board" contype="0" conaffinity="0" mass="0" group="1" />
+    <body name="storage_table" pos="3.6 1.36 0" quat="6.123233995736766e-17 0.0 0.0 1.0">
+      <geom name="storage_top" type="box" pos="0.225 0.225 0.19" size="0.225 0.225 0.005" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_side_0" type="box" pos="0.225 0.0025 0.0925" size="0.225 0.0025 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_side_1" type="box" pos="0.225 0.4475 0.0925" size="0.225 0.0025 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_side_2" type="box" pos="0.0025 0.225 0.0925" size="0.0025 0.22 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_side_3" type="box" pos="0.4475 0.225 0.0925" size="0.0025 0.22 0.0925" material="workcell_white_board" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_leg_0" type="mesh" mesh="workcell_leg_assembly" pos="0.05 0.05 0.0" quat="1.0 0.0 0.0 0.0" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_leg_1" type="mesh" mesh="workcell_leg_assembly" pos="0.05 0.4 0.0" quat="1.0 0.0 0.0 0.0" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_leg_2" type="mesh" mesh="workcell_leg_assembly" pos="0.4 0.05 0.0" quat="1.0 0.0 0.0 0.0" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="storage_leg_3" type="mesh" mesh="workcell_leg_assembly" pos="0.4 0.4 0.0" quat="1.0 0.0 0.0 0.0" rgba=".62 .66 .68 1" contype="0" conaffinity="0" mass="0" />
+      <body name="arm1_frame" pos="0.3145373915118412 0.4228353625437005 0.1974" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475">
+        <body name="arm1_base_link">
+          <geom pos="-0.00636471 -9.94414e-05 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_motor_holder_so101_v1" material="arm1_gray_filament" />
+          <geom pos="-0.00636471 -8.97657e-09 -0.0024" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="base_so101_v2" material="arm1_gray_filament" />
+          <geom pos="0.0263353 -8.97657e-09 0.0437" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+          <geom pos="-0.0309827 -0.000199441 0.0474" quat="0.499998 0.5 0.500002 0.5" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="waveshare_mounting_plate_so101_v2" material="arm1_gray_filament" />
+          <body name="arm1_shoulder_link" pos="0.0388353 -8.97657e-09 0.0624" quat="1.760359999996901e-12 1.3267899999976644e-06 -0.9999999999982396 -1.3267899999976644e-06">
+            <geom pos="-0.0303992 0.000422241 -0.0417" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+            <geom pos="-0.0675992 -0.000177759 0.0158499" quat="0.499998 0.5 -0.5 0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="motor_holder_so101_base_v1" material="arm1_gray_filament" />
+            <geom pos="0.0122008 2.22413e-05 0.0464" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="rotation_pitch_so101_v1" material="arm1_gray_filament" />
+            <body name="arm1_upper_arm_link" pos="-0.0303992 -0.0182778 -0.0542" quat="0.47438344810138716 -0.4743855455602465 -0.5243647148307249 -0.524366612372907">
+              <geom pos="-0.11257 -0.0155 0.0187" quat="9.38184e-07 -0.707105 0.707108 -9.38187e-07" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+              <geom pos="-0.065085 0.012 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="upper_arm_so101_v1" material="arm1_gray_filament" />
+              <body name="arm1_lower_arm_link" pos="-0.11257 -0.028 0.0" quat="0.9595490327468591 0.0 0.0 0.28154156665502744">
+                <geom pos="-0.0648499 -0.032 0.0182" quat="1.32679e-06 1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="under_arm_so101_v1" material="arm1_gray_filament" />
+                <geom pos="-0.0648499 -0.032 0.018" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="motor_holder_so101_wrist_v1" material="arm1_gray_filament" />
+                <geom pos="-0.1224 0.0052 0.0187" quat="1.76034e-12 -1.32679e-06 1 -1.32679e-06" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+                <body name="arm1_wrist_link" pos="-0.1349 0.0052 0.0" quat="0.8600644787836911 0.0 0.0 -0.5101853509603523">
+                  <geom pos="0 -0.0424 0.0306" quat="0.499998 0.5 0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_no_horn_v1" material="photo_servo" />
+                  <geom pos="0 -0.028 0.0181" quat="0.499998 -0.5 -0.5 -0.500002" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="wrist_roll_pitch_so101_v2" material="arm1_gray_filament" />
+                  <body name="arm1_gripper_link" pos="0.0 -0.0611 0.0181" quat="-0.00046583695216465687 0.0004679113189106805 0.7071081015886779 0.7071051525215949">
+                    <geom pos="0.0077 0.0001 -0.0234" quat="0.707105 -0.707108 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="sts3215_03a_v1" material="photo_servo" />
+                    <geom name="arm1_xlerobot_fixed_holder" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_fixed_holder" material="arm1_gray_filament" />
+                    <geom name="arm1_xlerobot_fixed_finger" pos="0 -0.000218214 0.000949706" quat="1.32679e-06 -1 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_fixed_finger" material="photo_blue_tpu" />
+                    <body name="arm1_gripper_frame_link" pos="-0.0079 -0.000218121 -0.0981274" quat="1.32679e-06 0 1 0">
+                  </body>
+                    <body name="arm1_moving_jaw_so101_v1_link" pos="0.0202 0.0188 -0.0234" quat="0.706221582783106 0.7062245790350836 -0.035340702991113096 0.03534055305364553">
+                      <geom name="arm1_xlerobot_moving_holder" pos="0 0 0.0189" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_moving_holder" material="arm1_gray_filament" />
+                      <geom name="arm1_xlerobot_moving_finger" pos="0 0 0.0189" quat="1 0 0 0" type="mesh" contype="0" conaffinity="0" group="1" density="0" mesh="xlerobot_moving_finger" material="photo_blue_tpu" />
+                      <geom name="arm1_razer_moving_pad" type="mesh" mesh="razer_moving_pad" material="gripper_rubber" pos="-5.55112e-17 -5.55112e-17 0.0189" quat="1.0 4.765725e-17 3.469445e-18 6.203849998346558e-25" contype="0" conaffinity="0" mass="0" group="1" />
+                    </body>
+                    <geom name="arm1_razer_fixed_pad" type="mesh" mesh="razer_fixed_pad" material="gripper_rubber" pos="8.32667e-17 -0.000218214 0.000949706" quat="1.3267948966775328e-06 -0.9999999999991198 -3.6825988434222926e-23 -2.775559999997557e-17" contype="0" conaffinity="0" mass="0" group="1" />
+                    <geom name="arm1_wrist_xlerobot_mount" type="mesh" mesh="arm1_camera_mesh_wrist_xlerobot_mount" pos="1.747884330886766e-05 0.025872682595646908 -0.006036351427073821" quat="0.7073638451469627 -0.001340550578739881 0.7068482265353709 -0.00042207446097474035" contype="0" conaffinity="0" mass="0" material="robot_and_camera_mount_plastic" />
+                    <geom name="arm1_wrist_32x32_camera" type="mesh" mesh="arm1_camera_mesh_wrist_32x32_camera" pos="1.7787263905084198e-05 0.025893930384103533 -0.005991091772163371" quat="0.7073638451469627 -0.001340550578739881 0.7068482265353709 -0.00042207446097474035" rgba=".24 .28 .31 1" contype="0" conaffinity="0" mass="0" />
+                    <body name="arm1_gripper_rgb_optical_frame" pos="0.003854827688359456 0.06666279887782646 -0.013121959836108577" quat="0.21771894386655455 0.9759780105654421 -0.007966933978507416 -0.001382872856020121" />
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+          <body name="arm1_arm2_base_mount_0" pos="0.055910400000000006 0.0277765 0.0">
+            <geom name="arm1_arm2_base_mount_0_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_0_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm1_arm2_base_mount_1" pos="0.055910400000000006 -0.0277765 0.0">
+            <geom name="arm1_arm2_base_mount_1_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_1_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm1_arm2_base_mount_2" pos="-0.0138646 0.03175 0.0">
+            <geom name="arm1_arm2_base_mount_2_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_2_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <body name="arm1_arm2_base_mount_3" pos="-0.0138646 -0.03175 0.0">
+            <geom name="arm1_arm2_base_mount_3_shaft" type="cylinder" size="0.0023 0.015085" pos="0.0 0.0 -0.0023149999999999993" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_3_head" type="mesh" mesh="fastener_countersunk_4.65_2.3" pos="0.0 0.0 0.01277" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            <geom name="arm1_arm2_base_mount_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.015065" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+          </body>
+          <site name="arm1_base_origin" pos="0 0 0" size=".0025" rgba="0 0 0 0" />
+        </body>
+      </body>
+      <body name="storage_camera_mount" pos="0.5177211630865411 0.02097505847108198 0.2024" quat="0.7071067811865476 0.0 0.0 0.7071067811865475">
+        <geom name="storage_overhead_arm_base" type="mesh" mesh="overhead_arm_base" pos="0.07294586152891801 0.17863377363585764 -0.0024000000000000002" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+        <geom name="storage_overhead_cam_mount_bottom" type="mesh" mesh="overhead_cam_mount_bottom" pos="-0.020975058471081998 0.1525446636358576 -0.0074" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+        <geom name="storage_overhead_cam_mount_middle" type="mesh" mesh="overhead_cam_mount_middle" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="0.7071067811865475 0.7071067811865475 0.0 0.0" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+        <geom name="storage_overhead_cam_mount_top" type="mesh" mesh="overhead_cam_mount_top" pos="-0.002275058471081998 0.1160326636358576 0.1807" quat="4.329780281177467e-17 4.329780281177467e-17 0.7071067811865476 0.7071067811865476" contype="0" conaffinity="0" group="1" mass="0" material="robot_and_camera_mount_plastic" />
+        <body name="storage_d435_cap_frame" pos="-0.002275058471081998 0.1160326636358576 0.5383000061035156">
+          <geom name="storage_d435_mount_base" type="mesh" mesh="storage_d435_base" material="robot_and_camera_mount_plastic" mass="0" contype="0" conaffinity="0" />
+          <body name="storage_d435_tilt_frame" pos="0.008511752254081162 0.0 -0.002272545811660545" quat="0.984807753012208 0.0 -0.17364817766693033 0.0">
+            <geom name="storage_d435_tilting_mount" type="mesh" mesh="storage_d435_tilt" material="robot_and_camera_mount_plastic" mass="0" contype="0" conaffinity="0" />
+            <body name="storage_d435_camera" pos="0.0252 0.0 0.010595300000000004" quat="0.7071067811865475 0.0 0.7071067811865475 0.0">
+              <geom name="storage_d435_body_0" type="mesh" mesh="storage_d435_body_mesh_0" mass="0" contype="0" conaffinity="0" material="photo_d435_aluminum" />
+              <geom name="storage_d435_body_1" type="mesh" mesh="storage_d435_body_mesh_1" mass="0" contype="0" conaffinity="0" material="photo_d435_aluminum" />
+              <site name="storage_d435_rgb_nominal" pos=".0106 .0325 .0125" size=".001" rgba="0 0 0 0" />
+            </body>
+            <body name="photo_d435_rear_screw_0" pos="0.037700000000000004 -0.0225 0.0">
+              <geom name="photo_d435_rear_screw_0_shaft" type="cylinder" size="0.0015 0.0036999999999999993" pos="0.0 0.0 0.02195" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_0_washer" type="cylinder" size="0.0035 0.0002" pos="0.0 0.0 0.02545" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_0_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.02565" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.027745000000000002" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.027745000000000002" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            </body>
+            <body name="photo_d435_rear_screw_1" pos="0.037700000000000004 0.0225 0.0">
+              <geom name="photo_d435_rear_screw_1_shaft" type="cylinder" size="0.0015 0.0036999999999999993" pos="0.0 0.0 0.02195" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_1_washer" type="cylinder" size="0.0035 0.0002" pos="0.0 0.0 0.02545" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_1_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.02565" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.027745000000000002" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_rear_screw_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.027745000000000002" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            </body>
+          </body>
+          <body name="photo_d435_hinge_fastener" pos=".0107 0 .023" quat=".7071067811865476 -.7071067811865476 0 0">
+            <body name="photo_d435_hinge_bolt" pos="0.0 0.0 0.0">
+              <geom name="photo_d435_hinge_bolt_shaft" type="cylinder" size="0.002 0.0191" pos="0.0 0.0 -0.0013000000000000008" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_hinge_bolt_washer" type="cylinder" size="0.004 0.0002" pos="0.0 0.0 0.017599999999999998" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_hinge_bolt_head" type="mesh" mesh="fastener_pan_3.2_2.1" pos="0.0 0.0 0.017799999999999996" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_hinge_bolt_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.019895" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+              <geom name="photo_d435_hinge_bolt_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.019895" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+            </body>
+            <geom name="photo_d435_hinge_nut" type="mesh" mesh="photo_m4_nut_mesh" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+          </body>
+        </body>
+      </body>
+      <body name="storage_jig_B" pos="0.154 0.3 0.195" quat="0.7071067811865476 0.0 0.0 0.7071067811865475">
+        <geom name="storage_carrier_B" type="mesh" mesh="storage_carrier" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_cap_fixture_0" type="mesh" mesh="storage_fixture_b_cap" pos="-0.072 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_cap_product_0" type="mesh" mesh="storage_product_b_cap" pos="-0.072 -0.036 0.03135" quat="0.0 0.7071067811865475 0.7071067811865475 0.0" contype="0" conaffinity="0" mass="0" material="photo_orange_pla" />
+        <geom name="B_tpu_fixture_0" type="mesh" mesh="storage_fixture_b_tpu" pos="0.0 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_tpu_product_0" type="mesh" mesh="storage_product_b_tpu" pos="0.0 -0.036 0.011349999999999999" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_blue_tpu" />
+        <geom name="B_housing_fixture_0" type="mesh" mesh="storage_fixture_b_housing" pos="0.072 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_housing_product_0" type="mesh" mesh="storage_product_b_housing" pos="0.072 -0.036 0.00835" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_orange_pla" />
+        <geom name="B_cap_fixture_1" type="mesh" mesh="storage_fixture_b_cap" pos="-0.072 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_cap_product_1" type="mesh" mesh="storage_product_b_cap" pos="-0.072 0.036 0.03135" quat="0.0 0.7071067811865475 0.7071067811865475 0.0" contype="0" conaffinity="0" mass="0" material="photo_orange_pla" />
+        <geom name="B_tpu_fixture_1" type="mesh" mesh="storage_fixture_b_tpu" pos="0.0 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_tpu_product_1" type="mesh" mesh="storage_product_b_tpu" pos="0.0 0.036 0.011349999999999999" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_blue_tpu" />
+        <geom name="B_housing_fixture_1" type="mesh" mesh="storage_fixture_a_housing" pos="0.072 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="B_housing_product_1" type="mesh" mesh="storage_product_b_housing" pos="0.072 0.036 0.00835" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_orange_pla" />
+      </body>
+      <body name="storage_jig_A" pos="0.34 0.216 0.195" quat="6.123233995736766e-17 0.0 0.0 1.0">
+        <geom name="storage_carrier_A" type="mesh" mesh="storage_carrier" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_cap_fixture_0" type="mesh" mesh="storage_fixture_a_cap" pos="-0.072 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_cap_product_0" type="mesh" mesh="storage_product_a_cap" pos="-0.072 -0.036 0.02555" quat="0.0 0.7071067811865475 0.7071067811865475 0.0" contype="0" conaffinity="0" mass="0" material="photo_purple_pla" />
+        <geom name="A_ball_fixture_0" type="mesh" mesh="storage_fixture_a_ball" pos="0.0 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_ball_product_0" type="mesh" mesh="storage_product_a_ball" pos="0.0 -0.036 0.00640209" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_green_ball" />
+        <geom name="A_housing_fixture_0" type="mesh" mesh="storage_fixture_a_housing" pos="0.072 -0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_housing_product_0" type="mesh" mesh="storage_product_a_housing" pos="0.072 -0.036 0.00835" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_purple_pla" />
+        <geom name="A_cap_fixture_1" type="mesh" mesh="storage_fixture_a_cap" pos="-0.072 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_cap_product_1" type="mesh" mesh="storage_product_a_cap" pos="-0.072 0.036 0.02555" quat="0.0 0.7071067811865475 0.7071067811865475 0.0" contype="0" conaffinity="0" mass="0" material="photo_purple_pla" />
+        <geom name="A_ball_fixture_1" type="mesh" mesh="storage_fixture_a_ball" pos="0.0 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_ball_product_1" type="mesh" mesh="storage_product_a_ball" pos="0.0 0.036 0.00640209" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_green_ball" />
+        <geom name="A_housing_fixture_1" type="mesh" mesh="storage_fixture_b_housing" pos="0.072 0.036 0.0048" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="workcell_white_pla" />
+        <geom name="A_housing_product_1" type="mesh" mesh="storage_product_a_housing" pos="0.072 0.036 0.00835" quat="0.7071067811865475 0.0 0.0 0.7071067811865475" contype="0" conaffinity="0" mass="0" material="photo_purple_pla" />
+      </body>
+    </body>
+    <body name="waiting_carrier_0" pos="1.74 1.6 0.195" quat="6.123233995736766e-17 0.0 0.0 1.0">
+      <geom name="waiting_carrier_mesh_0" type="mesh" mesh="map_mixed_carrier" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" rgba=".96 .96 .94 1" contype="0" conaffinity="0" mass="0" />
+      <body name="carrier_burger_10" pos="0.0 0.0 -0.195" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475">
+        <geom name="burger_10_base_link" type="mesh" mesh="burger_10_base_link" material="burger_frame_plastic" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_base_pcb" type="mesh" mesh="burger_10_base_pcb" material="burger_pcb_green" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_base_posts" type="mesh" mesh="burger_10_base_posts" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_wheel_left_link" type="mesh" mesh="burger_10_wheel_left_link" material="burger_tire_rubber" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_wheel_right_link" type="mesh" mesh="burger_10_wheel_right_link" material="burger_tire_rubber" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_base_scan" type="mesh" mesh="burger_10_base_scan" material="burger_sensor_plastic" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_standoffs" type="mesh" mesh="burger_10_carrier_standoffs" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_10_carrier_screw_0" pos="-0.064 -0.011800000000000001 0.0">
+        <geom name="burger_10_carrier_screw_0_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_0_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_10_carrier_screw_1" pos="-0.064 0.024399999999999998 0.0">
+        <geom name="burger_10_carrier_screw_1_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_1_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_10_carrier_screw_2" pos="0.064 -0.024399999999999998 0.0">
+        <geom name="burger_10_carrier_screw_2_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_2_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_10_carrier_screw_3" pos="0.064 0.011800000000000001 0.0">
+        <geom name="burger_10_carrier_screw_3_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_3_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_10_carrier_screw_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+    </body>
+    <body name="waiting_carrier_1" pos="2.1 1.6 0.195" quat="6.123233995736766e-17 0.0 0.0 1.0">
+      <geom name="waiting_carrier_mesh_1" type="mesh" mesh="map_mixed_carrier" pos="0.0 0.0 0.0" quat="1.0 0.0 0.0 0.0" rgba=".96 .96 .94 1" contype="0" conaffinity="0" mass="0" />
+      <body name="carrier_burger_11" pos="0.0 0.0 -0.195" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475">
+        <geom name="burger_11_base_link" type="mesh" mesh="burger_11_base_link" material="burger_frame_plastic" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_base_pcb" type="mesh" mesh="burger_11_base_pcb" material="burger_pcb_green" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_base_posts" type="mesh" mesh="burger_11_base_posts" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_wheel_left_link" type="mesh" mesh="burger_11_wheel_left_link" material="burger_tire_rubber" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_wheel_right_link" type="mesh" mesh="burger_11_wheel_right_link" material="burger_tire_rubber" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_base_scan" type="mesh" mesh="burger_11_base_scan" material="burger_sensor_plastic" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_standoffs" type="mesh" mesh="burger_11_carrier_standoffs" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_11_carrier_screw_0" pos="-0.064 -0.011800000000000001 0.0">
+        <geom name="burger_11_carrier_screw_0_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_0_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_0_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_0_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_11_carrier_screw_1" pos="-0.064 0.024399999999999998 0.0">
+        <geom name="burger_11_carrier_screw_1_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_1_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_1_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_1_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_11_carrier_screw_2" pos="0.064 -0.024399999999999998 0.0">
+        <geom name="burger_11_carrier_screw_2_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_2_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_2_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_2_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+      <body name="burger_11_carrier_screw_3" pos="0.064 0.011800000000000001 0.0">
+        <geom name="burger_11_carrier_screw_3_shaft" type="cylinder" size="0.0015 0.0038" pos="0.0 0.0 -0.0022" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_3_head" type="mesh" mesh="fastener_pan_2.7_2.1" pos="0.0 0.0 0.0016" material="workcell_silver_metal" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_3_slot_0" type="box" size="0.00125 0.00023999999999999998 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+        <geom name="burger_11_carrier_screw_3_slot_1" type="box" size="0.00023999999999999998 0.00125 1e-05" pos="0.0 0.0 0.0036950000000000004" rgba=".10 .11 .12 1" contype="0" conaffinity="0" mass="0" />
+      </body>
+    </body>
+    <geom name="tape_parking_left_to_assembly_0" type="box" pos="1.74 1.175 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.325 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_parking_right_to_rest_0" type="box" pos="2.1 1.3 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.19999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_parking_right_to_rest_1" type="box" pos="1.83 1.1 0.0007" quat="6.123233995736766e-17 0.0 0.0 1.0" size="0.27 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_parking_right_outline_0" type="box" pos="1.98 1.58 0.0007" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" size="0.07999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_parking_right_outline_1" type="box" pos="2.1 1.66 0.0007" quat="1.0 0.0 0.0 0.0" size="0.1200000000000001 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_parking_right_outline_2" type="box" pos="2.22 1.58 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.07999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_upper_approach_0" type="box" pos="2.22 1.42 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.24 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_upper_approach_1" type="box" pos="2.67 1.18 0.0007" quat="1.0 0.0 0.0 0.0" size="0.44999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_lower_approach_0" type="box" pos="2.22 0.73 0.0007" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" size="0.20999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_lower_approach_1" type="box" pos="2.67 0.94 0.0007" quat="1.0 0.0 0.0 0.0" size="0.44999999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_assembly_inner_approach_0" type="box" pos="1.93 0.9 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.20000000000000007 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_rest_outline_0" type="box" pos="1.48 1.22 0.0007" quat="1.0 0.0 0.0 0.0" size="0.08000000000000007 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_rest_outline_1" type="box" pos="1.56 1.1 0.0007" quat="0.7071067811865476 0.0 0.0 -0.7071067811865475" size="0.12 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_rest_outline_2" type="box" pos="1.48 0.98 0.0007" quat="6.123233995736766e-17 0.0 0.0 1.0" size="0.08000000000000007 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_rest_outline_3" type="box" pos="1.4 1.1 0.0007" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" size="0.12 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_stop_upper_tab_0" type="box" pos="3.045 1.14 0.0007" quat="1.0 0.0 0.0 0.0" size="0.07499999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_stop_lower_tab_0" type="box" pos="3.045 0.98 0.0007" quat="1.0 0.0 0.0 0.0" size="0.07499999999999996 0.01 0.0006" rgba=".95 .95 .92 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_park_stop_0" type="box" pos="1.9200000000000002 1.5 0.0015" quat="1.0 0.0 0.0 0.0" size="0.30000000000000004 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_rest_stop_0" type="box" pos="1.53 1.1 0.0015" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" size="0.09999999999999998 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_assembly_stop_0" type="box" pos="1.93 0.7 0.0015" quat="1.0 0.0 0.0 0.0" size="0.1399999999999999 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_stop_0" type="box" pos="2.97 1.06 0.0015" quat="0.7071067811865476 0.0 0.0 0.7071067811865475" size="0.12 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_upper_registration_0" type="box" pos="3.075 1.14 0.0015" quat="1.0 0.0 0.0 0.0" size="0.014999999999999902 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <geom name="tape_mat_lower_registration_0" type="box" pos="3.075 0.98 0.0015" quat="1.0 0.0 0.0 0.0" size="0.014999999999999902 0.01 0.0006" rgba=".018 .022 .025 1" contype="0" conaffinity="0" mass="0" group="4" />
+    <body name="aruco_board_MAT" pos="3.1485 1.06 0.115" quat="0.5000000000000001 0.5 -0.4999999999999999 -0.5">
+      <geom name="aruco_board_MAT_paper" type="box" size=".045 .045 .0005" rgba=".99 .99 .99 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_0" type="box" pos="-0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_1" type="box" pos="-0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_2" type="box" pos="-0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_3" type="box" pos="-0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_4" type="box" pos="-0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_0_5" type="box" pos="-0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_1_0" type="box" pos="-0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_1_2" type="box" pos="-0.0225 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_1_5" type="box" pos="-0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_2_0" type="box" pos="-0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_2_1" type="box" pos="-0.0275 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_2_3" type="box" pos="-0.0175 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_2_5" type="box" pos="-0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_3_0" type="box" pos="-0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_3_1" type="box" pos="-0.0275 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_3_2" type="box" pos="-0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_3_5" type="box" pos="-0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_4_0" type="box" pos="-0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_4_1" type="box" pos="-0.0275 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_4_2" type="box" pos="-0.0225 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_4_4" type="box" pos="-0.0125 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_4_5" type="box" pos="-0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_0" type="box" pos="-0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_1" type="box" pos="-0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_2" type="box" pos="-0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_3" type="box" pos="-0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_4" type="box" pos="-0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_0_5_5" type="box" pos="-0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_0" type="box" pos="0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_1" type="box" pos="0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_2" type="box" pos="0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_3" type="box" pos="0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_4" type="box" pos="0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_0_5" type="box" pos="0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_0" type="box" pos="0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_1" type="box" pos="0.0125 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_2" type="box" pos="0.0175 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_3" type="box" pos="0.0225 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_4" type="box" pos="0.0275 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_1_5" type="box" pos="0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_2_0" type="box" pos="0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_2_5" type="box" pos="0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_3_0" type="box" pos="0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_3_2" type="box" pos="0.0175 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_3_3" type="box" pos="0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_3_5" type="box" pos="0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_4_0" type="box" pos="0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_4_2" type="box" pos="0.0175 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_4_4" type="box" pos="0.0275 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_4_5" type="box" pos="0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_0" type="box" pos="0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_1" type="box" pos="0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_2" type="box" pos="0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_3" type="box" pos="0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_4" type="box" pos="0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_1_5_5" type="box" pos="0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_0" type="box" pos="-0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_1" type="box" pos="-0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_2" type="box" pos="-0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_3" type="box" pos="-0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_4" type="box" pos="-0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_0_5" type="box" pos="-0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_1_0" type="box" pos="-0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_1_1" type="box" pos="-0.0275 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_1_2" type="box" pos="-0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_1_5" type="box" pos="-0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_2_0" type="box" pos="-0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_2_1" type="box" pos="-0.0275 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_2_2" type="box" pos="-0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_2_5" type="box" pos="-0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_3_0" type="box" pos="-0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_3_1" type="box" pos="-0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_3_2" type="box" pos="-0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_3_4" type="box" pos="-0.0125 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_3_5" type="box" pos="-0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_4_0" type="box" pos="-0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_4_3" type="box" pos="-0.0175 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_4_5" type="box" pos="-0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_0" type="box" pos="-0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_1" type="box" pos="-0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_2" type="box" pos="-0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_3" type="box" pos="-0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_4" type="box" pos="-0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_2_5_5" type="box" pos="-0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_0" type="box" pos="0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_1" type="box" pos="0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_2" type="box" pos="0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_3" type="box" pos="0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_4" type="box" pos="0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_0_5" type="box" pos="0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_1_0" type="box" pos="0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_1_2" type="box" pos="0.0175 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_1_3" type="box" pos="0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_1_5" type="box" pos="0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_2_0" type="box" pos="0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_2_2" type="box" pos="0.0175 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_2_3" type="box" pos="0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_2_5" type="box" pos="0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_3_0" type="box" pos="0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_3_1" type="box" pos="0.0125 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_3_3" type="box" pos="0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_3_4" type="box" pos="0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_3_5" type="box" pos="0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_4_0" type="box" pos="0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_4_1" type="box" pos="0.0125 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_4_4" type="box" pos="0.0275 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_4_5" type="box" pos="0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_0" type="box" pos="0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_1" type="box" pos="0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_2" type="box" pos="0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_3" type="box" pos="0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_4" type="box" pos="0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_MAT_3_5_5" type="box" pos="0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+    </body>
+    <body name="aruco_board_ASM" pos="1.895 0.5158 0.115" quat="4.329780281177467e-17 4.329780281177466e-17 0.7071067811865475 0.7071067811865476">
+      <geom name="aruco_board_ASM_paper" type="box" size=".045 .045 .0005" rgba=".99 .99 .99 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_0" type="box" pos="-0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_1" type="box" pos="-0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_2" type="box" pos="-0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_3" type="box" pos="-0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_4" type="box" pos="-0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_0_5" type="box" pos="-0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_1_0" type="box" pos="-0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_1_2" type="box" pos="-0.0225 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_1_5" type="box" pos="-0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_2_0" type="box" pos="-0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_2_1" type="box" pos="-0.0275 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_2_3" type="box" pos="-0.0175 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_2_5" type="box" pos="-0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_3_0" type="box" pos="-0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_3_1" type="box" pos="-0.0275 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_3_2" type="box" pos="-0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_3_5" type="box" pos="-0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_4_0" type="box" pos="-0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_4_1" type="box" pos="-0.0275 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_4_2" type="box" pos="-0.0225 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_4_4" type="box" pos="-0.0125 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_4_5" type="box" pos="-0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_0" type="box" pos="-0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_1" type="box" pos="-0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_2" type="box" pos="-0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_3" type="box" pos="-0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_4" type="box" pos="-0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_0_5_5" type="box" pos="-0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_0" type="box" pos="0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_1" type="box" pos="0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_2" type="box" pos="0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_3" type="box" pos="0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_4" type="box" pos="0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_0_5" type="box" pos="0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_0" type="box" pos="0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_1" type="box" pos="0.0125 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_2" type="box" pos="0.0175 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_3" type="box" pos="0.0225 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_4" type="box" pos="0.0275 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_1_5" type="box" pos="0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_2_0" type="box" pos="0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_2_5" type="box" pos="0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_3_0" type="box" pos="0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_3_2" type="box" pos="0.0175 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_3_3" type="box" pos="0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_3_5" type="box" pos="0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_4_0" type="box" pos="0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_4_2" type="box" pos="0.0175 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_4_4" type="box" pos="0.0275 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_4_5" type="box" pos="0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_0" type="box" pos="0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_1" type="box" pos="0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_2" type="box" pos="0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_3" type="box" pos="0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_4" type="box" pos="0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_1_5_5" type="box" pos="0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_0" type="box" pos="-0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_1" type="box" pos="-0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_2" type="box" pos="-0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_3" type="box" pos="-0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_4" type="box" pos="-0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_0_5" type="box" pos="-0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_1_0" type="box" pos="-0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_1_1" type="box" pos="-0.0275 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_1_2" type="box" pos="-0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_1_5" type="box" pos="-0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_2_0" type="box" pos="-0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_2_1" type="box" pos="-0.0275 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_2_2" type="box" pos="-0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_2_5" type="box" pos="-0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_3_0" type="box" pos="-0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_3_1" type="box" pos="-0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_3_2" type="box" pos="-0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_3_4" type="box" pos="-0.0125 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_3_5" type="box" pos="-0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_4_0" type="box" pos="-0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_4_3" type="box" pos="-0.0175 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_4_5" type="box" pos="-0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_0" type="box" pos="-0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_1" type="box" pos="-0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_2" type="box" pos="-0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_3" type="box" pos="-0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_4" type="box" pos="-0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_2_5_5" type="box" pos="-0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_0" type="box" pos="0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_1" type="box" pos="0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_2" type="box" pos="0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_3" type="box" pos="0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_4" type="box" pos="0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_0_5" type="box" pos="0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_1_0" type="box" pos="0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_1_2" type="box" pos="0.0175 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_1_3" type="box" pos="0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_1_5" type="box" pos="0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_2_0" type="box" pos="0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_2_2" type="box" pos="0.0175 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_2_3" type="box" pos="0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_2_5" type="box" pos="0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_3_0" type="box" pos="0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_3_1" type="box" pos="0.0125 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_3_3" type="box" pos="0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_3_4" type="box" pos="0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_3_5" type="box" pos="0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_4_0" type="box" pos="0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_4_1" type="box" pos="0.0125 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_4_4" type="box" pos="0.0275 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_4_5" type="box" pos="0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_0" type="box" pos="0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_1" type="box" pos="0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_2" type="box" pos="0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_3" type="box" pos="0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_4" type="box" pos="0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_ASM_3_5_5" type="box" pos="0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+    </body>
+    <body name="aruco_board_P2" pos="1.74 1.798 0.1105" quat="0.7071067811865476 0.7071067811865475 0.0 0.0">
+      <geom name="aruco_board_P2_paper" type="box" size=".045 .045 .0005" rgba=".99 .99 .99 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_0" type="box" pos="-0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_1" type="box" pos="-0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_2" type="box" pos="-0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_3" type="box" pos="-0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_4" type="box" pos="-0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_0_5" type="box" pos="-0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_1_0" type="box" pos="-0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_1_5" type="box" pos="-0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_2_0" type="box" pos="-0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_2_4" type="box" pos="-0.0125 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_2_5" type="box" pos="-0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_3_0" type="box" pos="-0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_3_3" type="box" pos="-0.0175 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_3_5" type="box" pos="-0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_4_0" type="box" pos="-0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_4_2" type="box" pos="-0.0225 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_4_4" type="box" pos="-0.0125 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_4_5" type="box" pos="-0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_0" type="box" pos="-0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_1" type="box" pos="-0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_2" type="box" pos="-0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_3" type="box" pos="-0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_4" type="box" pos="-0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_8_5_5" type="box" pos="-0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_0" type="box" pos="0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_1" type="box" pos="0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_2" type="box" pos="0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_3" type="box" pos="0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_4" type="box" pos="0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_0_5" type="box" pos="0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_1_0" type="box" pos="0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_1_3" type="box" pos="0.0225 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_1_4" type="box" pos="0.0275 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_1_5" type="box" pos="0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_2_0" type="box" pos="0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_2_5" type="box" pos="0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_3_0" type="box" pos="0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_3_1" type="box" pos="0.0125 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_3_3" type="box" pos="0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_3_5" type="box" pos="0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_4_0" type="box" pos="0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_4_1" type="box" pos="0.0125 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_4_4" type="box" pos="0.0275 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_4_5" type="box" pos="0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_0" type="box" pos="0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_1" type="box" pos="0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_2" type="box" pos="0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_3" type="box" pos="0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_4" type="box" pos="0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_9_5_5" type="box" pos="0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_0" type="box" pos="-0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_1" type="box" pos="-0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_2" type="box" pos="-0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_3" type="box" pos="-0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_4" type="box" pos="-0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_0_5" type="box" pos="-0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_1_0" type="box" pos="-0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_1_5" type="box" pos="-0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_2_0" type="box" pos="-0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_2_2" type="box" pos="-0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_2_3" type="box" pos="-0.0175 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_2_5" type="box" pos="-0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_3_0" type="box" pos="-0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_3_2" type="box" pos="-0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_3_3" type="box" pos="-0.0175 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_3_5" type="box" pos="-0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_4_0" type="box" pos="-0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_4_1" type="box" pos="-0.0275 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_4_2" type="box" pos="-0.0225 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_4_3" type="box" pos="-0.0175 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_4_5" type="box" pos="-0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_0" type="box" pos="-0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_1" type="box" pos="-0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_2" type="box" pos="-0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_3" type="box" pos="-0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_4" type="box" pos="-0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_10_5_5" type="box" pos="-0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_0" type="box" pos="0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_1" type="box" pos="0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_2" type="box" pos="0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_3" type="box" pos="0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_4" type="box" pos="0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_0_5" type="box" pos="0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_1_0" type="box" pos="0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_1_1" type="box" pos="0.0125 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_1_2" type="box" pos="0.0175 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_1_3" type="box" pos="0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_1_5" type="box" pos="0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_2_0" type="box" pos="0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_2_1" type="box" pos="0.0125 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_2_2" type="box" pos="0.0175 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_2_3" type="box" pos="0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_2_5" type="box" pos="0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_3_0" type="box" pos="0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_3_2" type="box" pos="0.0175 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_3_4" type="box" pos="0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_3_5" type="box" pos="0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_4_0" type="box" pos="0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_4_1" type="box" pos="0.0125 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_4_5" type="box" pos="0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_0" type="box" pos="0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_1" type="box" pos="0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_2" type="box" pos="0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_3" type="box" pos="0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_4" type="box" pos="0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P2_11_5_5" type="box" pos="0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+    </body>
+    <body name="aruco_board_P1" pos="2.1 1.798 0.1105" quat="0.7071067811865476 0.7071067811865475 0.0 0.0">
+      <geom name="aruco_board_P1_paper" type="box" size=".045 .045 .0005" rgba=".99 .99 .99 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_0" type="box" pos="-0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_1" type="box" pos="-0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_2" type="box" pos="-0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_3" type="box" pos="-0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_4" type="box" pos="-0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_0_5" type="box" pos="-0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_1_0" type="box" pos="-0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_1_1" type="box" pos="-0.0275 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_1_3" type="box" pos="-0.0175 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_1_5" type="box" pos="-0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_2_0" type="box" pos="-0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_2_1" type="box" pos="-0.0275 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_2_3" type="box" pos="-0.0175 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_2_4" type="box" pos="-0.0125 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_2_5" type="box" pos="-0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_3_0" type="box" pos="-0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_3_2" type="box" pos="-0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_3_3" type="box" pos="-0.0175 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_3_5" type="box" pos="-0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_4_0" type="box" pos="-0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_4_4" type="box" pos="-0.0125 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_4_5" type="box" pos="-0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_0" type="box" pos="-0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_1" type="box" pos="-0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_2" type="box" pos="-0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_3" type="box" pos="-0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_4" type="box" pos="-0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_4_5_5" type="box" pos="-0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_0" type="box" pos="0.0075 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_1" type="box" pos="0.0125 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_2" type="box" pos="0.0175 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_3" type="box" pos="0.0225 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_4" type="box" pos="0.0275 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_0_5" type="box" pos="0.0325 0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_1_0" type="box" pos="0.0075 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_1_1" type="box" pos="0.0125 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_1_5" type="box" pos="0.0325 0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_2_0" type="box" pos="0.0075 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_2_2" type="box" pos="0.0175 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_2_3" type="box" pos="0.0225 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_2_5" type="box" pos="0.0325 0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_3_0" type="box" pos="0.0075 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_3_3" type="box" pos="0.0225 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_3_4" type="box" pos="0.0275 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_3_5" type="box" pos="0.0325 0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_4_0" type="box" pos="0.0075 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_4_3" type="box" pos="0.0225 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_4_5" type="box" pos="0.0325 0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_0" type="box" pos="0.0075 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_1" type="box" pos="0.0125 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_2" type="box" pos="0.0175 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_3" type="box" pos="0.0225 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_4" type="box" pos="0.0275 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_5_5_5" type="box" pos="0.0325 0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_0" type="box" pos="-0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_1" type="box" pos="-0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_2" type="box" pos="-0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_3" type="box" pos="-0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_4" type="box" pos="-0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_0_5" type="box" pos="-0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_1_0" type="box" pos="-0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_1_2" type="box" pos="-0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_1_3" type="box" pos="-0.0175 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_1_5" type="box" pos="-0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_2_0" type="box" pos="-0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_2_4" type="box" pos="-0.0125 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_2_5" type="box" pos="-0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_3_0" type="box" pos="-0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_3_1" type="box" pos="-0.0275 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_3_2" type="box" pos="-0.0225 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_3_4" type="box" pos="-0.0125 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_3_5" type="box" pos="-0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_4_0" type="box" pos="-0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_4_4" type="box" pos="-0.0125 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_4_5" type="box" pos="-0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_0" type="box" pos="-0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_1" type="box" pos="-0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_2" type="box" pos="-0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_3" type="box" pos="-0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_4" type="box" pos="-0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_6_5_5" type="box" pos="-0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_0" type="box" pos="0.0075 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_1" type="box" pos="0.0125 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_2" type="box" pos="0.0175 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_3" type="box" pos="0.0225 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_4" type="box" pos="0.0275 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_0_5" type="box" pos="0.0325 -0.0075 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_1_0" type="box" pos="0.0075 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_1_3" type="box" pos="0.0225 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_1_4" type="box" pos="0.0275 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_1_5" type="box" pos="0.0325 -0.0125 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_2_0" type="box" pos="0.0075 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_2_1" type="box" pos="0.0125 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_2_3" type="box" pos="0.0225 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_2_4" type="box" pos="0.0275 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_2_5" type="box" pos="0.0325 -0.0175 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_3_0" type="box" pos="0.0075 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_3_5" type="box" pos="0.0325 -0.0225 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_4_0" type="box" pos="0.0075 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_4_1" type="box" pos="0.0125 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_4_2" type="box" pos="0.0175 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_4_4" type="box" pos="0.0275 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_4_5" type="box" pos="0.0325 -0.0275 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_0" type="box" pos="0.0075 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_1" type="box" pos="0.0125 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_2" type="box" pos="0.0175 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_3" type="box" pos="0.0225 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_4" type="box" pos="0.0275 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+      <geom name="aruco_P1_7_5_5" type="box" pos="0.0325 -0.0325 0.0007" size=".0025 .0025 .0002" rgba=".004 .004 .004 1" contype="0" conaffinity="0" mass="0" />
+    </body>
+    <light name="photo_ceiling_fill_0" pos="0.0 -0.2 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.105 0.105 0.10342499999999999" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="false" />
+    <light name="photo_ceiling_fill_1" pos="1.8 -0.2 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.045 0.045 0.044324999999999996" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="true" />
+    <light name="photo_ceiling_fill_2" pos="3.6 -0.2 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.105 0.105 0.10342499999999999" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="false" />
+    <light name="photo_ceiling_fill_3" pos="0.0 2.0 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.105 0.105 0.10342499999999999" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="false" />
+    <light name="photo_ceiling_fill_4" pos="1.8 2.0 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.105 0.105 0.10342499999999999" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="false" />
+    <light name="photo_ceiling_fill_5" pos="3.6 2.0 2.4" dir="0 0 -1" ambient="0 0 0" diffuse="0.105 0.105 0.10342499999999999" specular=".12 .12 .12" attenuation="1 0 0" cutoff="80" exponent="0" directional="false" bulbradius=".45" castshadow="false" />
+  </worldbody>
+  <compiler angle="radian" />
+</mujoco>

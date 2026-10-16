@@ -19,6 +19,20 @@ def oak_texture(width,height):
     return np.clip(rgb,0,255).astype(np.uint8)
 
 def apply_preview_materials(model):
+    # The full room uses a separate source texture. Soften its contrast only in
+    # the MuJoCo display model; the original file remains the Isaac reference.
+    try:
+        model.material('mujoco_ceiling_panel')
+        floor=model.material('workcell_stone').id
+    except KeyError:pass
+    else:
+        import mujoco
+        index=int(model.mat_texid[floor,int(mujoco.mjtTextureRole.mjTEXROLE_RGB)])
+        if index>=0:
+            start=int(model.tex_adr[index]);w=int(model.tex_width[index]);h=int(model.tex_height[index]);c=int(model.tex_nchannel[index])
+            pixels=model.tex_data[start:start+w*h*c].reshape(h,w,c)
+            rgb=pixels[...,:3].astype(float)
+            pixels[...,:3]=np.clip(rgb*.60+rgb.mean(axis=(0,1))*.40,0,255).astype(np.uint8)
     try:index=model.texture('floor').id
     except KeyError:return
     w,h=int(model.tex_width[index]),int(model.tex_height[index]);channels=int(model.tex_nchannel[index]);start=int(model.tex_adr[index])

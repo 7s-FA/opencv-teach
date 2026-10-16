@@ -20,4 +20,22 @@ class AssetsTest(unittest.TestCase):
             for attr in ('mesh_vert','geom_size','body_pos','body_quat','jnt_axis'):
                 np.testing.assert_allclose(getattr(original,attr),getattr(packed,attr),atol=0,rtol=0)
 
+    def test_full_map_and_pad_assets_compile_after_source_tree_is_removed(self):
+        from so101_teach.preview import configured_scene
+        from so101_teach.configuration import model_tcp
+        from so101_teach.workcell_preview import load_placement
+        xml=configured_scene([],model_tcp(),workcell=load_placement(ROOT/'examples/data'),full_map=True)
+        original=mujoco.MjModel.from_xml_string(xml)
+        with tempfile.TemporaryDirectory(prefix='전체 맵 경로 ') as temp:
+            folder=Path(temp)/'한글'
+            for name in ('assets','calibration'):shutil.copytree(ROOT/name,folder/name)
+            relocated=xml.replace(str(ROOT),str(folder))
+            packed_xml,blobs=virtual_assets(relocated,folder)
+            shutil.rmtree(folder)
+            packed=mujoco.MjModel.from_xml_string(packed_xml,assets=blobs)
+            self.assertEqual(original.ngeom,packed.ngeom)
+            self.assertEqual(original.nq,packed.nq)
+            for attr in ('mesh_vert','geom_size','body_pos','body_quat','jnt_axis','body_mass'):
+                np.testing.assert_allclose(getattr(original,attr),getattr(packed,attr),atol=0,rtol=0)
+
 if __name__=='__main__':unittest.main()

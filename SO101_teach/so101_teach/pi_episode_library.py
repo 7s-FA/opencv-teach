@@ -53,6 +53,7 @@ class PiEpisodeLibrary:
     def set_status(self,text):
         self.app.pi_episode_status.set(text)
     def refresh(self,*,preserve_local_changes=True):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
         a=self.app
         if self.job or a.closed:return
         if a.episode_adjust_panel.dirty:raise ValueError('변경한 실행 설정·완제품·안착 검사를 저장하거나 입력을 되돌린 뒤 Pi에서 불러오세요.')
