@@ -74,6 +74,7 @@ def execution_request(app,apps,*,apply_jig=True):
 
 STAGES={'LOWER':'하단','MIDDLE':'중단','UPPER':'상단','PICK':'집기','PLACE':'놓기'}
 LABELS={'FOLLOWER_CONNECTING':'팔 연결 확인','FOLLOWER_READY':'팔 연결 확인 완료','ACCEPTED':'에피소드 접수',
+        'VISION_PREPARING':'카메라·모델 준비 중','VISION_READY':'카메라·모델 준비 완료',
         'JIG_DETECTION_STARTED':'지그 위치 확인 중','JIG_CONFIRMED':'지그 위치 확인 완료',
         'STARTUP_INSPECTION_STARTED':'시작 조건 검사 중','STARTUP_INSPECTION_PASSED':'시작 조건 검사 통과',
         'PLAN_STARTED':'동작 경로 준비','EPISODE_STARTED':'에피소드 실행 중','EPISODE_DONE':'동작 완료 · 마무리 중',

@@ -1,0 +1,12 @@
+{
+  "model": "YOLO26n-seg",
+  "training": "real+synthetic",
+  "format": "NCNN FP16",
+  "imgsz": 960,
+  "files": {
+    "metadata.yaml": "8f648948a14dc89aabdfda42e18b2b5540a7967d20840df399f0d6685b6ee3b4",
+    "model.ncnn.bin": "20ba05507dda52f1a7e35fed5e9f76b032ee839f1e8e68e3e83e9fcd46ae82a5",
+    "model.ncnn.param": "e8037ba3faebb6fd713e9495888daf78a4b52950d93e885741e4ea0ebe51132c"
+  },
+  "comparison": "training-artifacts/benchmarks/yolo26n_vs_s_mixed_fp16_20261018"
+}

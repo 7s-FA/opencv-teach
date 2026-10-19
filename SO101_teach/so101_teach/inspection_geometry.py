@@ -58,7 +58,7 @@ def anchors_for(frame,results,adopted,catalog,profile,reference,station,product,
         key='carrier' if station=='운반용 지그' else 'finished_pallet';spec=reference['stations'][key];jid=spec['jig_id']
         accepted=adopted.get(jid,{});result=accepted if accepted.get('selected') else results.get(jid,{})
         item=result.get('selected') or {};metric=item.get('metric')
-        if not metric:return [],'기준 지그 감지·채택 대기'
+        if not metric:return [],'기준 지그 위치 미확정 · '+str(result['error']) if result.get('error') else '기준 지그 감지·채택 대기'
         if not accepted.get('selected') and any(result.get(k) for k in ('pose_held','pose_frozen','teaching_held')):return [],'기준 지그 감지 대기'
         if key=='carrier' and (not item.get('orientation_verified') or metric.get('symmetry_deg')!=360):return [],'운반 지그 앞뒤 방향 확인 대기'
         yaw=float(metric['yaw_deg'])+mesh_yaw_offset(metric)

@@ -1,4 +1,5 @@
 import json,time,unittest
+from unittest.mock import Mock,patch
 from copy import deepcopy
 from pathlib import Path
 from tests import test_camera_overview as camera_fixtures
@@ -9,6 +10,49 @@ class CameraInspectionUITests(unittest.TestCase):
     setUp=camera_fixtures.CameraOverviewTests.setUp
     tearDown=camera_fixtures.CameraOverviewTests.tearDown
     camera=camera_fixtures.CameraOverviewTests.camera
+    def test_inspection_method_switch_persists_without_changing_geometry_or_jig_settings(self):
+        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile)
+        p.method.set('AI + OpenCV');p.update_method_controls()
+        self.assertFalse(p.method_apply.instate(['disabled']))
+        self.assertIn('적용 중: OpenCV',p.method_status.get())
+        with patch('so101_teach.model_regions.runtime',return_value=({},None,{'files':{'model.ncnn.bin':'a'*64}})):
+            p.apply_method()
+        self.assertEqual({k:v for k,v in a.profile.items() if k!='part_inspection'},before)
+        self.assertEqual(json.loads((a.data_dir/'profile.json').read_text())['part_inspection'],a.profile['part_inspection'])
+        self.assertIn('적용 중: AI + OpenCV',p.method_status.get())
+        self.assertTrue(p.method_apply.instate(['disabled']))
+        old_generation=p.generation
+        p.previous_rows={'old':(time.monotonic(),{'state':'present'})};p.capture_snapshot={'old':True}
+        p.table.insert('','end',iid='old',values=('과거','정상','90%'))
+        p.method.set('OpenCV');p.apply_method()
+        self.assertEqual(a.profile['part_inspection']['method'],'opencv')
+        self.assertEqual(p.previous_rows,{});self.assertFalse(p.table.get_children());self.assertIsNone(p.capture_snapshot)
+        self.assertGreater(p.generation,old_generation)
+        self.assertIn('적용 중: OpenCV',p.method_status.get())
+
+    def test_inspection_method_rejects_running_or_unavailable_model_without_change(self):
+        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI + OpenCV')
+        a.camera_task={'kind':'jig'}
+        with self.assertRaisesRegex(ValueError,'끝난 뒤'):p.apply_method()
+        a.camera_task=None
+        with patch('so101_teach.model_regions.runtime',side_effect=ValueError('모델 준비 필요')):
+            with self.assertRaisesRegex(ValueError,'준비'):p.apply_method()
+        self.assertEqual(a.profile,before);self.assertIn('적용 중: OpenCV',p.method_status.get())
+
+    def test_inspection_method_remote_sync_failure_does_not_commit_local_selection(self):
+        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI + OpenCV')
+        a.remote_mode=True;a.remote=Mock(error=None)
+        try:
+            with patch('so101_teach.model_regions.runtime',return_value=({},None,{'files':{'model.ncnn.bin':'a'*64}})):
+                a.remote.sync_bundle.side_effect=ValueError('동기화 실패')
+                with self.assertRaisesRegex(ValueError,'동기화 실패'):p.apply_method()
+                self.assertEqual(a.profile,before)
+                a.remote.sync_bundle.side_effect=None;p.apply_method()
+                bundle=a.remote.sync_bundle.call_args.args[0]
+                self.assertEqual(bundle['profile']['part_inspection'],a.profile['part_inspection'])
+                self.assertEqual(bundle['profile'].get('jig_detection'),before.get('jig_detection'))
+        finally:a.remote=None;a.remote_mode=False
+
     def test_toolbar_controls_share_height_and_stay_inside_maximized_page(self):
         a=self.app;self.root.geometry('1920x1080');a.show_page('camera');a.camera_tabs.select(a.camera_inspection);self.root.update()
         p=a.camera_inspection;controls=(p.mode_choice,p.endpoint_choice,p.connect_button,p.save_button,p.folder_button)
@@ -134,7 +178,7 @@ class CameraInspectionUITests(unittest.TestCase):
 
     def test_tabs_overlay_stale_and_cad_switch(self):
         frame,data=self.camera();a=self.app;p=a.camera_inspection
-        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사','오류 기록','영상 저장'])
+        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사','오류 기록','영상 저장','AI 인식'])
         self.assertNotIn('inspection',a.pages)
         a.camera_tabs.select(p);p.station.set('완성품 팔레트');p.change();a.root.update()
         self.assertIn('전체 영역 자동 비교',p.status.get());self.assertTrue(p.canvas.find_withtag('image'))

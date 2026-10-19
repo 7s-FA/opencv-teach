@@ -12,6 +12,8 @@ def main():
     p.add_argument('--integration-domain',type=int,default=40,help='ROS domain for the opt-in receiver (default 40)')
     p.add_argument('--minimized',action='store_true',help='Start minimized without raising the workspace window')
     p.add_argument('--setup',action='store_true',help='Open configuration page')
+    p.add_argument('--ai',action='store_true',help='Open the AI recognition tab')
+    p.add_argument('--jig-detection',action='store_true',help='Open the jig detection tab')
     p.add_argument('--check',action='store_true',help='Validate local configuration without opening devices')
     p.add_argument('--probe',action='store_true',help='Read motors and camera; no motor writes')
     p.add_argument('--no-camera',action='store_true');p.add_argument('--seconds',type=float,default=3.)
@@ -72,6 +74,8 @@ def main():
         workspaces.integration=IntegrationBridge(workspaces,args.integration,domain=args.integration_domain)
         for window in workspaces.apps.values():window.root.title(window.root.title()+' · 통합 명령 수신')
     if args.setup:app.show_page('settings')
+    if args.ai:app.show_page('camera');app.camera_tabs.select(app.camera_yolo)
+    if args.jig_detection:app.show_page('camera');app.camera_tabs.select(0)
     show_ready_window(root,minimized=args.minimized)
     root.mainloop()
 

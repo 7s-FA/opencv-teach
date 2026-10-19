@@ -87,12 +87,13 @@ class FrameInspection(threading.Thread):
         self.stop.set()
         if self.is_alive() and threading.current_thread() is not self:self.join(.2)
     def run(self):
+        inspector=None
         try:
-            from .shape_inspection import ShapeInspector
+            from .ai_inspection import inspector_for
             from .vision_service import MultiDetector
             from .inspection_geometry import anchors_for
             from .occupied_pallet import locate
-            inspector=ShapeInspector();inspector.stop=self.stop
+            inspector=inspector_for(self.profile);inspector.stop=self.stop
             if self.linear_state_reader:
                 if not self.placement:raise ValueError('시작 전 검사: 작업대 좌표 없음')
                 self.placement['linear_stage']['startup_state']=self.linear_state_reader()
@@ -122,6 +123,8 @@ class FrameInspection(threading.Thread):
                 rows=inspector.inspect(frame,chosen,self.profile)
                 self.result={'at':at,'row':deepcopy(rows[0]) if len(rows)==1 else None,'reason':reason,'completed':time.monotonic()}
         except Exception as exc:self.result={'error':str(exc)}
+        finally:
+            if inspector is not None and hasattr(inspector,'close'):inspector.close()
 
 
 class FrameInspections(FrameInspection):
@@ -132,12 +135,13 @@ class FrameInspections(FrameInspection):
         super().__init__(data_dir,profile,catalog,placement,first['inspection'],first['inspection_product'],linear_state_reader=linear_state_reader,fixed_jigs=fixed_jigs)
     def retain(self,ids):self.active_ids=frozenset(ids)
     def run(self):
+        inspector=None
         try:
-            from .shape_inspection import ShapeInspector
+            from .ai_inspection import inspector_for
             from .vision_service import MultiDetector
             from .inspection_geometry import anchors_for
             from .occupied_pallet import locate
-            inspector=ShapeInspector();inspector.stop=self.stop
+            inspector=inspector_for(self.profile);inspector.stop=self.stop
             detector=MultiDetector(self.catalog,self.profile) if self.fixed_jigs is None else None
             from .episode_inspection import fixed_jig_results
             fixed=fixed_jig_results(self.fixed_jigs) if self.fixed_jigs is not None else {}
@@ -176,3 +180,5 @@ class FrameInspections(FrameInspection):
                 for key,anchor_id in selected.items():out[key]['row']=deepcopy(rows.get(anchor_id))
                 self.result={'at':at,'results':out,'completed':time.monotonic()}
         except Exception as exc:self.result={'error':str(exc)}
+        finally:
+            if inspector is not None and hasattr(inspector,'close'):inspector.close()

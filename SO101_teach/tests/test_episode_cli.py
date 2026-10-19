@@ -15,7 +15,7 @@ class FakeLink:
     lease = 'test'
     def __init__(self):
         self.mode = 'READ_ONLY'; self.calls = []; self.request = None; self.completed = None
-        self.index = 0; self.pending = False; self.stale = False; self.auto_finish = True; self.frame = {}
+        self.index = 0; self.pending = False; self.stale = False; self.auto_finish = True; self.frame = {}; self.preparing = False
     def state(self):
         return {'running': True, 'error': None, 'state': self.mode, 'program_active': self.pending,
                 'command_pending': False, 'completed_request_id': self.completed, 'request_id': self.request,
@@ -24,6 +24,8 @@ class FakeLink:
                     'telemetry': {str(i): {'moving': 0, 'torque': 0 if self.mode == 'READ_ONLY' else 1} for i in range(6)}}}
     def rpc(self, method, args=None):
         args = args or {}; self.calls.append((method, deepcopy(args)))
+        if method=='camera_prepare':self.preparing=True
+        elif method=='camera_start':self.preparing=False
         if method == 'command':
             action = args['action']
             if action == 'release': self.mode = 'READ_ONLY'; self.pending = False
@@ -37,7 +39,9 @@ class FakeLink:
         if method == 'plan': return {'plan': [{'ticks': s['ticks']} for s in args['steps']]}
         return {}
     def post(self, endpoint, body=None):
-        if endpoint == '/camera': return self.frame
+        if endpoint == '/camera':
+            if self.preparing:return {'at':time.monotonic(),'detection':{'vision_ready':True,'selected':None,'candidates':[]}}
+            return self.frame
         if endpoint == '/state': return {'follower': self.state()}
         return self.rpc(body['method'], body['args'])
 
@@ -300,6 +304,7 @@ class ParallelPreparationTests(unittest.TestCase):
                 return super().rpc(method,args)
             def post(self, endpoint, body=None):
                 if endpoint!='/camera': return super().post(endpoint,body)
+                if self.preparing:return super().post(endpoint,body)
                 result={}
                 if self.ready is not None and outer.now>=self.ready:
                     result={'j':{'selected':{'metric':{'center_xy_mm':[self.generation,0],'yaw_deg':0}},

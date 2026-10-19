@@ -20,6 +20,7 @@ from .inspection_seating import COLORS
 from .adoption_display import drawable_adoptions
 from .shape_inspection import InspectionWorker
 from .display_coordinates import display_position,display_heading
+from .ai_inspection import METHODS,inspection_settings,inspection_label
 
 
 class CameraInspectionPanel(ttk.Frame):
@@ -36,6 +37,15 @@ class CameraInspectionPanel(ttk.Frame):
         self.capture_snapshot=None
         self.save_button=app.button(bar,'영상 저장',self.save_capture);self.save_button.grid(row=0,column=6,sticky='ns',padx=(8,0));self.save_button.state(['disabled'])
         self.folder_button=app.button(bar,'저장 폴더 열기',app.open_capture_folder);self.folder_button.grid(row=0,column=7,sticky='ns',padx=(8,0))
+        method_bar=ttk.Frame(bar,style='Card.TFrame');method_bar.grid(row=1,column=0,columnspan=8,sticky='ew',pady=(10,0))
+        ttk.Label(method_bar,text='안착검사 방식').pack(side='left',padx=(0,8))
+        self.method=tk.StringVar(value=inspection_label(app.profile))
+        self.method_choice=ttk.Combobox(method_bar,textvariable=self.method,values=tuple(METHODS),state='readonly',width=17)
+        self.method_choice.pack(side='left',padx=(0,8));self.method_choice.bind('<<ComboboxSelected>>',lambda e:self.update_method_controls())
+        self.method_apply=app.button(method_bar,'검사 방식 적용',self.apply_method);self.method_apply.pack(side='left',padx=(0,16))
+        self.method_status=tk.StringVar()
+        self.method_status_label=ttk.Label(method_bar,textvariable=self.method_status,style='Small.TLabel');self.method_status_label.pack(side='left')
+        self.update_method_controls(sync=True)
         self.status=tk.StringVar(value='영상 대기')
         status=tk.Label(self,textvariable=self.status,font=('Noto Sans CJK KR',10),fg='#526477',bg=UI_COLORS['panel'],height=2,width=1,anchor='w',justify='left');status.grid(row=1,column=0,columnspan=2,sticky='ew',pady=8);status.bind('<Configure>',lambda e:status.configure(wraplength=max(1,e.width)))
         self.canvas=tk.Canvas(self,bg='#132b3a',highlightthickness=0);self.canvas.grid(row=2,column=0,sticky='nsew')
@@ -58,6 +68,35 @@ class CameraInspectionPanel(ttk.Frame):
         self.reference=ROIReferencePanel(self);self.reference.grid(row=2,column=0,columnspan=2,rowspan=2,sticky='nsew');self.reference.grid_remove()
         self.canvas.bind('<Configure>',lambda e:self.app.draw_camera_frame(time.monotonic()))
         self.bind('<Destroy>',lambda e:self.worker.close() if e.widget is self else None)
+    def update_method_controls(self,sync=False):
+        settings=inspection_settings(self.app.profile);label=inspection_label(self.app.profile)
+        if sync:self.method.set(label)
+        detail='형상·색상·CAD 안착 비교' if settings['method']=='opencv' else f"YOLO26{settings['model']} · 신뢰도 {settings['confidence']:.1f} · AI 분류·마스크 + CAD 안착 비교"
+        set_text(self.method_status,'적용 중: '+label+' · '+detail)
+        self.method_apply.state(['disabled'] if self.method.get()==label else ['!disabled'])
+
+    def apply_method(self):
+        from .model_regions import runtime,identity
+        from .pi_execution import active_execution
+        app=self.app
+        if (app.pending_execution or app.camera_task or app.safe_entry or app.playing or app.detector.frozen
+                or app.pose_latch.frozen or getattr(getattr(app,'inspection_run',None),'busy',False) or active_execution(app)):
+            raise ValueError('측정·검사·실행이 끝난 뒤 안착검사 방식을 적용하세요.')
+        settings=inspection_settings(app.profile)
+        settings['method']=METHODS[self.method.get()]
+        if settings['method']=='model_roi':settings['model_identity']=identity(runtime(settings['model'])[2])
+        profile={**app.profile,'part_inspection':settings};inspection_settings(profile)
+        if app.remote_mode and app.remote:
+            if app.remote.error:raise ValueError('Pi 통신을 복구한 뒤 검사 방식을 적용하세요.')
+            from .remote_config import configuration_bundle
+            bundle=configuration_bundle(app);bundle['profile']['part_inspection']=settings
+            app.remote.sync_bundle(bundle)
+        app.profile=profile;app.persist_configuration()
+        self.clear();self.generation+=1;self.last_submit_at=0.
+        self.title.set('전체 검사 · 새 영상 대기');self.update_method_controls(sync=True)
+        app.notice('안착검사 방식 저장: '+inspection_label(profile)+' · 새 영상부터 검사합니다.')
+        app.draw_camera_frame(time.monotonic())
+
     def save_capture(self):
         from datetime import datetime
         from .domain import atomic_json
@@ -198,7 +237,7 @@ class CameraInspectionPanel(ttk.Frame):
             except (ValueError,KeyError,cv2.error):pass
             label=('운반 ' if a['station']=='운반용 지그' else '리니어 ' if a['station']=='리니어 조립' else '')+a['label']
             score='—' if row['score'] is None else f'{row["score"]}%'
-            values.append((a['id'],(label,row['label'],score),quality,row['reason']))
+            values.append((a['id'],(label,row['label'],score),quality,inspection_label(app.profile)+' · '+row['reason']))
         for station in ('운반용 지그','리니어 조립','완성품 팔레트'):
             if any(a['station']==station for a in anchors):continue
             names=[g+' '+k for g in ('A','B') for k in ('하단','중단','상단')] if station=='운반용 지그' else ['팔레트 1','팔레트 2'] if station=='리니어 조립' else ['완성품 팔레트']
@@ -223,7 +262,7 @@ class CameraInspectionPanel(ttk.Frame):
         set_text(self.parts,'\n'.join(' · '.join(cells) for _,cells,_,_ in values));set_text(self.position,'\n'.join('  /  '.join(positions[i:i+2]) for i in range(0,len(positions),2)))
         set_text(self.detected,detection_summary(results,app.catalog.items,fresh=detection_fresh))
         counts={q:sum(tag==q for _,_,tag,_ in values) for q in COLORS}
-        set_text(self.title,f'전체 {len(values)} · 정상 {counts["normal"]} / 비정상 {counts["abnormal"]} / 밖 {counts["outside"]} / 갱신 대기 {counts["waiting"]}')
+        set_text(self.title,f'{inspection_label(app.profile)} · 전체 {len(values)} · 정상 {counts["normal"]} / 비정상 {counts["abnormal"]} / 밖 {counts["outside"]} / 대기 {counts["waiting"]}')
         self.center_marks=draw_linear_centers(image,app.profile,self.reference.data,app.workcell_preview,self.endpoint.get(),labels=False,layout=layout)
         self.label_rectangles=self.part_labels.draw(image,labels)
         message=messages['리니어 조립']

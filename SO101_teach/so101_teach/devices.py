@@ -288,6 +288,8 @@ class CameraSession:
         finally:
             if cap is not None:cap.release()
             self.stop.set();self.frame_ready.set()
+            owner=getattr(self.processor,'__self__',None)
+            if hasattr(owner,'close'):owner.close()
             if self.processing_thread:self.processing_thread.join(3)
             self.running=False
     def close(self):self.stop.set();self.frame_ready.set()

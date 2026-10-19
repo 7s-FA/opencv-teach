@@ -64,26 +64,34 @@ def rectangle_proposals(frame,mesh,allowed,profile,visible,*,seed_poses=None,evi
     # All samples lie on one plane. Project with the equivalent homography
     # without allocating and multiplying an N-by-128-by-3 world/camera array.
     H=K@np.column_stack((T[:3,0],T[:3,1],T[:3,2]*z+T[:3,3]))
-    def evaluate(poses,strict=True):
+    def evaluate_batch(poses,strict=True):
         c=np.cos(poses[:,2,None]);s=np.sin(poses[:,2,None])
         x=c*sample[:,0]-s*sample[:,1]+poses[:,0,None]
         y=s*sample[:,0]+c*sample[:,1]+poses[:,1,None]
         depth=H[2,0]*x+H[2,1]*y+H[2,2]
-        uv=np.stack(((H[0,0]*x+H[0,1]*y+H[0,2])/depth,
-                     (H[1,0]*x+H[1,1]*y+H[1,2])/depth),axis=-1)
-        pixels=np.rint(uv).astype(int);h,w=gray.shape
-        inside=(pixels[:,:,0]>=0)&(pixels[:,:,0]<w)&(pixels[:,:,1]>=0)&(pixels[:,:,1]<h)
-        px=np.clip(pixels[:,:,0],0,w-1);py=np.clip(pixels[:,:,1],0,h-1)
+        # Keep coordinates contiguous and avoid two N-by-128-by-2 copies.
+        px=np.rint((H[0,0]*x+H[0,1]*y+H[0,2])/depth).astype(int)
+        py=np.rint((H[1,0]*x+H[1,1]*y+H[1,2])/depth).astype(int);h,w=gray.shape
+        inside=(px>=0)&(px<w)&(py>=0)&(py<h)
+        np.clip(px,0,w-1,out=px);np.clip(py,0,h-1,out=py)
         observed=inside&(visible[py,px]>0);in_roi=allowed[py,px]>0
         count=observed.reshape(-1,4,32).sum(2);d=distance[py,px]
-        support=((d<2.5)&observed).reshape(-1,4,32).sum(2)/np.maximum(count,1)
         cost=(np.minimum(d,5)/5*observed).reshape(-1,4,32).sum(2)/np.maximum(count,1)
-        valid=(count.min(1)>=24)&(support.min(1)>=.65)&(support.mean(1)>=.8)&~(observed&~in_roi).any(1)
+        valid=(count.min(1)>=24)&~(observed&~in_roi).any(1)
         score=cost.mean(1)
-        if strict:valid &=score<=.20
-        else:valid=(count.min(1)>=24)&~(observed&~in_roi).any(1)
+        support=None
+        if strict:
+            support=((d<2.5)&observed).reshape(-1,4,32).sum(2)/np.maximum(count,1)
+            valid &=(support.min(1)>=.65)&(support.mean(1)>=.8)&(score<=.20)
         score[~valid]=np.inf
         return score,support
+    def evaluate(poses,strict=True):
+        # Small float64 batches fit the Pi cache without changing the pose
+        # lattice, arithmetic, candidate ordering or acceptance criteria.
+        size=128
+        if len(poses)<=size:return evaluate_batch(poses,strict)
+        parts=[evaluate_batch(poses[start:start+size],strict) for start in range(0,len(poses),size)]
+        return np.concatenate([part[0] for part in parts]),np.concatenate([part[1] for part in parts]) if strict else None
     span,step,turn=(24,4,8) if seed_poses is None else (8,2,4)
     grid=np.stack(np.meshgrid(np.arange(-span,span+.1,step),np.arange(-span,span+.1,step),np.deg2rad(np.arange(-turn,turn+.1,2)),indexing='ij'),axis=-1).reshape(-1,3)
     fine=np.stack(np.meshgrid(np.arange(-3,3.1,1),np.arange(-3,3.1,1),np.deg2rad(np.arange(-2,2.1,.5)),indexing='ij'),axis=-1).reshape(-1,3)

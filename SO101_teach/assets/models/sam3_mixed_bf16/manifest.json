@@ -1,0 +1,25 @@
+{
+  "model": "SAM3",
+  "training": "real+synthetic",
+  "format": "PyTorch BF16",
+  "imgsz": 1008,
+  "files": {
+    "base.pt": "9999e2341ceef5e136daa386eecb55cb414446a00ac2b55eb2dfd2f7c3cf8c9e",
+    "adapter.pt": "05a43ec19cd8731f0ce0f3eb1834e1d7231462c336fae6fcb6cf3b45ce574f28",
+    "prompts.json": "d80f98f349a61f3e534861cca4719b5ee0fd8c71058e8406759965a5abba0642"
+  },
+  "base_is_shared": true,
+  "runtime_optimization": {
+    "name": "cached_text_compile",
+    "text_feature_cache": true,
+    "torch_compile": true,
+    "compile_mode": "default",
+    "compiled_components": [
+      "vision ViT",
+      "segmentation pixel decoder"
+    ],
+    "cache_dir": "training-artifacts/benchmarks/sam3_runtime_optimization_20261018/inductor-cache",
+    "precision": "BF16",
+    "validation_report": "training-artifacts/benchmarks/sam3_runtime_optimization_20261018/test-cached_text_compile/report.json"
+  }
+}

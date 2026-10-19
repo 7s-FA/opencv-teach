@@ -22,6 +22,27 @@ CARRIER_HOUSING_MARGIN_MM=2.
 CARRIER_HOUSING_POSITION_TOLERANCE_MM=5.
 BOUNDARY_FRACTION=.01
 ROTATION_TOLERANCE_DEG=12.
+EMPTY_SHAPE_FLOOR=.45
+
+
+def empty_floor_edges(cloud,anchor,profile,lo,size):
+    """Project only the recessed floor edges visible through the CAD opening."""
+    mask=np.zeros(size,np.uint8)
+    bottom=np.isclose(cloud[:,2],cloud[:,2].min())
+    if bottom.all():return mask>0
+    floor=cloud[bottom];rim_z=float(cloud[~bottom,2].min())
+    camera=np.linalg.inv(anchor['camera_from_local'])[:3,3]
+    if camera[2]<=rim_z:return mask>0
+    # A floor point can be seen only if its ray to the camera stays inside
+    # the opening at rim height. The floor footprint is a conservative inner
+    # bound, so obscured rear edges never become required visual evidence.
+    ray=floor+(camera-floor)*((rim_z-floor[:,2])/(camera[2]-floor[:,2]))[:,None]
+    visible=((ray[:,:2]>=floor[:,:2].min(0))&(ray[:,:2]<=floor[:,:2].max(0))).all(1)
+    if not visible.any():return mask>0
+    uv=np.rint(project(floor[visible],anchor,profile)-lo).astype(int)
+    uv=uv[(uv[:,0]>=0)&(uv[:,0]<size[1])&(uv[:,1]>=0)&(uv[:,1]<size[0])]
+    mask[uv[:,1],uv[:,0]]=255
+    return cv2.morphologyEx(mask,cv2.MORPH_CLOSE,np.ones((3,3),np.uint8))>0
 
 
 class ShapeInspector:
@@ -147,12 +168,24 @@ class ShapeInspector:
         points=np.concatenate([np.column_stack(np.where(m['edge']>0)[::-1]) for _,m in templates])
         if len(points)>2:cv2.fillConvexPoly(region,cv2.convexHull(points.astype(np.int32)),255)
         region=cv2.dilate(region,np.ones((5,5),np.uint8))>0
-        for _,masks in templates:
+        for name,masks in templates:
             distances=cv2.distanceTransform(255-masks['edge'],cv2.DIST_L2,3)
             masks['_region']=region;masks['_distances']=distances
             masks['_edges']=masks['edge']>0;masks['_expected']=masks['color']>0
             masks['_edge_count']=int(masks['_edges'].sum());masks['_color_count']=int(masks['_expected'].sum())
             masks['_precision_kernel']=np.exp(-distances/2)*region
+            if anchor.get('part')=='finished' and self.meta[name]['state']=='empty':
+                # Raised product templates project beyond the empty fixture.
+                # Their shared search region can contain colored background and
+                # unrelated edges. Judge absence within this fixture's own CAD
+                # footprint, keeping the same raster margin and score limits.
+                empty_region=np.zeros(size,np.uint8)
+                points=np.column_stack(np.where(masks['edge']>0)[::-1]).astype(np.int32)
+                cv2.fillConvexPoly(empty_region,cv2.convexHull(points),255)
+                empty_region=cv2.dilate(empty_region,np.ones((5,5),np.uint8))>0
+                masks['_empty_region']=empty_region
+                masks['_empty_precision_kernel']=np.exp(-distances/2)*empty_region
+                masks['_empty_floor']=empty_floor_edges(self.arrays[name+'__edge'],anchor,profile,lo,size)
             masks['_material_masks']={part:cv2.erode(masks[part],np.ones((5,5),np.uint8))>0 for part in ('housing','insert','cap')}
             masks['_coverage']={};masks['_interior']={}
         value=(lo,hi,templates)
@@ -204,7 +237,6 @@ class ShapeInspector:
                 # Use softer edges only for their empty-state templates.
                 empty_edges=cv2.Canny(blurred,15,45) if anchor.get('part')=='finished' else None
                 empty_distance=cv2.distanceTransform(255-empty_edges,cv2.DIST_L2,3) if empty_edges is not None else None
-                empty_count=correlate(empty_edges>0,region) if empty_edges is not None else None
                 yy,xx=np.mgrid[-radius:radius+1,-radius:radius+1]
                 shift_penalty=np.hypot(xx,yy)*.001
                 local_offsets=np.linalg.solve(pixel_axes,np.stack([xx,yy]).reshape(2,-1)).reshape(2,*xx.shape)
@@ -223,9 +255,11 @@ class ShapeInspector:
                     empty_fixture=empty_edges is not None and self.meta[name]['state']=='empty'
                     image_similarity=empty_similarity if empty_fixture else observed_similarity
                     image_edges=empty_observed_edges if empty_fixture else observed_edges
-                    image_count=empty_count if empty_fixture else edge_count
+                    score_region=masks['_empty_region'] if empty_fixture else region
+                    image_count=correlate(image_edges,score_region) if empty_fixture else edge_count
+                    precision_kernel=masks['_empty_precision_kernel'] if empty_fixture else masks['_precision_kernel']
                     recall=correlate(image_similarity,masks['_edges'])/max(1,masks['_edge_count'])
-                    precision=correlate(image_edges,masks['_precision_kernel'])/np.maximum(1,image_count)
+                    precision=correlate(image_edges,precision_kernel)/np.maximum(1,image_count)
                     shape_score=2*recall*precision/np.maximum(.001,recall+precision)
                     n=masks['_color_count']
                     if n:
@@ -234,14 +268,23 @@ class ShapeInspector:
                         score=.4*silhouette+.6*shape_score
                     else:
                         # Only a matching empty fixture supports an absence observation.
-                        silhouette=np.maximum(0,1-color_count/max(1,int(region.sum()))*12)
+                        occupancy=correlate(observed_color,score_region) if empty_fixture else color_count
+                        silhouette=np.maximum(0,1-occupancy/max(1,int(score_region.sum()))*12)
                         score=shape_score*silhouette
                     if radius not in masks['_coverage']:
                         masks['_coverage'][radius]=correlate(coverage_image,expected if n else masks['_edges'])/max(1,n if n else masks['_edge_count'])
                     covered=masks['_coverage'][radius]
                     allowed=bounded & (covered>=(.98 if n else .85))
                     if not allowed.any():continue
-                    y,x=np.unravel_index(np.argmax(np.where(allowed,score-shift_penalty,-1)),score.shape)
+                    floor_support=None;eligible=allowed
+                    if empty_fixture:
+                        floor=masks['_empty_floor']
+                        floor_support=correlate(image_similarity,floor)/max(1,int(floor.sum()))
+                        # A flat cover can resemble the outer rim. Require the
+                        # recessed opening as well, using the same shape floor
+                        # and bounded translation search as the existing fit.
+                        eligible=allowed & (floor_support>=EMPTY_SHAPE_FLOOR)
+                    y,x=np.unravel_index(np.argmax(np.where(eligible if eligible.any() else allowed,score-shift_penalty,-1)),score.shape)
                     offset=np.linalg.solve(pixel_axes,[x-radius,y-radius])
                     material=None;material_parts={}
                     if n:
@@ -295,7 +338,9 @@ class ShapeInspector:
                                 precision_detail=float(np.exp(-masks['_detail_distances'][actual]/2).mean()) if actual.any() else 0.
                                 detail=2*recall_detail*precision_detail/max(.001,recall_detail+precision_detail)
                             else:detail=max(0.,1-float(actual.sum())/max(1,float(interior.sum())*.04))
-                    results.append({'template':name,'score':combined,'shape':float(shape_score[y,x]),'silhouette':float(silhouette[y,x]),'material':material,'material_parts':material_parts,'interior_detail':detail,'offset_mm':offset.round(2).tolist()})
+                    candidate={'template':name,'score':combined,'shape':float(shape_score[y,x]),'silhouette':float(silhouette[y,x]),'material':material,'material_parts':material_parts,'interior_detail':detail,'offset_mm':offset.round(2).tolist()}
+                    if empty_fixture:candidate['empty_floor_support']=float(floor_support[y,x])
+                    results.append(candidate)
                 # Competing templates belong to a known fixture. A template
                 # needing a large translation is weaker geometric evidence.
                 for candidate in results:candidate['rank_score']=candidate['score']-.008*float(np.linalg.norm(candidate['offset_mm']))+.10*(candidate['interior_detail'] or 0.)
@@ -311,9 +356,9 @@ class ShapeInspector:
                 rival=next((r for r in results[1:] if visual_state(self.meta[r['template']])!=observed_state),None)
                 margin=best['rank_score']-(rival['rank_score'] if rival else 0)
                 empty_fixture=anchor.get('part')=='finished' and meta['state']=='empty'
-                score_floor,shape_floor,margin_floor=(.45,.45,.10) if empty_fixture else (.50,.32,.02)
+                score_floor,shape_floor,margin_floor=(.45,EMPTY_SHAPE_FLOOR,.10) if empty_fixture else (.50,.32,.02)
                 confident=best['score']>=score_floor and margin>=margin_floor and best['shape']>=shape_floor
-                if empty_fixture:confident=confident and best['silhouette']>=.98
+                if empty_fixture:confident=confident and best['silhouette']>=.98 and best['empty_floor_support']>=shape_floor
                 row.update(score=round(best['score']*100),template=best['template'],candidates=results,margin=round(margin,3),offset_mm=best['offset_mm'])
                 if confident:
                     same_state=[r for r in results if (self.meta[r['template']]['state'] in ('cap_only','cap_added') if observed_state=='cap_visible' else self.meta[r['template']]['state']==meta['state']) and best['score']-r['score']<.08]
@@ -331,6 +376,8 @@ class ShapeInspector:
                         dx,dy=best['offset_mm'];row['reason']+=f' · 위치차 {dx:+.1f}/{dy:+.1f} mm'
                 else:
                     row['reason']=('부품 구분 기준 미충족' if margin<margin_floor else '색상·외곽·홈 검사 기준 미충족')+f' · 일치 {best["score"]*100:.0f}/{score_floor*100:g}점 · 외곽 {best["shape"]:.2f}/{shape_floor:g} · 상태차 {margin:.2f}/{margin_floor:g}'
+                    if empty_fixture and best['empty_floor_support']<shape_floor:
+                        row['reason']+=f' · 빈 구멍 바닥 근거 {best["empty_floor_support"]:.2f}/{shape_floor:g} 미달'
                 masks=dict(templates)[best['template']];roi=masks['roi'];row['roi_polygon']=masks['roi_polygon'];row['roi_display_polygon']=masks['roi_display_polygon']
                 row['missing_visible_parts']=[p for p in meta.get('visible',[]) if best['material_parts'].get(p,0)<.3]
                 delta=pixel_axes@best['offset_mm'];target=cv2.warpAffine(masks['color'],np.float32([[1,0,delta[0]],[0,1,delta[1]]]),(gray.shape[1],gray.shape[0]))>0
@@ -448,7 +495,9 @@ class InspectionWorker(threading.Thread):
         if self.is_alive() and threading.current_thread() is not self:self.join(timeout=1)
     def run(self):
         inspector=None;error=None
-        try:inspector=ShapeInspector();inspector.stop=self.stop
+        try:
+            from .ai_inspection import ModelInspector
+            inspector=ModelInspector(geometry=ShapeInspector());inspector.stop=self.stop
         except Exception as exc:error=str(exc)
         previous={};last_key=None;last_at=None;last_completed=None
         while not self.stop.is_set():
@@ -481,3 +530,4 @@ class InspectionWorker(threading.Thread):
                 if state not in ('unknown',) and count<2:row.update(state='checking',quality='waiting',label='확인 중',reason='다음 새 영상에서 같은 형상 확인')
             previous=current;last_key=key;last_at=at;last_completed=time.monotonic()
             self.result={'key':key,'at':at,'completed':time.monotonic(),'rows':rows,'anchors':anchors,'error':error}
+        if inspector is not None:inspector.close()

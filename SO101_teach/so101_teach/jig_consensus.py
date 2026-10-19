@@ -113,7 +113,7 @@ def median_candidate(group,profile=None,mesh=None):
     return out
 
 class StableCandidate:
-    """All distinct processed frames count; only a finished window may adopt."""
+    """Collect a full window unless a jig's validated early gate passes."""
     angle_delta=staticmethod(angle_delta)
     def __init__(self,seconds=ACQUISITION_SECONDS,attempts_limit=3):self.configure(seconds,attempts_limit)
     def configure(self,seconds,attempts_limit=None):
@@ -121,7 +121,7 @@ class StableCandidate:
         attempts=checked_attempts(attempts_limit if attempts_limit is not None else getattr(self,'attempts_limit',3))
         self.seconds=seconds;self.attempts_limit=attempts;self.clear()
     def clear(self,started=None):
-        self.started=started;self.last_at=None;self.samples=[];self.latest=None;self.completed_attempts=0
+        self.started=started;self.last_at=None;self.samples=[];self.latest=None;self.completed_attempts=0;self.cad_early_ids=[];self.carrier_early_ids=[]
         self.profile=None;self.mesh=None;self.last_output=None;self.exhausted=False
     def _progress(self,now):
         out=deepcopy(self.latest or {'candidates':[]});out['selected']=None
@@ -158,7 +158,7 @@ class StableCandidate:
                        verified_for_motion=False,pose_measured_at=self.last_at)
         else:
             out['acquisition_issue']='관측 부족' if len(values)<2 else '위치 불일치' if not enough else '최신 위치 미확인'
-        self.completed_attempts+=1;self.started=completed;self.samples=[];self.latest=None
+        self.completed_attempts+=1;self.started=completed;self.samples=[];self.latest=None;self.cad_early_ids=[];self.carrier_early_ids=[]
         self.exhausted=not out.get('selected') and self.completed_attempts>=self.attempts_limit
         out['acquisition_exhausted']=self.exhausted
         if self.exhausted:self.started=None
@@ -179,6 +179,21 @@ class StableCandidate:
             self.latest=deepcopy(result);self.last_at=now
             current=self.candidate(result)
             if current is not None:self.samples.append((now,deepcopy(current)))
+            if self.cad_early_ids is not None:
+                observation_id=result.get('cad_observation_id')
+                cad=(current is not None and result.get('pallet_pose_method')=='cad_silhouette_fit'
+                     and result.get('status')=='shape_match' and len(result.get('candidates',[]))==1
+                     and current.get('cad_pose_validated') and current.get('shape_match')
+                     and current.get('metric',{}).get('dimension_source')=='cad_silhouette_fit')
+                if not cad or not isinstance(observation_id,str) or not observation_id or observation_id in self.cad_early_ids:
+                    self.cad_early_ids=None
+                else:self.cad_early_ids.append(observation_id)
+            if self.carrier_early_ids is not None:
+                observation_id=result.get('carrier_observation_id')
+                if (current is None or not isinstance(observation_id,str) or not observation_id
+                        or observation_id in self.carrier_early_ids):
+                    self.carrier_early_ids=None
+                else:self.carrier_early_ids.append(observation_id)
         if done is not None:
             # A closing frame outside the window is not another vote, but it
             # must not contradict a pose we are about to publish for the first time.
@@ -191,6 +206,36 @@ class StableCandidate:
                 if self.exhausted:self.started=None;self.samples=[];self.latest=None
                 self.last_output=deepcopy(done)
             return done
+        if fresh and self.cad_early_ids is not None and len(self.samples)==3 and len(self.cad_early_ids)==3 and now<self.started+self.seconds:
+            values=[c for _,c in self.samples]
+            # Only the first three fresh CAD observations may finish early.
+            # A mismatch leaves every observation in the original full window.
+            if all(agrees(a,b) for i,a in enumerate(values) for b in values[i+1:]):
+                chosen=median_candidate(values,self.profile,self.mesh);out=self._progress(now)
+                out.update(selected=chosen,candidates=[chosen],status='shape_match',verified_for_motion=False,
+                           pose_measured_at=now,adoption_method='cad_three_frame_gate',adoption_inliers=3,adoption_rejected=0,
+                           stable_candidate_required_samples=3,acquisition_completed_at=now,
+                           acquisition_completed_attempts=self.completed_attempts+1,acquisition_exhausted=False)
+                self.started=now;self.samples=[];self.latest=None;self.completed_attempts=0;self.cad_early_ids=[];self.carrier_early_ids=[]
+                self.last_output=deepcopy(out)
+                return out
+            self.cad_early_ids=None
+        if fresh and self.carrier_early_ids is not None and len(self.samples)==3 and len(self.carrier_early_ids)==3 and now<self.started+self.seconds:
+            from .two_frame_gate import pose_delta
+            values=[c for _,c in self.samples]
+            pairs=[(a,b) for i,a in enumerate(values) for b in values[i+1:]]
+            # Keep the ordinary pixel/area bounds and additionally require
+            # every metric pair to agree within 0.5 mm and 0.5 degrees.
+            if all(agrees(a,b) and max(pose_delta(a,b))<=.5 for a,b in pairs):
+                chosen=median_candidate(values,self.profile,self.mesh);out=self._progress(now)
+                out.update(selected=chosen,candidates=[chosen],status='shape_match',verified_for_motion=False,
+                           pose_measured_at=now,adoption_method='carrier_three_frame_gate',adoption_inliers=3,adoption_rejected=0,
+                           stable_candidate_required_samples=3,acquisition_completed_at=now,
+                           acquisition_completed_attempts=self.completed_attempts+1,acquisition_exhausted=False)
+                self.started=now;self.samples=[];self.latest=None;self.completed_attempts=0;self.cad_early_ids=[];self.carrier_early_ids=[]
+                self.last_output=deepcopy(out)
+                return out
+            self.carrier_early_ids=None
         done=self.finish(now)
         self.last_output=deepcopy(done if done is not None else self._progress(now))
         return deepcopy(self.last_output)

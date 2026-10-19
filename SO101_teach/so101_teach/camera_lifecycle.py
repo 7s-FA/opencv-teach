@@ -56,7 +56,9 @@ class CameraLifecycle:
         measuring=bool(self.pending_execution or task and task['kind'] in ('jig','follow') and not task.get('captured'))
         photo=bool(task and task['kind']=='photo')
         inspecting=bool(getattr(getattr(self,'inspection_run',None),'busy',False))
-        processing=not inspecting and (measuring or not photo and not self.jig_updates_paused and not self.detector.frozen)
+        yolo=getattr(self,'camera_yolo',None)
+        yolo_view=bool(yolo is not None and yolo.visible())
+        processing=not inspecting and (measuring or not photo and not yolo_view and not self.jig_updates_paused and not self.detector.frozen)
         camera.set_mode(processing_enabled=processing,preview_fps=10 if processing or photo or inspecting else 5)
 
     def camera_page_changed(self,previous):

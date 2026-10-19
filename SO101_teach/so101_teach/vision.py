@@ -130,7 +130,7 @@ def project_plane(points,profile,z_mm):
     uv,_=cv2.projectPoints(camera,np.zeros(3),np.zeros(3),np.array(profile['intrinsics']['K']),np.array(profile['intrinsics']['D']))
     return uv.reshape(-1,2).astype(np.float32)
 
-def detect(frame,mesh,roi=None,profile=None,*,prepared=None):
+def detect(frame,mesh,roi=None,profile=None,*,prepared=None,search_mask=None,pose_seed=None):
     from .lens_geometry import DetectionFrame,detection_region
     prepared=prepared or DetectionFrame(frame,profile)
     if mesh.get('shape')=='rectangle':prepared=detection_region(prepared,roi)
@@ -140,20 +140,47 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None):
     geometry=deepcopy(prepared.profile)
     if geometry is not None and profile is not None:geometry['table_z_mm']=profile.get('table_z_mm',-7.4)
     allowed=prepared.mask(roi)
+    if search_mask is not None:
+        allowed=cv2.bitwise_and(allowed,prepared.search_mask(search_mask))
+        if not np.any(allowed):return {'selected':None,'candidates':[],'status':'model_not_found','error':'모델 영역과 지정 범위가 겹치지 않습니다.','verified_for_motion':False}
     from .frame_evidence import FrameEvidence,RegionEvidence
     if prepared.evidence is None:prepared.evidence=FrameEvidence(prepared.frame)
     evidence=RegionEvidence(prepared.frame,allowed,prepared.evidence)
     use_grid=mesh.get('method')=='grid'
-    hints=[]
+    hints=[];grid_observations=[];grid_lines=[]
     if use_grid:
         from .grid_model import grid_hypotheses
-        hints=grid_hypotheses(prepared.frame,mesh,allowed,geometry,evidence=evidence,visible=prepared.mask(None))
+        hints=grid_hypotheses(prepared.frame,mesh,allowed,geometry,evidence=evidence,visible=prepared.mask(None),observations=grid_observations,line_observations=grid_lines)
     def finish(result):
         from .pose_refinement import refine
         result=refine(prepared.frame,mesh,geometry,allowed,prepared.mask(None),result,evidence=evidence)
         if use_grid:
-            from .grid_model import attach_grid
-            result=attach_grid(result,hints,mesh)
+            from .grid_model import attach_grid,matching_grid,verify_grid_fragments
+            # Seed deduplication favours image support before the rim is known.
+            # Once its outer boundary is measured, compare all independently
+            # supported crossing pairs rather than only those seed winners.
+            result=attach_grid(result,grid_observations,mesh)
+            result['grid_hypotheses']=len(hints)
+            chosen=result.get('selected')
+            if chosen and chosen.get('observed_boundary_refined') and not chosen.get('grid_verified'):
+                # Low-contrast dividers can fragment before they span both
+                # crossings. Retry evidence from this image with local contrast
+                # enhancement, retaining the same geometric/support checks.
+                # This verifies the already measured rim; it does not move it.
+                enhanced=[];enhanced_hint_count=0
+                for refit in (False,True):
+                    enhanced_hint_count+=len(grid_hypotheses(prepared.frame,mesh,allowed,geometry,
+                                    evidence=evidence,visible=prepared.mask(None),refine_lines=refit,enhanced=True,observations=enhanced,line_observations=grid_lines))
+                match=matching_grid(chosen,enhanced,mesh)
+                if match:
+                    attach_grid(result,enhanced,mesh)
+                    result['grid_hypotheses']=enhanced_hint_count
+                    chosen['grid_contrast_recovery']=True
+            if chosen and chosen.get('observed_boundary_refined') and not chosen.get('grid_verified'):
+                fragments=verify_grid_fragments(chosen,grid_lines,mesh,allowed,geometry,prepared.mask(None),evidence)
+                if matching_grid(chosen,fragments,mesh):
+                    hint_count=result['grid_hypotheses'];attach_grid(result,fragments,mesh)
+                    result['grid_hypotheses']=hint_count;chosen['grid_fragment_recovery']=True
             if result.get('grid_seed_recovery'):
                 valid=[c for c in result['candidates'] if c.get('grid_verified')]
                 result.update(candidates=valid,selected=valid[0] if len(valid)==1 else None,status='shape_match' if len(valid)==1 else 'ambiguous' if valid else 'not_found')
@@ -165,6 +192,24 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None):
             from .raised_model import attach_raised
             result=attach_raised(prepared.frame,mesh,allowed,geometry,result,evidence=evidence)
         return prepared.restore(result)
+    if pose_seed is not None:
+        seed=np.asarray(pose_seed,float)
+        if seed.shape!=(3,) or not np.isfinite(seed).all():raise ValueError('잘못된 마스크 위치·각도 후보')
+        if mesh.get('shape')=='rectangle':
+            from .rectangle_model import rectangle_proposals
+            proposals=rectangle_proposals(prepared.frame,mesh,allowed,geometry,prepared.mask(None),seed_poses=[seed],evidence=evidence)
+        else:
+            from .edge_model import ring_proposals
+            proposals=ring_proposals(prepared.frame,mesh,allowed,geometry,seed_poses=[seed],evidence=evidence)
+        if not proposals:
+            return {'selected':None,'candidates':[],'status':'mask_rim_not_found','verified_for_motion':False}
+        result=_detect(prepared.frame,mesh,None,geometry,allowed_mask=allowed,proposals=proposals,visible_mask=prepared.mask(None),evidence=evidence)
+        result=finish(result)
+        # Temporal consensus must not promote a mask seed or failed image fit.
+        if not result.get('selected') or not result['selected'].get('shape_match'):
+            result.update(selected=None,candidates=[])
+        else:result['mask_seed_refined']=True
+        return result
     def recover_grid():
         nonlocal hints
         from .rectangle_model import rectangle_proposals
@@ -174,7 +219,7 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None):
                 # A noisy longest divider can bias its distant crossings.
                 # Retry observed-fragment fitting only after normal evidence
                 # fails, retaining every size, ROI and grid acceptance check.
-                hints=grid_hypotheses(prepared.frame,mesh,allowed,geometry,evidence=evidence,visible=prepared.mask(None),refine_lines=True)
+                hints=grid_hypotheses(prepared.frame,mesh,allowed,geometry,evidence=evidence,visible=prepared.mask(None),refine_lines=True,observations=grid_observations,line_observations=grid_lines)
             if not hints:continue
             proposals=rectangle_proposals(prepared.frame,mesh,allowed,geometry,prepared.mask(None),seed_poses=[h['pose'] for h in hints],evidence=evidence)
             if not proposals:continue

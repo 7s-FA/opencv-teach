@@ -2,6 +2,11 @@
 import cv2
 import numpy as np
 
+# Exact float64 equivalents of the per-pixel colour arithmetic. HSV channels
+# are uint8, so indexing avoids expanding the entire three-channel image.
+_WHITE_VALUE=np.clip((np.arange(256,dtype=float)-90)/90,0,1)
+_WHITE_SATURATION=1-np.clip((np.arange(256,dtype=float)-40)/120,0,1)
+
 class FrameEvidence:
     def __init__(self,frame):self.frame=frame;self.cache={}
     def get(self,key,make):
@@ -14,9 +19,16 @@ class FrameEvidence:
     def hsv(self):return self.get('hsv',lambda:cv2.cvtColor(self.frame,cv2.COLOR_BGR2HSV))
     def white(self):
         def make():
-            hsv=self.hsv().astype(float)
-            return np.clip((hsv[:,:,2]-90)/90,0,1)*(1-np.clip((hsv[:,:,1]-40)/120,0,1))
+            hsv=self.hsv()
+            return _WHITE_VALUE[hsv[:,:,2]]*_WHITE_SATURATION[hsv[:,:,1]]
         return self.get('white',make)
+    def gradient_directions(self,enhanced=False):
+        def make():
+            gray=self.blurred(enhanced)
+            gx=cv2.Sobel(gray,cv2.CV_32F,1,0);gy=cv2.Sobel(gray,cv2.CV_32F,0,1)
+            magnitude=np.maximum(np.hypot(gx,gy),1);gx/=magnitude;gy/=magnitude
+            return gx,gy
+        return self.get(('gradient_directions',enhanced),make)
     def edges(self,low=20,high=60,enhanced=False):return self.get(('edges',low,high,enhanced),lambda:cv2.Canny(self.blurred(enhanced),low,high))
 
 class RegionEvidence:

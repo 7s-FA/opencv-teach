@@ -217,7 +217,7 @@ def criteria_signature(root=None):
         from .domain import ROOT
         root=ROOT
     root=Path(root);digest=hashlib.sha256()
-    files=('so101_teach/assembly_evidence.py','so101_teach/episode_inspection.py','so101_teach/episode_inspection_runtime.py','so101_teach/shape_inspection.py','so101_teach/inspection_geometry.py','so101_teach/inspection_seating.py','inspection/roi_reference.json','inspection/shape_templates.json','inspection/shape_templates.npz','inspection/appearance_reference.json','so101_teach/occupied_pallet.py','so101_teach/orientation_model.py','so101_teach/junction_orientation.py','assets/reference/carrier-junction.png')
+    files=('so101_teach/ai_inspection.py','so101_teach/model_regions.py','so101_teach/assembly_evidence.py','so101_teach/episode_inspection.py','so101_teach/episode_inspection_runtime.py','so101_teach/shape_inspection.py','so101_teach/inspection_geometry.py','so101_teach/inspection_seating.py','inspection/roi_reference.json','inspection/shape_templates.json','inspection/shape_templates.npz','inspection/appearance_reference.json','so101_teach/occupied_pallet.py','so101_teach/orientation_model.py','so101_teach/junction_orientation.py','assets/reference/carrier-junction.png')
     for name in files:
         path=root/name
         if not path.is_file():raise ValueError('안착 검사 기준 파일 없음: '+name)

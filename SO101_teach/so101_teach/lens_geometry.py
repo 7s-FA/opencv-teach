@@ -46,6 +46,10 @@ class DetectionFrame:
         rays=cv2.undistortPoints(points.reshape(-1,1,2),self.newK,None).reshape(-1,2)
         uv,_=cv2.projectPoints(np.c_[rays,np.ones(len(rays))],np.zeros(3),np.zeros(3),self.K,self.D)
         return uv.reshape(-1,2)
+    def search_mask(self,mask):
+        if mask.shape!=(self.height,self.width):raise ValueError('모델 탐색 영역과 원본 영상 크기가 다릅니다.')
+        mask=np.asarray(mask,np.uint8)
+        return cv2.bitwise_and(cv2.remap(mask,*self.maps,cv2.INTER_NEAREST),self.valid) if self.maps else mask
     def restore(self,result):
         result['lens_corrected']=self.maps is not None
         if self.maps is None and not getattr(self,'offset',None):return result
@@ -83,6 +87,9 @@ class DetectionRegion(DetectionFrame):
         return self.parent.mask(roi)[y:y+self.height,x:x+self.width]
     def raw_points(self,points):
         return self.parent.raw_points(np.asarray(points).reshape(-1,2)+self.offset)
+    def search_mask(self,mask):
+        x,y=self.offset
+        return self.parent.search_mask(mask)[y:y+self.height,x:x+self.width]
 
 
 def detection_region(prepared,roi):

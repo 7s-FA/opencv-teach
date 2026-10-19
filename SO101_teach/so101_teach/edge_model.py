@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 from .height_reference import detection_plane_z
 
-def ring_proposals(frame,mesh,allowed,profile,*,evidence=None):
+def ring_proposals(frame,mesh,allowed,profile,*,evidence=None,seed_poses=None):
     from .vision import ordered_quad,world_xy,project_plane,quad_inside_mask
     if mesh.get('shape','ring')!='ring' or len(mesh.get('holes',[]))!=1 or not profile or not profile.get('extrinsics') or not profile.get('intrinsics'):return []
     width,height=mesh['size_mm'][:2];hole=mesh['holes'][0]
@@ -15,36 +15,42 @@ def ring_proposals(frame,mesh,allowed,profile,*,evidence=None):
     from .frame_evidence import RegionEvidence
     evidence=evidence or RegionEvidence(frame,allowed)
     gray=evidence.source.blurred(True);edges=evidence.edges(enhanced=True)
-    # Bridge tiny gaps only when finding opening seeds. Every proposal is
-    # still checked against the original, unclosed edge image below.
-    closed=cv2.morphologyEx(edges,cv2.MORPH_CLOSE,np.ones((5,5),np.uint8));closed &=allowed
-    contours=list(cv2.findContours(closed,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0])
-    z=detection_plane_z(profile,mesh);seeds=[]
-    for contour in contours:
-        if not 80<cv2.contourArea(contour)<frame.shape[0]*frame.shape[1]*.1:continue
-        poly=cv2.approxPolyDP(contour,.03*cv2.arcLength(contour,True),True)
-        if len(poly)!=4 or not cv2.isContourConvex(poly):
-            # Rounded openings and their wall shadows need not form a four-point
-            # contour. A fragmented opening may fill only half of its box;
-            # this rectangle only seeds the separately verified model.
-            box=cv2.boxPoints(cv2.minAreaRect(contour))
-            if cv2.contourArea(contour)<.50*cv2.contourArea(box):continue
-            poly=box
-        q=ordered_quad(poly)
-        if not quad_inside_mask(q,allowed):continue
-        xy=world_xy(q,profile,z);sides=np.linalg.norm(np.roll(xy,-1,axis=0)-xy,axis=1)
-        if np.max(abs(np.sort(sides)-np.sort(np.tile(hole_size,2)))/np.sort(np.tile(hole_size,2)))>.30:continue
-        center=xy.mean(0)
-        if any(np.linalg.norm(center-s[0])<4 for s in seeds):continue
-        axis=xy[1]-xy[0];angle=np.arctan2(axis[1],axis[0])
-        # Select which model side corresponds to this opening side.
-        if abs(sides[0]-hole_size[1])<abs(sides[0]-hole_size[0]):angle-=np.pi/2
-        seeds.append((center,angle))
+    if seed_poses is None:
+        # Bridge tiny gaps only when finding opening seeds. Every proposal is
+        # still checked against the original, unclosed edge image below.
+        closed=cv2.morphologyEx(edges,cv2.MORPH_CLOSE,np.ones((5,5),np.uint8));closed &=allowed
+        contours=list(cv2.findContours(closed,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)[0])
+        z=detection_plane_z(profile,mesh);seeds=[]
+        for contour in contours:
+            if not 80<cv2.contourArea(contour)<frame.shape[0]*frame.shape[1]*.1:continue
+            poly=cv2.approxPolyDP(contour,.03*cv2.arcLength(contour,True),True)
+            if len(poly)!=4 or not cv2.isContourConvex(poly):
+                # Rounded openings and their wall shadows need not form a four-point
+                # contour. A fragmented opening may fill only half of its box;
+                # this rectangle only seeds the separately verified model.
+                box=cv2.boxPoints(cv2.minAreaRect(contour))
+                if cv2.contourArea(contour)<.50*cv2.contourArea(box):continue
+                poly=box
+            q=ordered_quad(poly)
+            if not quad_inside_mask(q,allowed):continue
+            xy=world_xy(q,profile,z);sides=np.linalg.norm(np.roll(xy,-1,axis=0)-xy,axis=1)
+            if np.max(abs(np.sort(sides)-np.sort(np.tile(hole_size,2)))/np.sort(np.tile(hole_size,2)))>.30:continue
+            center=xy.mean(0)
+            if any(np.linalg.norm(center-s[0])<4 for s in seeds):continue
+            axis=xy[1]-xy[0];angle=np.arctan2(axis[1],axis[0])
+            # Select which model side corresponds to this opening side.
+            if abs(sides[0]-hole_size[1])<abs(sides[0]-hole_size[0]):angle-=np.pi/2
+            seeds.append((center,angle))
+    else:
+        z=detection_plane_z(profile,mesh);seeds=[]
+        offset=(np.asarray(hole['center'])-.5)*[width,height]
+        for cx,cy,angle in seed_poses:
+            c,s=np.cos(angle),np.sin(angle);rotation=np.array([[c,-s],[s,c]])
+            seeds.append((np.array([cx,cy])+offset@rotation.T,angle))
     if not seeds:return []
     # Distance and orientation support reject unrelated nearby texture edges.
     distance=evidence.distance(enhanced=True)
-    gx=cv2.Sobel(gray,cv2.CV_32F,1,0);gy=cv2.Sobel(gray,cv2.CV_32F,0,1)
-    magnitude=np.hypot(gx,gy);gx/=np.maximum(magnitude,1);gy/=np.maximum(magnitude,1)
+    gx,gy=evidence.source.gradient_directions(True)
     def rectangle(w,h,center=(0,0)):
         return np.array([[-w,-h],[w,-h],[w,h],[-w,h]],float)/2+center
     outer=rectangle(width,height);offset=(np.asarray(hole['center'])-.5)*[width,height]

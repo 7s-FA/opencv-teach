@@ -91,6 +91,7 @@ QUIET_EVENTS={
     'TORQUE_OFF_STARTED','TORQUE_OFF_CONFIRMED','TORQUE_OFF_REQUESTED',
 }
 EVENT_LABELS={
+    'VISION_PREPARING':'카메라·모델 준비 중', 'VISION_READY':'카메라·모델 준비 완료',
     'PLAN_STARTED':'동작 경로 준비', 'EPISODE_STARTED':'에피소드 시작',
     'BUILD_DONE':'조립 완료 · 적재로 전환', 'IDLE_RELEASE_SCHEDULED':'새 명령 대기 · 유휴 시 토크 해제 예약',
     'DONE':'에피소드 완료', 'STARTED':'작업 시작',

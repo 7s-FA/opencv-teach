@@ -41,6 +41,18 @@ class RemoteTests(unittest.TestCase):
         self.assertEqual(self.runtime.catalog.mesh('pallet')['sha256'],self.app.catalog.mesh('pallet')['sha256'])
         self.assertTrue(str(self.runtime.catalog.items['pallet']['stl']).startswith(self.tmp.name))
         self.assertEqual(self.runtime.ref.angles(self.runtime.ref.middle),self.app.reference.angles(self.app.reference.middle))
+    def test_part_inspection_selection_roundtrips_and_invalid_method_is_atomic(self):
+        bundle=deepcopy(self.bundle)
+        settings={'method':'model_roi','model':'n','confidence':.5,'model_identity':'a'*64}
+        bundle['profile']['part_inspection']=settings
+        self.runtime.configure(bundle)
+        self.assertEqual(self.runtime.profile['part_inspection'],settings)
+        self.assertEqual(json.loads((Path(self.tmp.name)/'profile.json').read_text())['part_inspection'],settings)
+        generation=self.runtime.generation
+        bundle['profile']['part_inspection']['method']='unknown'
+        with self.assertRaises(ValueError):self.runtime.configure(bundle)
+        self.assertEqual(self.runtime.generation,generation)
+        self.assertEqual(self.runtime.profile['part_inspection']['method'],'model_roi')
     def test_traversal_and_missing_files_rejected_before_materializing(self):
         bad=deepcopy(self.bundle);bad['files']['../escape.json']=base64.b64encode(b'{}').decode()
         with self.assertRaises(ValueError):materialize(self.tmp.name,bad)
@@ -193,6 +205,14 @@ class CameraIdleRuntimeTests(unittest.TestCase):
     setUp=RemoteTests.setUp
     tearDown=RemoteTests.tearDown
     rpc=RemoteTests.rpc
+    def test_unclaimed_runtime_is_idle_until_a_client_acquires_it(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runtime=Runtime(folder,motion_factory=FakeMotion,camera_factory=FakeCamera)
+            try:
+                self.assertTrue(runtime.detached);self.assertIsNone(runtime.lease)
+                lease=runtime.acquire()['lease'];self.assertFalse(runtime.detached)
+                runtime.detach(lease);self.assertTrue(runtime.detached)
+            finally:runtime.close()
     def test_detach_closes_camera_without_releasing_motor_torque(self):
         self.rpc('connect',{'speed':SPEED_PRESETS['보통']});s=self.runtime.session;s.state='HOLD';self.runtime.start_camera();camera=self.runtime.camera
         self.runtime.detach(self.lease)

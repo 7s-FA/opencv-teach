@@ -30,13 +30,25 @@ def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None,junction_so
         observed_centers=project_plane([xy],profile,z)[0]+shift
         errors=np.linalg.norm(world_xy(observed_centers,profile,z)-xy,axis=1)
         cost[errors>4]=np.inf
-        best=int(np.argmin(cost));support=(d[best]<1.8).reshape(2,8,8).mean(2)
+        # A cheaper shift can align a short arc while missing sectors that a
+        # neighbouring shift observes. Minimize over shifts that satisfy the
+        # existing coverage checks; do not discard that evidence afterwards.
+        all_support=(d<1.8).reshape(-1,2,8,8).mean(3)
+        sectors=np.count_nonzero(all_support.min(1)>=.5,axis=1)
+        eligible=(sectors>=6)&(all_support.mean((1,2))>=.65)&np.isfinite(cost)
+        raw_cost=float(cost.min())
+        best=int(np.argmin(np.where(eligible,cost,np.inf))) if np.any(eligible) else int(np.argmin(cost))
+        support=all_support[best]
         observed=project_plane([xy],profile,z)[0]+shift[best]
         error=float(np.linalg.norm(world_xy([observed],profile,z)[0]-xy))
-        hypotheses.append({'yaw':float(yaw),'cost':float(cost[best]),'support':support.tolist(),'sectors':int(np.count_nonzero(support.min(0)>=.5)),'center_px':observed,'outline_px':uv[1]+shift[best],'error_mm':error})
+        hypotheses.append({'yaw':float(yaw),'cost':float(cost[best]),'raw_cost':raw_cost,'support':support.tolist(),'sectors':int(sectors[best]),'center_px':observed,'outline_px':uv[1]+shift[best],'error_mm':error})
     hypotheses.sort(key=lambda v:v['cost']);best,other=hypotheses
-    candidate['orientation_scores']=[{'yaw_deg':h['yaw'],'cost':h['cost'] if np.isfinite(h['cost']) else None,'supported_sectors':h['sectors']} for h in hypotheses]
-    verified=best['cost']<=.30 and best['sectors']>=6 and np.mean(best['support'])>=.65 and best['error_mm']<=4 and other['cost']-best['cost']>=.12
+    # Keep the opposite heading's cheapest evidence as the ambiguity bound,
+    # even if its best shift has insufficient coverage. Filtering must not
+    # artificially increase the separation between two possible headings.
+    candidate['orientation_scores']=[{'yaw_deg':h['yaw'],'cost':cost if np.isfinite(cost) else None,'supported_sectors':h['sectors']}
+                                     for h,cost in ((best,best['cost']),(other,other['raw_cost']))]
+    verified=best['cost']<=.30 and best['sectors']>=6 and np.mean(best['support'])>=.65 and best['error_mm']<=4 and other['raw_cost']-best['cost']>=.12
     junction=None
     if not verified:
         from .junction_orientation import evaluate

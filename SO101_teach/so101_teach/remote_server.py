@@ -30,7 +30,7 @@ class Runtime:
         self.idle_release=IdleRelease();self.handoff_ready=False
         self.lock=threading.RLock();self.control_lock=threading.RLock();self.session=None;self.leader=None;self.camera=None;self.worker=None
         self.profile=None;self.cal=None;self.ref=None;self.kin=None;self.catalog=None;self.detector=None
-        self.lease=None;self.last_heartbeat=0.;self.detached=False;self.events=deque(maxlen=256);self.event_id=0
+        self.lease=None;self.last_heartbeat=0.;self.detached=True;self.events=deque(maxlen=256);self.event_id=0
         self.requests=OrderedDict();self.generation=0;self.bundle_hash=None;self.stop=threading.Event();self.version=code_version()
         self.runtime_version=manifest(ROOT)
         self.instance=uuid.uuid4().hex;self.plans=OrderedDict();self.watch=threading.Thread(target=self.watchdog,daemon=True);self.watch.start()
@@ -101,6 +101,10 @@ class Runtime:
             if self.leader:self.leader.latest=None;self.leader.last_sequence=-1
             return {'lease':self.lease,'instance':self.instance,'event_id':self.event_id}
     def configure(self,bundle):
+        from .model_regions import checked_settings
+        checked_settings(bundle['profile'])
+        from .ai_inspection import inspection_settings
+        inspection_settings(bundle['profile'])
         if self.robot_id is not None and bundle['profile'].get('robot_id','arm2')!=self.robot_id:
             raise ValueError('다른 로봇팔의 설정·명령을 이 연결에 적용할 수 없습니다.')
         if self.busy() or self.worker and self.worker.running:raise ValueError('Pi 실행·보정이 끝난 뒤 설정을 적용하세요.')
@@ -141,12 +145,14 @@ class Runtime:
             materialize(self.data_dir,bundle);self.profile,self.cal,self.ref=load_profile(self.data_dir);self.ref.set_trims(bundle['trim_ticks'])
             self.kin=Kinematics(self.ref,tcp=self.profile['tcp']);self.catalog=JigCatalog(self.data_dir,profile=self.profile,persist_migration=True)
             from .vision_service import MultiDetector
+            previous_detector=self.detector
             self.detector=MultiDetector(self.catalog,self.profile,active=bundle['active_jig']);self.detector.seconds=float(bundle['hold_seconds']);self.detector.acquisition_seconds=acquisition_seconds;self.detector.attempts_limit=attempts_limit;self.detector.refresh()
             for latch in self.detector.latches.values():latch.configure(self.detector.seconds,acquisition_seconds=acquisition_seconds,attempts_limit=attempts_limit)
             self.store=EpisodeStore(self.data_dir/'episodes',self.cal,profile.get('robot_id','arm2'))
             self.generation+=1;self.bundle_hash=digest;self.plans.clear()
             if reuse_camera:self.camera.set_processor(self.detector.process)
             elif camera_running:self.start_camera(**camera_mode)
+            if previous_detector:previous_detector.close()
             return {'generation':self.generation,'calibration_sha256':self.cal.sha256}
         finally:self.camera_reconfiguring=False
     def snapshot(self,s):
@@ -188,16 +194,19 @@ class Runtime:
             frame,_,at=preview;result['preview_at']=at
             if at!=after_preview_at and (changing or not obs or at!=obs[2]):result['preview_image']=encode(frame,at)
         return result
-    def start_camera(self,**mode):
+    def start_camera(self,*,prepare=False,**mode):
         if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
+        processor=self.detector.prepare if prepare else self.detector.process
         if self.camera and self.camera.running and getattr(self.camera,'stop',None) and self.camera.stop.is_set():
             self.camera.join(1.)
             if self.camera.running:raise ValueError('Pi 카메라 해제 중입니다. 잠시 후 다시 연결하세요.')
         if not self.camera or not self.camera.running:
-            self.camera=self.camera_factory(**self.profile['camera'],processor=self.detector.process);self.camera.max_fps=10
+            self.camera=self.camera_factory(**self.profile['camera'],processor=processor);self.camera.max_fps=10
             if mode:self.camera.set_mode(**mode)
             self.camera.start()
-        elif mode:self.camera.set_mode(**mode)
+        else:
+            if getattr(self.camera,'processor',processor)!=processor:self.camera.set_processor(processor)
+            if mode:self.camera.set_mode(**mode)
         return {}
     def call(self,method,args):
         if method=='handoff_shutdown':
@@ -221,6 +230,7 @@ class Runtime:
         if method=='execution_state':return self.state(self.lease)['follower']
         if method=='configure':return self.configure(args['bundle'])
         if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
+        if method=='camera_prepare':return self.start_camera(prepare=True,processing_enabled=True,preview_fps=10)
         if method=='camera_start':return self.start_camera(**args)
         if method=='camera_mode':
             if self.camera:self.camera.set_mode(**args)

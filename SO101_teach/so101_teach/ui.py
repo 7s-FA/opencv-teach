@@ -548,6 +548,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             self.steps.item(step['id'],values=(name,'지그' if step.get('jig_id') else '고정','—' if marker=='없음' else marker),tags=('editor2',) if right else ())
     def change_camera_tab(self,event=None):
         if self.page!='camera':return
+        if hasattr(self,'camera_yolo') and not self.camera_yolo.visible() and self.camera_yolo.active:
+            self.camera_yolo.stop('탭 전환으로 인식 중지 · 인식 시작을 눌러 다시 실행하세요.')
+        self.update_camera_mode()
         if hasattr(self,'camera_gallery') and self.camera_gallery.visible():self.camera_gallery.refresh()
         if self.camera_history_visible():
             self.camera_errors.activate()
@@ -567,6 +570,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         from .camera_inspection_ui import CaptureGalleryPanel
         self.camera_gallery=CaptureGalleryPanel(self.camera_tabs,self)
         self.camera_tabs.add(self.camera_gallery,text='영상 저장')
+        from .yolo_ui import YoloPanel
+        self.camera_yolo=YoloPanel(self.camera_tabs,self)
+        self.camera_tabs.add(self.camera_yolo,text='AI 인식')
         self.camera_tabs.bind('<<NotebookTabChanged>>',self.change_camera_tab)
         parent=detection
         parent.columnconfigure(0,weight=1);parent.rowconfigure(0,weight=1)
@@ -598,6 +604,24 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.roi_mode_choice.bind('<<ComboboxSelected>>',lambda e:self.change_roi_mode())
         self.roi_cancel_button=self.button(roi_bar,'그리기 취소',self.cancel_roi_points);self.roi_cancel_button.pack(side='left',padx=(0,6))
         self.roi_clear_button=self.button(roi_bar,'범위 해제',self.clear_camera_roi);self.roi_clear_button.pack(side='left',padx=(0,8))
+        from .model_regions import checked_settings,METHODS,MODELS
+        detection_settings=checked_settings(self.profile)
+        pipeline=ttk.Frame(bar,style='Card.TFrame');pipeline.grid(row=3,column=0,columnspan=4,sticky='ew',pady=(6,0))
+        ttk.Label(pipeline,text='지그 검출').pack(side='left',padx=(0,6))
+        self.jig_detection_method=tk.StringVar(value=next(k for k,v in METHODS.items() if v==detection_settings['method']))
+        self.jig_detection_model=tk.StringVar(value=next(k for k,v in MODELS.items() if v==detection_settings['model']))
+        self.jig_detection_confidence=tk.StringVar(value=f"{detection_settings['confidence']:.1f}")
+        self.jig_method_choice=ttk.Combobox(pipeline,state='readonly',width=26,textvariable=self.jig_detection_method,values=tuple(METHODS))
+        self.jig_method_choice.pack(side='left',padx=(0,8));self.jig_method_choice.bind('<<ComboboxSelected>>',lambda e:self.update_jig_detection_controls())
+        self.jig_model_choice=ttk.Combobox(pipeline,state='readonly',width=18,textvariable=self.jig_detection_model,values=tuple(MODELS));self.jig_model_choice.pack(side='left',padx=(0,8))
+        ttk.Label(pipeline,text='최소 신뢰도').pack(side='left',padx=(0,5))
+        self.jig_confidence_choice=ttk.Combobox(pipeline,state='readonly',width=5,textvariable=self.jig_detection_confidence,values=('0.5','0.6','0.7','0.8','0.9'));self.jig_confidence_choice.pack(side='left',padx=(0,8))
+        self.button(pipeline,'검출 방식 적용',self.save_jig_detection).pack(side='left',padx=(0,12))
+        self.jig_detection_status=tk.StringVar(value=self.jig_detection_applied_text())
+        ttk.Label(pipeline,textvariable=self.jig_detection_status,style='Small.TLabel').pack(side='left')
+        self.jig_detection_help=tk.StringVar()
+        ttk.Label(bar,textvariable=self.jig_detection_help,style='Small.TLabel').grid(row=4,column=0,columnspan=4,sticky='w',pady=(4,0))
+        self.update_jig_detection_controls()
         self.roi_progress=tk.StringVar(value='드래그 후 놓으면 저장')
         ttk.Label(roi_bar,textvariable=self.roi_progress,style='Small.TLabel').pack(side='left',padx=(0,8))
         self.adoption_toggle=ttk.Checkbutton(roi_bar,text='채택 상태 표시',variable=self.show_adoption,command=self.toggle_adoption_display);self.adoption_toggle.pack(side='right',padx=(12,0))
@@ -727,6 +751,46 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             for latch in self.detector.latches.values():latch.configure(seconds,acquisition_seconds=acquisition,attempts_limit=attempts)
             self.invalidate_jig_measurements()
         self.notice(f'획득 {acquisition:g}초 동안 모든 새 관측 수집 · 최대 {attempts}회 시도 · 위치 유지 {seconds:g}초 적용')
+
+    def jig_detection_applied_text(self):
+        from .model_regions import checked_settings
+        value=checked_settings(self.profile)
+        return '적용: 기존 OpenCV' if value['method']=='opencv' else f"적용: 팔레트 CAD / 운반용 OpenCV · YOLO26{value['model']} · 신뢰도 {value['confidence']:.1f}"
+
+    def update_jig_detection_controls(self,sync=False):
+        if sync:
+            from .model_regions import checked_settings,METHODS,MODELS
+            settings=checked_settings(self.profile)
+            self.jig_detection_method.set(next(k for k,v in METHODS.items() if v==settings['method']))
+            self.jig_detection_model.set(next(k for k,v in MODELS.items() if v==settings['model']))
+            self.jig_detection_confidence.set(f"{settings['confidence']:.1f}")
+            self.jig_detection_status.set(self.jig_detection_applied_text())
+        hybrid=self.jig_detection_method.get()=='AI 마스크 + 지그별 정합'
+        for widget in (self.jig_model_choice,self.jig_confidence_choice):widget.configure(state='readonly' if hybrid else 'disabled')
+        self.jig_detection_help.set('AI 마스크 → 팔레트: CAD 정합만 사용 · 운반용 팔레트: OpenCV 보정·추적' if hybrid else '매 프레임 OpenCV로 상단 테두리의 중심·각도를 계산합니다.')
+
+    def save_jig_detection(self):
+        from .model_regions import checked_settings,METHODS,MODELS,runtime,identity
+        from .pi_execution import active_execution
+        if (self.pending_execution or self.camera_task or self.safe_entry or self.playing or self.detector.frozen
+                or self.pose_latch.frozen or getattr(getattr(self,'inspection_run',None),'busy',False) or active_execution(self)):
+            raise ValueError('측정·검사·실행이 끝난 뒤 지그 검출 방식을 적용하세요.')
+        value={'method':METHODS[self.jig_detection_method.get()],'model':MODELS[self.jig_detection_model.get()],
+               'confidence':float(self.jig_detection_confidence.get()),'model_identity':None}
+        if value['method']=='model_roi':value['model_identity']=identity(runtime(value['model'])[2])
+        from .ai_inspection import inspection_settings
+        profile={**self.profile,'part_inspection':inspection_settings(self.profile),'jig_detection':value};checked_settings(profile)
+        if self.remote_mode and self.remote:
+            if self.remote.error:raise ValueError('Pi 통신을 복구한 뒤 검출 방식을 적용하세요.')
+            from .remote_config import configuration_bundle
+            bundle=configuration_bundle(self);bundle['profile']['jig_detection']=value
+            bundle['profile']['part_inspection']=profile['part_inspection']
+            self.remote.sync_bundle(bundle)
+        self.profile=profile;self.persist_configuration();self.invalidate_jig_measurements();self.detector.close()
+        if self.camera:self.camera.observation=None
+        self.jig_detection_status.set(self.jig_detection_applied_text())
+        self.camera_inspection.update_method_controls(sync=True)
+        self.notice('지그 검출 방식 저장 · 이전 채택 위치 초기화 · 새 사진으로 다시 측정하세요.')
 
     def show_page(self,page,*,internal=False):
         if not internal and page!=self.page:
@@ -1944,6 +2008,17 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
     def show_camera_overview_detail(self,event=None):
         selected=self.camera_jig_status.selection()
         set_text(self.camera_overview_detail,self.camera_overview_details.get(selected[0],'영상 대기') if selected else '행 선택: 상세 상태 · 더블클릭: 범위 편집')
+    def update_camera_mode(self):
+        yolo=getattr(self,'camera_yolo',None);camera=self.camera
+        task=self.camera_task
+        measuring=bool(self.pending_execution or task and task['kind'] in ('jig','follow') and not task.get('captured'))
+        if (yolo is not None and yolo.active and yolo.visible() and camera is not None
+                and hasattr(camera,'set_mode') and not getattr(camera,'observer',False)
+                and not measuring and not task and not getattr(getattr(self,'inspection_run',None),'busy',False)):
+            camera.set_mode(processing_enabled=False,preview_fps=10)
+            return
+        CameraLifecycle.update_camera_mode(self)
+
     def camera_view_observation(self):
         if not self.camera:return None
         return getattr(self.camera,'preview_observation',None) or self.camera.observation
@@ -1960,6 +2035,8 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         from .camera_display import display_results
         return display_results(self.camera_display_poses,results,now,raw=raw)
     def draw_camera_frame(self,now,*,scheduled=False,for_capture=False):
+        yolo=getattr(self,'camera_yolo',None)
+        if not for_capture and yolo is not None and yolo.visible():return
         if not for_capture and self.camera_history_visible():return
         if not for_capture and self.camera_gallery.visible():
             self.camera_gallery.update_frame(now);return
@@ -2210,6 +2287,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if self.session:self.session.close()
         if self.camera:self.camera.close()
         self.camera_inspection.worker.close()
+        self.camera_yolo.close()
         if self.leader_session:self.leader_session.close()
         self.settings.close()
         if self.renderer:self.renderer.close()

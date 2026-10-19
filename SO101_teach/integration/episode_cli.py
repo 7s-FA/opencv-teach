@@ -210,6 +210,10 @@ class Runner:
         self.finished_return_step = None
         self.linear_return_started = False
         self.follower_phase = 'active'
+        self.episode_camera_required = False
+        self.camera_owned = False
+        self.camera_preparing = False
+        self.camera_prepare_started = None
         from failure_images import FailureImages
         self.failure_images=FailureImages(ROOT/'data')
         self.failure_context={'phase':'preparation',**(self.control.info or {})}
@@ -221,6 +225,49 @@ class Runner:
         try:self.failure_images.remember(reply)
         except Exception as exc:self.failure_images.capture_error=str(exc)
         return reply
+
+    def prepare_camera(self):
+        # The runtime's preparation processor warms AI without collecting poses.
+        self.camera_prepare_started=time.monotonic()
+        self.camera_owned=True
+        self.link.rpc('camera_prepare')
+        self.camera_preparing=True
+        self.emit('VISION_PREPARING')
+
+    def await_camera_ready(self):
+        if not self.camera_preparing:self.prepare_camera()
+        after_at=after_preview_at=None
+        while True:
+            self.check()
+            if self.linear_active:self.poll_linear()
+            frame=self.camera_frame({'after_at':after_at,'after_preview_at':after_preview_at})
+            after_at,after_preview_at=frame.get('at'),frame.get('preview_at')
+            detection=frame.get('detection') or {}
+            error=frame.get('error') or detection.get('error')
+            if error:raise RuntimeError('카메라·모델 준비 실패: '+str(error))
+            now=time.monotonic();at=frame.get('at')
+            if (detection.get('vision_ready') and type(at) in (int,float)
+                    and self.camera_prepare_started<=at<=now and now-at<3):
+                self.emit('VISION_READY')
+                return
+            if now-self.camera_prepare_started>=30:raise RuntimeError('카메라·모델 준비 시간 초과')
+            time.sleep(.05)
+
+    def pause_camera(self):
+        if self.camera_owned:
+            self.link.rpc('camera_mode',{'processing_enabled':False,'preview_fps':10})
+        else:self.link.rpc('camera_stop')
+
+    def close_episode_camera(self):
+        if not self.camera_owned:return
+        self.camera_preparing=False
+        try:
+            self.link.rpc('camera_stop')
+            until=time.monotonic()+3
+            while self.link.post('/camera',{}).get('running'):
+                if time.monotonic()>=until:raise RuntimeError('에피소드 카메라 해제 시간 초과')
+                time.sleep(.02)
+        finally:self.camera_owned=False
 
     def save_failure_images(self, error):
         # Called only after emergency/HOLD. Image I/O must never replace the
@@ -276,6 +323,7 @@ class Runner:
             self.check()
             self.emit('FOLLOWER_CONNECTING')
             self.link.rpc('configure', {'bundle': bundle})
+            if self.episode_camera_required:self.prepare_camera()
             self.check()
             started=time.monotonic()
             self.link.rpc('connect', {'speed': speed})
@@ -489,6 +537,7 @@ class Runner:
         keys = {s['jig_id'] for s in steps if s.get('jig_id')} | inspection_jig_ids(steps)
         if not keys: return {}
         self.link.rpc('detect_freeze', {'enabled': False})
+        if self.camera_owned:self.await_camera_ready()
         def begin():
             self.link.rpc('detect_clear')
             self.emit('JIG_DETECTION_STARTED')
@@ -496,6 +545,7 @@ class Runner:
         started = begin()
         until = started + bundle['acquisition_seconds'] * bundle['acquisition_attempts']
         self.link.rpc('camera_start', {'processing_enabled': True, 'preview_fps': 10})
+        self.camera_preparing=False
         after_at = after_preview_at = None
         detected = set()
         try:
@@ -503,8 +553,11 @@ class Runner:
                 _, resumed = self.check()
                 if self.linear_active: self.poll_linear()
                 if resumed:
+                    if self.camera_owned:self.await_camera_ready()
                     started = begin(); detected.clear()
                     until = started + bundle['acquisition_seconds'] * bundle['acquisition_attempts']
+                    self.link.rpc('camera_start', {'processing_enabled': True, 'preview_fps': 10})
+                    self.camera_preparing=False
                 frame = self.camera_frame({'after_at': after_at, 'after_preview_at': after_preview_at})
                 after_at, after_preview_at = frame.get('at'), frame.get('preview_at')
                 if frame.get('error'): raise RuntimeError(frame['error'])
@@ -533,7 +586,7 @@ class Runner:
                 if now >= until: raise RuntimeError('지그 측정 실패: ' + ', '.join(sorted(keys - current.keys())))
                 time.sleep(.1)
         finally:
-            self.link.rpc('camera_stop')
+            self.pause_camera()
 
     def inspect_checkpoint(self,step,bundle,*,startup=False):
         import base64
@@ -597,7 +650,7 @@ class Runner:
             raise
         finally:
             if worker:worker.close()
-            self.link.rpc('camera_stop')
+            self.pause_camera()
 
     def inspect_startup_group(self,steps,bundle):
         import base64,cv2,numpy as np
@@ -664,7 +717,7 @@ class Runner:
             raise
         finally:
             if worker:worker.close()
-            self.link.rpc('camera_stop')
+            self.pause_camera()
 
     def begin_inspections(self,steps,bundle,events):
         from so101_teach.episode_inspection import inspection_schedule
@@ -726,6 +779,19 @@ class Runner:
             self.emit('CHAIN_RETURN_STARTED:target_mm=100:target_position=ASSEMBLY')
 
     def execute(self, episode, bundle, speed, target):
+        from so101_teach.episode_inspection import startup_steps
+        self.episode_camera_required=any(s.get('jig_id') or s.get('inspection') for s in [*episode['steps'],*startup_steps(episode)])
+        try:return self._execute(episode,bundle,speed,target)
+        finally:
+            failing=sys.exc_info()[0] is not None
+            # Do not put camera RPC cleanup ahead of HOLD for a motion failure.
+            if failing and self.failure_context.get('phase')=='motion':self.emergency()
+            try:self.close_episode_camera()
+            except Exception as exc:
+                if not failing:raise
+                print('에피소드 카메라 정리 실패: '+str(exc),file=sys.stderr)
+
+    def _execute(self, episode, bundle, speed, target):
         self.failure_context.update(episode_id=episode.get('id'),episode_name=episode.get('name'),product_type=episode.get('product_type'),profile=deepcopy(bundle.get('profile')),jigs=deepcopy(bundle.get('jigs')),mesh_hashes=deepcopy(bundle.get('mesh_hashes')))
         from so101_teach.episode_inspection import validate_inspection,has_inspections
         validate_inspection(episode)
@@ -783,7 +849,7 @@ class Runner:
                 self.emit('INSPECTION_FAILED:'+str(exc));raise
             finally:
                 if self.inspection_batch:self.inspection_batch.close();self.inspection_batch=None
-                self.link.rpc('camera_stop')
+                self.pause_camera()
         else:self.move('play', [point['ticks'] for point in plan], steps, episode.get('completion_events'))
         if self.finished_return_step is not None:
             self.start_finished_return(defer_pause=False)

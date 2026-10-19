@@ -1,0 +1,92 @@
+{
+  "frame": "../vision-carrier-sequence/0.png",
+  "frame_sha256": "d3205620e26e25027ef6dad0a5e11b9333eabdebf96341a62baa101242ea9e54",
+  "expected": {
+    "n": {
+      "model_files": {
+        "metadata.yaml": "8f648948a14dc89aabdfda42e18b2b5540a7967d20840df399f0d6685b6ee3b4",
+        "model.ncnn.bin": "20ba05507dda52f1a7e35fed5e9f76b032ee839f1e8e68e3e83e9fcd46ae82a5",
+        "model.ncnn.param": "e8037ba3faebb6fd713e9495888daf78a4b52950d93e885741e4ea0ebe51132c"
+      },
+      "masks_sha256": "af3c9f887339a263ce13f74612354324b744736cc633dce0c8092a6051e962b1",
+      "jigs": {
+        "pallet": {
+          "center_xy_mm": [
+            387.1910644118569,
+            280.939017608974
+          ],
+          "yaw_deg": 29.593130158348295,
+          "symmetry_deg": 90,
+          "sides_mm": [
+            69.99997309453514,
+            70.00000418152172,
+            70.00000822410038,
+            69.99995833959625
+          ],
+          "verified": false,
+          "dimension_source": "stl_model"
+        },
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "center_xy_mm": [
+            192.63223459123083,
+            -128.66037878306193
+          ],
+          "yaw_deg": 29.350635164214964,
+          "symmetry_deg": 360,
+          "sides_mm": [
+            224.3676476749993,
+            150.93822679518075,
+            224.367633025217,
+            150.93823135626818
+          ],
+          "verified": false,
+          "dimension_source": "observed_boundary_fit",
+          "mesh_yaw_offset_deg": 180.0
+        }
+      }
+    },
+    "s": {
+      "model_files": {
+        "model.ncnn.param": "b521ac2ecba84f253970ae0aeba8cdbae927ed25cf80d887dbc2e7193abcc725",
+        "model.ncnn.bin": "5dcb1dcdca77e3b1d9886cf62ce3f7861b9314c219683e35cdb537608bb9fd7b",
+        "metadata.yaml": "674ba9d0ea066eaa0aa14294db1cfa9ca5ae149b2790cb3c87b66c4f27165e68"
+      },
+      "masks_sha256": "8016ef99cf59017f2777d08332c7ae27161ce9f95cf4d1fc6ef9907abc4a7785",
+      "jigs": {
+        "pallet": {
+          "center_xy_mm": [
+            387.1943391016365,
+            280.9310668560487
+          ],
+          "yaw_deg": 29.442798246009097,
+          "symmetry_deg": 90,
+          "sides_mm": [
+            69.99997362067762,
+            69.99995960505119,
+            70.00002670389586,
+            69.99999449777827
+          ],
+          "verified": false,
+          "dimension_source": "stl_model"
+        },
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "center_xy_mm": [
+            192.65580354472513,
+            -128.6837697145693
+          ],
+          "yaw_deg": 29.37763609083811,
+          "symmetry_deg": 360,
+          "sides_mm": [
+            224.3301351076943,
+            150.91300215112432,
+            224.33014155943815,
+            150.91297442901575
+          ],
+          "verified": false,
+          "dimension_source": "observed_boundary_fit",
+          "mesh_yaw_offset_deg": 180.0
+        }
+      }
+    }
+  }
+}

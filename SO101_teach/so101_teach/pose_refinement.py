@@ -36,11 +36,11 @@ def refine_outer_boundary(frame,mesh,profile,allowed,visible,result,*,evidence=N
     # Estimate exposure only inside the independently detected quadrilateral.
     footprint=np.zeros(gray.shape,np.uint8)
     cv2.fillConvexPoly(footprint,np.rint(quad).astype(np.int32),255)
-    hsv=evidence.source.hsv().astype(float)
+    hsv=evidence.source.hsv()
     neutral=(footprint>0)&(allowed>0)&(visible>0)&(hsv[:,:,1]<60)
     brightness=float(np.percentile(hsv[:,:,2][neutral],90)) if np.any(neutral) else 0.
     if 90<=brightness<180:
-        white=np.clip((hsv[:,:,2]*(180/brightness)-90)/90,0,1)*(1-np.clip((hsv[:,:,1]-40)/120,0,1))
+        white=np.clip((hsv[:,:,2]*(180/brightness)-90)/90,0,1)*(1-np.clip((hsv[:,:,1].astype(float)-40)/120,0,1))
     offsets=np.linspace(-16,16,129);lines=[];coverage=[]
     for a,b in zip(quad,np.roll(quad,-1,axis=0)):
         along=np.linspace(.08,.92,64);uv=a+(b-a)*along[:,None]
@@ -151,7 +151,6 @@ def refine(frame,mesh,profile,allowed,visible,result,*,evidence=None):
     along=np.linspace(.17,.83,32) if ring else np.linspace(.08,.92,32)
     points=np.concatenate([a+(b-a)*along[:,None] for poly in polygons for a,b in zip(poly,np.roll(poly,-1,axis=0))])
     gray=evidence.source.blurred(ring);distance=evidence.distance(enhanced=ring);white=evidence.source.white()
-    gx=cv2.Sobel(gray,cv2.CV_32F,1,0);gy=cv2.Sobel(gray,cv2.CV_32F,0,1);mag=np.maximum(np.hypot(gx,gy),1);gx/=mag;gy/=mag
     T=np.linalg.inv(np.asarray(profile['extrinsics']['base_from_camera']));K=np.asarray(profile['intrinsics']['K'])
     def project(xy):
         camera=np.c_[xy,np.full(len(xy),z)]@T[:3,:3].T+T[:3,3];uv=camera@K.T
@@ -185,6 +184,7 @@ def refine(frame,mesh,profile,allowed,visible,result,*,evidence=None):
     support=(((d<2.5)&observed).reshape(-1,32).sum(1)/count)
     costs=((np.minimum(d,5)/5*observed).reshape(-1,32).sum(1)/count)
     if ring:
+        gx,gy=evidence.source.gradient_directions(True)
         regular=min(support[:4])>=.40 and np.mean(support[:4])>=.65
         faint=min(support[:4])>=.25 and sorted(support[:4])[1]>=.85 and np.mean(support[:4])>=.80
         alignment=np.abs(sample(gx,uv,0)*normal[:,0]+sample(gy,uv,0)*normal[:,1])

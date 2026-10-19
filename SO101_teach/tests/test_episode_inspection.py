@@ -130,7 +130,7 @@ class TransferTests(unittest.TestCase):
         target=self.root/'inspection';target.mkdir()
         for name in ('roi_reference.json','shape_templates.json','shape_templates.npz','appearance_reference.json'):(target/name).write_bytes((ROOT/'inspection'/name).read_bytes())
         from so101_teach.episode_inspection import criteria_signature
-        for name in ('assembly_evidence.py','episode_inspection.py','episode_inspection_runtime.py','shape_inspection.py','inspection_geometry.py','inspection_seating.py','occupied_pallet.py','orientation_model.py','junction_orientation.py'):
+        for name in ('ai_inspection.py','model_regions.py','assembly_evidence.py','episode_inspection.py','episode_inspection_runtime.py','shape_inspection.py','inspection_geometry.py','inspection_seating.py','occupied_pallet.py','orientation_model.py','junction_orientation.py'):
             dest=self.root/'so101_teach'/name;dest.parent.mkdir(exist_ok=True);dest.write_bytes((ROOT/'so101_teach'/name).read_bytes())
         reference=self.root/'assets/reference/carrier-junction.png';reference.parent.mkdir(parents=True,exist_ok=True);reference.write_bytes((ROOT/'assets/reference/carrier-junction.png').read_bytes())
         with self.assertRaisesRegex(ValueError,'기준이 다릅니다'):transfer_fixture.receiver.deliver(self.root,self.request)

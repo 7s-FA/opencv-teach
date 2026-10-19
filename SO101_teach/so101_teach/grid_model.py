@@ -40,55 +40,66 @@ def grid_layout(mesh):
     return {'axis':axis,'points':points,'spacing':float(np.linalg.norm(points[1]-points[0])),'size':size}
 
 
-def grid_hypotheses(frame,mesh,allowed,profile,*,evidence=None,visible=None,refine_lines=False):
+def grid_hypotheses(frame,mesh,allowed,profile,*,evidence=None,visible=None,refine_lines=False,enhanced=False,observations=None,line_observations=None):
     """Find two parallel dividers crossed by a third, with visible arm support.
 
     Intersections seed the known outer rectangle; they never by themselves
-    establish an object detection or a motion-ready pose.
+    establish an object detection or a motion-ready pose. Optionally collect
+    every supported crossing pair for verification after the rim is measured;
+    the returned pose-seed shortlist remains bounded and deduplicated.
     """
     from .vision import world_xy,project_plane
     layout=grid_layout(mesh)
     if layout is None or not profile or not profile.get('intrinsics') or not profile.get('extrinsics'):return []
     from .frame_evidence import RegionEvidence
     evidence=evidence or RegionEvidence(frame,allowed)
-    gray=evidence.source.blurred()
-    edges=evidence.edges()
-    # ROI clipping changes Hough's segment sampling, even for lines wholly
-    # inside the region. Seed from the full image, then constrain the evidence
-    # to the ROI below; final outer-rim containment remains strict.
-    hough_edges=edges if visible is None else cv2.bitwise_and(evidence.source.edges(),visible)
-    left=top=0
-    if visible is not None and not np.array_equal(allowed,visible):
-        x,y,width,height=cv2.boundingRect(allowed)
-        if not width or not height:return []
-        left=max(0,x-16);top=max(0,y-16)
-        right=min(frame.shape[1],x+width+16);bottom=min(frame.shape[0],y+height+16)
-        # A padded rectangle preserves uninterrupted local lines without
-        # spending the Pi's frame budget on unrelated floor texture.
-        hough_edges=hough_edges[top:bottom,left:right]
-    segments=cv2.HoughLinesP(hough_edges,1,np.pi/720,threshold=25,minLineLength=25,maxLineGap=8)
+    gray=evidence.source.blurred(enhanced)
+    edges=evidence.edges(enhanced=enhanced)
+    # Refitting the same frame's fragments changes only their line fit.
+    # Reuse the exact Hough sample rather than running it again. RegionEvidence
+    # owns one allowed mask; compare visible masks too (crops are fresh views).
+    cache_key=('grid_segments',enhanced)
+    cached=evidence.cache.get(cache_key)
+    same_visible=cached is not None and (cached[0] is visible or
+                 (cached[0] is not None and visible is not None and np.array_equal(cached[0],visible)))
+    if same_visible:
+        segments=cached[1]
+    else:
+        # ROI clipping changes Hough sampling. Preserve the existing padded
+        # camera-valid image and filter segment midpoints against the ROI.
+        hough_edges=edges if visible is None else cv2.bitwise_and(evidence.source.edges(enhanced=enhanced),visible)
+        left=top=0
+        if visible is not None and not np.array_equal(allowed,visible):
+            x,y,width,height=cv2.boundingRect(allowed)
+            if not width or not height:return []
+            left=max(0,x-16);top=max(0,y-16)
+            right=min(frame.shape[1],x+width+16);bottom=min(frame.shape[0],y+height+16)
+            hough_edges=hough_edges[top:bottom,left:right]
+        segments=cv2.HoughLinesP(hough_edges,1,np.pi/720,threshold=25,minLineLength=25,maxLineGap=8)
+        if segments is not None:
+            segments=segments[:,0]+np.array([left,top,left,top])
+            midpoint=np.rint((segments[:,:2]+segments[:,2:])/2).astype(int)
+            segments=segments[allowed[midpoint[:,1],midpoint[:,0]]>0]
+            order=np.argsort(-np.sum((segments[:,2:]-segments[:,:2])**2,axis=1))[:240]
+            segments=segments[order]
+        evidence.cache[cache_key]=(visible,segments)
     if segments is None:return []
     z=detection_plane_z(profile,mesh);lines=[]
-    segments=segments[:,0]+np.array([left,top,left,top])
-    # Discard unrelated full-image segments before the expensive grid search.
-    # Hough itself still sees the same camera-valid image for every ROI.
-    midpoint=np.rint((segments[:,:2]+segments[:,2:])/2).astype(int)
-    segments=segments[allowed[midpoint[:,1],midpoint[:,0]]>0]
-    order=np.argsort(-np.sum((segments[:,2:]-segments[:,:2])**2,axis=1))[:240]
-    for segment in segments[order]:
+    for segment in segments:
         xy=world_xy(segment.reshape(2,2),profile,z);vector=xy[1]-xy[0];length=float(np.linalg.norm(vector))
         if not 30<length<max(layout['size'])*1.3:continue
         direction=vector/length
         if direction[0]<0:direction=-direction
         normal=np.array([-direction[1],direction[0]])
-        lines.append({'xy':xy,'direction':direction,'normal':normal,'offset':float(normal@xy.mean(0)),'length':length})
+        center=xy.mean(0)
+        lines.append({'xy':xy,'center':center,'direction':direction,'normal':normal,'offset':float(normal@center),'length':length})
     # A crossing can split a Hough segment into two halves. Rejoin only nearby
     # collinear fragments; later arm tests still use the unmodified edge image.
     merged=[]
     for line in sorted(lines,key=lambda line:-line['length']):
         for existing in merged:
             if abs(line['direction']@existing['direction'])<math.cos(math.radians(2)):continue
-            if abs(existing['normal']@line['xy'].mean(0)-existing['offset'])>2.5:continue
+            if abs(existing['normal']@line['center']-existing['offset'])>2.5:continue
             a=np.sort(existing['xy']@existing['direction']);b=np.sort(line['xy']@existing['direction'])
             if max(a[0],b[0])-min(a[1],b[1])>12:continue
             if refine_lines:
@@ -101,36 +112,61 @@ def grid_hypotheses(frame,mesh,allowed,profile,*,evidence=None,visible=None,refi
                 normal=np.array([-direction[1],direction[0]]);center=np.array([cx,cy])
                 projection=(points-center)@direction
                 xy=center+np.array([projection.min(),projection.max()])[:,None]*direction
-                existing.update(xy=xy,direction=direction,normal=normal,offset=float(normal@center),length=float(np.ptp(projection)),fragments=points)
+                existing.update(xy=xy,center=xy.mean(0),direction=direction,normal=normal,offset=float(normal@center),length=float(np.ptp(projection)),fragments=points)
             else:
                 points=np.concatenate([existing['xy'],line['xy']]);direction=existing['direction']
-                center=(existing['xy'].mean(0)*existing['length']+line['xy'].mean(0)*line['length'])/(existing['length']+line['length'])
+                center=(existing['center']*existing['length']+line['center']*line['length'])/(existing['length']+line['length'])
                 projection=(points-center)@direction
                 xy=center+np.array([projection.min(),projection.max()])[:,None]*direction
-                existing.update(xy=xy,offset=float(existing['normal']@center),length=float(np.ptp(projection)))
+                existing.update(xy=xy,center=xy.mean(0),offset=float(existing['normal']@center),length=float(np.ptp(projection)))
             break
         else:merged.append(line)
     lines=sorted(merged,key=lambda line:-line['length'])[:80]
-    distance=evidence.distance()
-    h,w=gray.shape;hypotheses=[];pairs=[];gap=layout['spacing'];axis=layout['axis']
+    if line_observations is not None:line_observations.extend(lines)
+    return _grid_candidates(lines,mesh,allowed,profile,visible,evidence,layout,enhanced,observations)
+
+
+def _grid_candidates(lines,mesh,allowed,profile,visible,evidence,layout,enhanced,observations,reference=None):
+    from .vision import project_plane
+    z=detection_plane_z(profile,mesh);gray=evidence.source.blurred(enhanced)
+    if reference is not None:
+        # Final verification already has an independently measured outer rim.
+        # Ignore lines farther away than the existing 6 mm grid match bound;
+        # this prunes the search without moving any observed line or crossing.
+        _,expected=_expected_grid(reference,mesh)
+        unique={tuple(line['xy'].ravel()):line for line in lines}
+        lines=[line for line in unique.values() if np.min(abs(expected@line['normal']-line['offset']))<=6]
+    distance=evidence.distance(enhanced=enhanced)
+    h,w=gray.shape;hypotheses=[];pairs=[];gap=layout['spacing'];axis=layout['axis'];layout_center=layout['points'].mean(0)
     for i,a in enumerate(lines):
         if a['length']<layout['size'][1-axis]*.4:continue
         for b in lines[i+1:]:
             if b['length']<layout['size'][1-axis]*.4:continue
             if abs(a['direction']@b['direction'])<math.cos(math.radians(3)):continue
-            separation=abs(float(a['normal']@(b['xy'].mean(0)-a['xy'].mean(0))))
+            separation=abs(float(a['normal']@(b['center']-a['center'])))
             if abs(separation/gap-1)>.12:continue
             pairs.append((a['length']+b['length'],a,b))
-    for _,a,b in sorted(pairs,key=lambda row:-row[0])[:30]:
-        for cross in lines:
-            if cross['length']<gap*.6 or abs(a['direction']@cross['direction'])>math.sin(math.radians(5)):continue
+    ordered=sorted(pairs,key=lambda row:-row[0])
+    for _,a,b in (ordered if reference is not None else ordered[:30]):
+        crosses=[line for line in lines if line['length']>=gap*.6 and abs(a['direction']@line['direction'])<=math.sin(math.radians(5))]
+        if reference is None:cross_pairs=zip(crosses,crosses)
+        else:
+            # A divider may be interrupted between the two junctions. Each
+            # crossing must still lie on its own observed fragment. Reuse the
+            # existing 2-degree/2.5-mm collinearity bounds, in both directions;
+            # never extend one fragment across the unobserved middle gap.
+            cross_pairs=((x,y) for x in crosses for y in crosses
+                         if abs(x['direction']@y['direction'])>=math.cos(math.radians(2))
+                         and abs(x['normal']@y['center']-x['offset'])<=2.5
+                         and abs(y['normal']@x['center']-y['offset'])<=2.5)
+        for cross,other_cross in cross_pairs:
             intersections=[]
-            for parallel in (a,b):
-                matrix=np.array([parallel['normal'],cross['normal']])
-                point=np.linalg.solve(matrix,[parallel['offset'],cross['offset']])
+            for parallel,local_cross in zip((a,b),(cross,other_cross)):
+                matrix=np.array([parallel['normal'],local_cross['normal']])
+                point=np.linalg.solve(matrix,[parallel['offset'],local_cross['offset']])
                 # A small gap at the junction is expected, not a long invented
                 # extension of an unrelated part or floor line.
-                if any(np.min((line['xy']-point)@line['direction'])>10 or np.max((line['xy']-point)@line['direction'])< -10 for line in (parallel,cross)):break
+                if any(np.min((line['xy']-point)@line['direction'])>10 or np.max((line['xy']-point)@line['direction'])< -10 for line in (parallel,local_cross)):break
                 intersections.append(point)
             if len(intersections)!=2:continue
             observed=np.array(intersections)
@@ -141,7 +177,7 @@ def grid_hypotheses(frame,mesh,allowed,profile,*,evidence=None,visible=None,refi
             along=delta/length
             u=along if axis==0 else np.array([along[1],-along[0]])
             v=np.array([-u[1],u[0]]);rotation=np.column_stack([u,v])
-            center=observed.mean(0)-layout['points'].mean(0)@rotation.T*scale
+            center=observed.mean(0)-layout_center@rotation.T*scale
             angle=float(math.atan2(u[1],u[0]));pose=np.r_[center,angle]
             # Three of four supported arms at each junction, including both
             # directions of at least one divider, reject mere corner pairs.
@@ -153,18 +189,33 @@ def grid_hypotheses(frame,mesh,allowed,profile,*,evidence=None,visible=None,refi
             if np.any(np.count_nonzero(support>=.5,axis=1)<3):continue
             score=float(support.mean())
             item={'pose':pose,'points_world':observed,'points_px':project_plane(observed,profile,z),'arm_support':support.tolist(),'score':score}
+            if observations is not None:observations.append(item)
             duplicate=next((i for i,p in enumerate(hypotheses) if np.linalg.norm(p['pose'][:2]-center)<6 and abs((p['pose'][2]-angle+np.pi/2)%np.pi-np.pi/2)<np.deg2rad(4)),None)
             if duplicate is None:hypotheses.append(item)
             elif score>hypotheses[duplicate]['score']:hypotheses[duplicate]=item
     return sorted(hypotheses,key=lambda p:-p['score'])[:8]
 
 
-def matching_grid(candidate,hypotheses,mesh):
+def _expected_grid(candidate,mesh):
     layout=grid_layout(mesh);metric=candidate.get('metric')
     if layout is None or not metric:return None
     yaw=math.radians(metric['yaw_deg']);rotation=np.array([[math.cos(yaw),-math.sin(yaw)],[math.sin(yaw),math.cos(yaw)]])
     scale=float(candidate.get('boundary_scale',candidate.get('outer_shape',{}).get('fit_scale',1.)))
-    expected=layout['points']@rotation.T*scale+metric['center_xy_mm'];matches=[]
+    return yaw,layout['points']@rotation.T*scale+metric['center_xy_mm']
+
+
+def verify_grid_fragments(candidate,lines,mesh,allowed,profile,visible,evidence):
+    """Check this frame's fragmented dividers after independent rim fitting."""
+    if not lines or _expected_grid(candidate,mesh) is None:return []
+    observations=[]
+    _grid_candidates(lines,mesh,allowed,profile,visible,evidence,grid_layout(mesh),False,observations,reference=candidate)
+    return observations
+
+
+def matching_grid(candidate,hypotheses,mesh):
+    expected_grid=_expected_grid(candidate,mesh)
+    if expected_grid is None:return None
+    yaw,expected=expected_grid;matches=[]
     for item in hypotheses:
         error=min(float(np.max(np.linalg.norm(expected-item['points_world'],axis=1))),float(np.max(np.linalg.norm(expected-item['points_world'][::-1],axis=1))))
         angle=abs((yaw-item['pose'][2]+np.pi/2)%np.pi-np.pi/2)

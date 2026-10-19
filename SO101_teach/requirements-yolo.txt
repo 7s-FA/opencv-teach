@@ -1,0 +1,12 @@
+# Independent Pi CPU environment only; leave the Pi robot server venv unchanged.
+# Install with pip --no-deps -r requirements-yolo.txt in a --system-site-packages venv.
+# NCNN declares GUI OpenCV as a dependency; use headless OpenCV on this Pi.
+ncnn==1.0.20260526
+numpy==2.5.4
+PyYAML==6.0.3
+Pillow==10.2.0
+opencv-python-headless==5.0.0.93
+# PC TensorRT uses the engine's evaluated environment from data/yolo-runtime.json.
+# See assets/models/yolo26x_mixed_trt_fp16/manifest.json for build versions.
+tqdm==4.70.1
+portalocker==4.4.1

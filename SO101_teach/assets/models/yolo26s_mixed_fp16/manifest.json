@@ -1,0 +1,11 @@
+{
+  "model": "YOLO26s-seg",
+  "training": "real+synthetic",
+  "format": "NCNN FP16",
+  "date": "2026-10-16",
+  "files": {
+    "model.ncnn.param": "b521ac2ecba84f253970ae0aeba8cdbae927ed25cf80d887dbc2e7193abcc725",
+    "model.ncnn.bin": "5dcb1dcdca77e3b1d9886cf62ce3f7861b9314c219683e35cdb537608bb9fd7b",
+    "metadata.yaml": "674ba9d0ea066eaa0aa14294db1cfa9ca5ae149b2790cb3c87b66c4f27165e68"
+  }
+}

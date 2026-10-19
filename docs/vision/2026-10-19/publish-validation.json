@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-19",
+  "targeted_regression_passed": 61,
+  "demo_data_asset_tests_passed": 4,
+  "initial_fixture_setup_errors": 2,
+  "fixture_setup_errors_resolved": true,
+  "native_ui": {
+    "passed": true,
+    "checks": {
+      "first_arm_3d": true,
+      "save_reload_preserved": true,
+      "second_arm_3d": true,
+      "both_jigs_detected": {
+        "pallet": "shape_match",
+        "b5ebdb54807c441c8267c15d77713b6a": "shape_match"
+      },
+      "both_jigs_adopted": true,
+      "korean_capture_path": true,
+      "fault_photo_processed": true,
+      "motors": [
+        "DemoSession",
+        "DemoSession"
+      ],
+      "network_blocked": true,
+      "serial_blocked": true,
+      "final_message": "오안착 사진 · 저장된 사진으로 위치를 다시 측정합니다."
+    },
+    "errors": []
+  },
+  "hardware_motion": false
+}
