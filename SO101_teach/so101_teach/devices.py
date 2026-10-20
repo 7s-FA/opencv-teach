@@ -205,7 +205,7 @@ class CameraSession:
         self.source=source;self.width=width;self.height=height;self.stop=threading.Event();self.processor=processor;self.observation=None
         self.frame=None;self.frame_at=0.;self.error=None;self.running=False;self.thread=None;self.max_fps=10
         self.preview_frame=None;self.processing_thread=None;self.frame_ready=threading.Event();self.frame_lock=threading.Lock();self.pending_frame=None;self.processor_revision=0
-        self.processing_enabled=True;self.preview_fps=10
+        self.processing_enabled=True;self.preview_fps=10;self.share_inference=False
     @property
     def observation(self):
         obs=getattr(self,'_observation',None)
@@ -232,6 +232,10 @@ class CameraSession:
             result={**result,'preview_detection_age_s':age}
             if 'live_by_jig' in result:
                 result['live_by_jig']={key:{**value,'preview_detection_age_s':age} for key,value in result['live_by_jig'].items()}
+        if result and (not obs or at!=obs[2]):
+            # Even pixel-identical consecutive captures are separate temporal
+            # observations. Never attach old AI evidence to a newer preview.
+            result={key:value for key,value in result.items() if key!='shared_ai'}
         return frame,{**result,'_preview':True,'detection_frame_at':obs[2] if obs else None} if result else result,at
     def start(self):
         if self.running:return
@@ -246,11 +250,20 @@ class CameraSession:
                 self.processor_revision+=1;self.pending_frame=None
                 if processing_enabled:self.observation=None
             self.processing_enabled=processing_enabled;self.preview_fps=preview_fps
+    def set_shared_inference(self,enabled):
+        if type(enabled) is not bool:raise ValueError('잘못된 AI 공유 설정')
+        with self.frame_lock:
+            if self.share_inference!=enabled:
+                self.share_inference=enabled;self.processor_revision+=1
+                self.pending_frame=None;self.observation=None
     def process_frames(self):
         while not self.stop.is_set():
             self.frame_ready.wait(.1)
             with self.frame_lock:
                 pending=self.pending_frame if self.processing_enabled else None;self.pending_frame=None;self.frame_ready.clear();processor=self.processor;revision=self.processor_revision
+                owner=getattr(processor,'__self__',None)
+                if self.share_inference and processor==getattr(owner,'process',None) and hasattr(owner,'process_shared'):
+                    processor=owner.process_shared
             if pending is None:continue
             frame,at=pending
             try:result=processor(frame) if processor else None

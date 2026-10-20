@@ -1,0 +1,48 @@
+{
+  "scope": "Public source and native desktop demo publication; separate from production audits",
+  "regression_unique_tests_passed": 72,
+  "initial_errors": 1,
+  "initial_error_reason": "Public UI fixture retained a machine-local STL path",
+  "targeted_recheck_errors": 1,
+  "targeted_error_reason": "New screenshot test assumed an existing verification folder",
+  "resolved": [
+    "Resolve fixture STL paths under repository data/jig_assets",
+    "Create screenshot output directory in test"
+  ],
+  "demo_data_tests_passed": 2,
+  "portable_asset_tests_passed": 2,
+  "native_ui": {
+    "passed": true,
+    "checks": {
+      "first_arm_3d": true,
+      "save_reload_preserved": true,
+      "second_arm_3d": true,
+      "both_jigs_detected": {
+        "pallet": "shape_match",
+        "b5ebdb54807c441c8267c15d77713b6a": "shape_match"
+      },
+      "both_jigs_adopted": true,
+      "korean_capture_path": true,
+      "fault_photo_processed": true,
+      "motors": [
+        "DemoSession",
+        "DemoSession"
+      ],
+      "network_blocked": true,
+      "serial_blocked": true,
+      "final_message": "오안착 사진 · 저장된 사진으로 위치를 다시 측정합니다."
+    },
+    "errors": []
+  },
+  "public_adaptations_preserved": [
+    "Windows directory fsync guard",
+    "Lazy Linux device imports",
+    "MuJoCo Unicode virtual asset loader",
+    "Relative model asset paths",
+    "Example recipes and execution settings"
+  ],
+  "additional_portability_fix": "Explicit UTF-8 and deterministic close for shared appearance JSON",
+  "hardware_access": false,
+  "github_actions": "Triggered by source push; see commit checks for final Linux and Windows build results",
+  "new_release_created": false
+}

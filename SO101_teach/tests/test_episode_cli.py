@@ -36,7 +36,7 @@ class FakeLink:
                 self.mode = 'HOLD' if self.auto_finish else 'MOVING'; self.pending = not self.auto_finish
                 if self.auto_finish: self.completed = self.request; self.index = len(args['targets'])
             return {'request_id': self.request}
-        if method == 'plan': return {'plan': [{'ticks': s['ticks']} for s in args['steps']]}
+        if method in ('plan','plan_snapshot'): return {'plan': [{'ticks': s['ticks']} for s in args['steps']]}
         return {}
     def post(self, endpoint, body=None):
         if endpoint == '/camera':
@@ -295,12 +295,13 @@ class ParallelPreparationTests(unittest.TestCase):
                 return {'phase':'TIMED_COMPLETE' if outer.now >= self.end else 'MOVING',
                         'target_mm':self.target,'remaining_s':max(0.,self.end-outer.now)}
         class Link(FakeLink):
-            def __init__(self): super().__init__(); self.ready=None; self.generation=0; self.move_times=[]
+            def __init__(self): super().__init__(); self.ready=None; self.generation=0; self.move_times=[]; self.play_times=[]
             def rpc(self, method, args=None):
                 if method=='detect_clear':
                     self.ready=outer.now+detect_after; self.generation+=1
                 if method=='command' and args['action'] in ('arm','move','play'):
                     self.move_times.append(outer.now)
+                    if args['action']=='play':self.play_times.append(outer.now)
                 return super().rpc(method,args)
             def post(self, endpoint, body=None):
                 if endpoint!='/camera': return super().post(endpoint,body)
@@ -324,12 +325,43 @@ class ParallelPreparationTests(unittest.TestCase):
         with patch.object(cli.time,'monotonic',side_effect=lambda:self.now), patch.object(cli.time,'sleep',side_effect=sleep):
             self.runner.execute(self.episode,self.bundle,400,100.)
 
+    def test_linear_starts_before_safe_arrival_and_jigs_wait_for_safe(self):
+        self.setup_job()
+        self.execute()
+        safe=self.events.index('SAFE_POSE_REACHED')
+        self.assertLess(next(i for i,e in enumerate(self.events) if e.startswith('LINEAR_CHECK:')),self.events.index('SAFE_POSE_STARTED'))
+        self.assertLess(safe,self.events.index('JIG_CONFIRMED:j'))
+        self.assertLess(safe,self.events.index('EPISODE_STARTED'))
+        self.assertEqual(self.episode['steps'][0]['safe_boundary'],'start')
+
+    def test_safe_travel_time_overlaps_linear_deadline(self):
+        self.setup_job(detect_after=1.,linear_seconds=8.)
+        original=self.runner.move
+        def move(action,*args,**kwargs):
+            if action=='move':
+                self.assertEqual(self.linear.calls.count('ensure'),1)
+                self.now+=5.
+            return original(action,*args,**kwargs)
+        with patch.object(self.runner,'move',side_effect=move):self.execute()
+        self.assertEqual(self.linear.calls.count('ensure'),1)
+        self.assertGreaterEqual(min(self.link.play_times),108.)
+        self.assertLess(min(self.link.play_times),108.2)
+
+    def test_failed_safe_move_never_starts_jig_checks_or_work(self):
+        self.setup_job()
+        with patch.object(self.runner,'move',side_effect=RuntimeError('safe arrival failed')),patch.object(self.runner,'prepare_work') as prepare:
+            with self.assertRaisesRegex(RuntimeError,'safe arrival failed'):self.execute()
+        prepare.assert_not_called()
+        self.assertEqual(self.linear.calls.count('ensure'),1)
+        self.assertNotIn('SAFE_POSE_REACHED',self.events)
+        self.assertNotIn('EPISODE_STARTED',self.events)
+
     def test_detection_finishes_first_arm_waits_for_linear(self):
         self.setup_job()
         self.execute()
         self.assertLess(self.events.index('JIG_CONFIRMED:j'), self.events.index('LINEAR_DONE:TIME_BASED:target_mm=100:target_position=ASSEMBLY:position_measured=false'))
-        self.assertGreaterEqual(min(self.link.move_times),108.)
-        self.assertLess(min(self.link.move_times),108.2)
+        self.assertGreaterEqual(min(self.link.play_times),108.)
+        self.assertLess(min(self.link.play_times),108.2)
         self.assertEqual(self.linear.calls.count('ensure'),1)
         self.assertFalse(any('remaining_s' in event or 'LINEAR_PROGRESS' in event for event in self.events))
 
@@ -337,17 +369,19 @@ class ParallelPreparationTests(unittest.TestCase):
         self.setup_job(detect_after=10.)
         self.execute()
         self.assertLess(self.events.index('LINEAR_DONE:TIME_BASED:target_mm=100:target_position=ASSEMBLY:position_measured=false'),self.events.index('JIG_CONFIRMED:j'))
-        self.assertGreaterEqual(min(self.link.move_times),110.)
+        self.assertGreaterEqual(min(self.link.play_times),110.)
 
-    def test_detection_failure_never_arms_or_moves_robot(self):
+    def test_detection_failure_allows_safe_move_but_never_work(self):
         self.setup_job(detect_after=100.)
         with self.assertRaisesRegex(RuntimeError,'지그 측정 실패'): self.execute()
-        self.assertEqual(self.link.move_times,[])
+        self.assertIn('SAFE_POSE_REACHED',self.events)
+        self.assertEqual(self.link.play_times,[])
 
-    def test_linear_timeout_never_arms_or_moves_robot(self):
+    def test_linear_timeout_allows_safe_move_but_never_work(self):
         self.setup_job(linear_seconds=100.)
         with self.assertRaisesRegex(RuntimeError,'리니어 완료 대기 시간 초과'): self.execute()
-        self.assertEqual(self.link.move_times,[])
+        self.assertIn('SAFE_POSE_REACHED',self.events)
+        self.assertEqual(self.link.play_times,[])
 
     def test_estop_leaves_linear_running_and_rechecks_pre_detected_jig(self):
         self.setup_job(); sent=False; restarted=False
@@ -362,8 +396,8 @@ class ParallelPreparationTests(unittest.TestCase):
         self.assertIn('JIG_RECHECK_AFTER_RESUME',self.events)
         self.assertEqual(self.linear.end,108.)
         self.assertEqual(self.linear.calls.count('ensure'),1)
-        self.assertGreaterEqual(min(self.link.move_times),114.)
-        plan=[args for method,args in self.link.calls if method=='plan'][0]
+        self.assertGreaterEqual(min(self.link.play_times),114.)
+        plan=[args for method,args in self.link.calls if method=='plan_snapshot'][-1]
         self.assertEqual(plan['current']['j']['pose'][0],2)
 
     def test_reset_waits_for_linear_before_safe_return(self):
@@ -376,6 +410,6 @@ class ParallelPreparationTests(unittest.TestCase):
         with self.assertRaises(cli.ResetRequested):self.execute(controls)
         with patch.object(cli.time,'monotonic',side_effect=lambda:self.now), patch.object(cli.time,'sleep',side_effect=lambda s:setattr(self,'now',self.now+s)):
             self.runner.reset_to_safe()
-        self.assertGreaterEqual(min(self.link.move_times),108.)
+        self.assertGreaterEqual(self.link.move_times[-1],108.)
         self.assertIn('RESET_WAIT_LINEAR_COMPLETE',self.events)
         self.assertEqual(self.linear.calls.count('ensure'),1)

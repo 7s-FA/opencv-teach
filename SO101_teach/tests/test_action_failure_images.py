@@ -105,7 +105,9 @@ class ActionEntryFailureTests(unittest.TestCase):
             def open(self):pass
             def close(self):pass
             def post(self,endpoint,body=None):
-                if endpoint=='/camera':return {'at':now[0],'image':frames,'detection':{'by_jig':{}}}
+                if endpoint=='/camera':
+                    if self.preparing:return super().post(endpoint,body)
+                    return {'at':now[0],'image':frames,'detection':{'by_jig':{}}}
                 return super().post(endpoint,body)
         class Linear(FakeLinear):
             def open(self):pass
@@ -123,7 +125,9 @@ class ActionEntryFailureTests(unittest.TestCase):
             self.assertEqual(cli.main(['build_a','--no-ros']),1)
         status=json.loads((folder/'data/episode-cli-arm2.json').read_text())
         self.assertIn('FAILED:지그 측정 실패',status['status']);self.assertEqual(events,['save'])
-        self.assertFalse(any(m=='command' and a.get('action') in ('arm','move','play') for link in links for m,a in link.calls))
+        # Preparation can enable holding torque before measuring jigs. A failed
+        # acquisition must still HOLD before saving and never dispatch motion.
+        self.assertFalse(any(m=='command' and a.get('action') in ('move','play') for link in links for m,a in link.calls))
         return list((folder/'data/diagnostics/action-failures').glob('*/error.json')),raw
 
     def test_action_timeout_saves_received_detection_after_hold_even_after_camera_stop(self):

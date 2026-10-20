@@ -53,7 +53,7 @@ class CameraInspectionPanel(ttk.Frame):
         self.title=tk.StringVar(value='전체 검사 · 9개 대상')
         ttk.Label(self.summary,textvariable=self.title,style='Section.TLabel').grid(row=0,column=0,sticky='w')
         self.table=ttk.Treeview(self.summary,style='Inspection.Treeview',columns=('part','state','score'),show='headings',height=9,selectmode='browse')
-        for key,label,width in [('part','대상',180),('state','판단',247),('score','일치도',60)]:
+        for key,label,width in [('part','대상',180),('state','판단',211),('score','형상 일치도',96)]:
             self.table.heading(key,text=label);self.table.column(key,width=width,minwidth=45,stretch=key=='state')
         self.table.grid(row=1,column=0,sticky='ew',pady=(6,0))
         for key,color in [('normal','#176b35'),('abnormal','#b42324'),('outside','#8b6b00'),('waiting','#5b6470')]:self.table.tag_configure(key,foreground=color)
@@ -71,7 +71,7 @@ class CameraInspectionPanel(ttk.Frame):
     def update_method_controls(self,sync=False):
         settings=inspection_settings(self.app.profile);label=inspection_label(self.app.profile)
         if sync:self.method.set(label)
-        detail='형상·색상·CAD 안착 비교' if settings['method']=='opencv' else f"YOLO26{settings['model']} · 신뢰도 {settings['confidence']:.1f} · AI 분류·마스크 + CAD 안착 비교"
+        detail='형상·색상·CAD 안착 비교' if settings['method']=='opencv' else f"YOLO26{settings['model']} · 신뢰도 {settings['confidence']:.1f} · AI 부품 분류 + CAD 안착 · 마스크 경계 검사 제외"
         set_text(self.method_status,'적용 중: '+label+' · '+detail)
         self.method_apply.state(['disabled'] if self.method.get()==label else ['!disabled'])
 
@@ -142,6 +142,7 @@ class CameraInspectionPanel(ttk.Frame):
         self.context=None;self.last_submit=None
         children=self.table.get_children()
         if children:self.table.delete(*children)
+        set_text(self.title,'영상 대기 · 검사 결과 없음')
         set_text(self.parts,'');set_text(self.position,'');self.row_details={};set_text(self.details,'최신 영상 대기')
         if self.canvas.find_all():self.canvas.delete('all')
         set_text(self.status,'최신 카메라 영상 대기 · 이전 판단은 숨깁니다.')
@@ -178,7 +179,7 @@ class CameraInspectionPanel(ttk.Frame):
                 shown.append({**deepcopy(anchor),'inspection_allowed':False,'source':'이전 검출 · 갱신 중'})
         return shown
 
-    def update_frame(self,frame,results,*,detection_fresh=True,frame_at=None):
+    def update_frame(self,frame,results,*,detection_fresh=True,frame_at=None,inference=None):
         if self.mode.get()!='카메라 영상':return
         if self.reference.data is None:self.clear();set_text(self.status,'부품 CAD 기준 파일 확인 필요');return
         app=self.app;now=time.monotonic();frame_at=now if frame_at is None else frame_at
@@ -193,7 +194,7 @@ class CameraInspectionPanel(ttk.Frame):
         if key!=self.context:self.context=key;self.last_submit=None
         if frame_at!=self.last_submit and now-self.last_submit_at>=.3:
             recovery={'catalog':app.catalog.items,'reference':self.reference.data,'placement':app.workcell_preview,'reference_directory':str(app.data_dir/'inspection_reference')}
-            self.worker.submit(key,frame_at,frame,anchors,app.profile,recovery=recovery);self.last_submit=frame_at;self.last_submit_at=now
+            self.worker.submit(key,frame_at,frame,anchors,app.profile,recovery=recovery,inference=inference);self.last_submit=frame_at;self.last_submit_at=now
         # Nine-region inspection can finish after ~2 s on the live PC.
         # Its completed display result shares the five-second retention window.
         result=self.worker.result
@@ -300,9 +301,13 @@ class CaptureGalleryPanel(ttk.Frame):
         ttk.Style(self).configure('Capture.Shell.Primary.TButton',font=('Noto Sans CJK KR',18,'bold'),padding=(32,18))
         self.save_button=app.button(bar,'사진 촬영·저장',self.capture,True);self.save_button.configure(style='Capture.Shell.Primary.TButton',width=16);self.save_button.pack(side='left',padx=(0,8));self.save_button.state(['disabled'])
         self.save_button.bind('<Button-3>',self.delete_click)
+        hint=ttk.Frame(bar,width=440,height=68);hint.pack(side='left',padx=(0,16));hint.pack_propagate(False)
+        ttk.Label(hint,text='좌클릭: 촬영·저장 · 우클릭: 선택 사진 삭제',style='Muted.TLabel',background=UI_COLORS['bg']).pack(anchor='w')
+        self.delete_target=tk.StringVar(value='삭제 대상: 선택된 사진 없음')
+        self.delete_target_label=StatusText(hint,self.delete_target,height=2,background=UI_COLORS['bg'])
+        self.delete_target_label.pack(fill='x',pady=(4,0))
         for text,command in [('카메라 연결',app.start_camera),('카메라 해제',app.stop_camera),('목록 새로고침',self.refresh),('저장 폴더 열기',app.open_capture_folder)]:
             button=app.button(bar,text,command);button.configure(style='Shell.TButton');button.pack(side='left',padx=(0,8))
-        ttk.Label(bar,text='좌클릭: 촬영·저장\n우클릭: 선택 사진 삭제',style='Muted.TLabel',background=UI_COLORS['bg']).pack(side='right')
         body=ttk.Frame(self);body.grid(row=1,column=0,sticky='nsew');body.rowconfigure(0,weight=1)
         body.columnconfigure(0,weight=1,uniform='photos');body.columnconfigure(1,weight=1,uniform='photos')
         self.canvases=[]
@@ -401,6 +406,7 @@ class CaptureGalleryPanel(ttk.Frame):
             if changed or preferred:self.table.see(chosen);self.load_selected()
         else:
             self.selected=None;self.saved_image=None;self.saved_canvas.delete('image');self.saved_status.set('저장된 사진이 없습니다. 실시간 영상을 확인한 뒤 촬영하세요.')
+            set_text(self.delete_target,'삭제 대상: 선택된 사진 없음')
 
     def select_photo(self,event=None):
         selection=self.table.selection()
@@ -408,6 +414,7 @@ class CaptureGalleryPanel(ttk.Frame):
 
     def load_selected(self,event=None):
         if not self.selected:return
+        set_text(self.delete_target,'삭제 대상: '+self.selected+' · 원본·표시본·판정 기록')
         path=self.folder/self.variant.get()/self.selected
         try:
             with Image.open(path) as image:self.saved_image=image.convert('RGB')

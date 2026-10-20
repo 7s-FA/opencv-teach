@@ -290,17 +290,20 @@ class RemoteCameraSession(CameraSession):
         import cv2,numpy as np
         rate=10.;failure_at=None;last_at=None;last_preview_at=None;sent_mode=None
         try:
-            with self.frame_lock:sent_mode=(self.processing_enabled,self.preview_fps,self.processor_revision)
+            with self.frame_lock:sent_mode=(self.processing_enabled,self.preview_fps,self.processor_revision,self.share_inference)
             mode_args={'processing_enabled':sent_mode[0],'preview_fps':sent_mode[1]}
+            if sent_mode[3]:mode_args['share_inference']=True
             if not self.observer:
-                if sent_mode[:2]==(True,10):self.link.camera_rpc('camera_start')
+                if sent_mode[:2]==(True,10) and not sent_mode[3]:self.link.camera_rpc('camera_start')
                 else:self.link.camera_rpc('camera_start',mode_args)
             while not self.stop.is_set() and not self.link.error:
                 start=time.monotonic()
                 try:
-                    with self.frame_lock:mode=(self.processing_enabled,self.preview_fps,self.processor_revision)
+                    with self.frame_lock:mode=(self.processing_enabled,self.preview_fps,self.processor_revision,self.share_inference)
                     if mode!=sent_mode and not self.observer:
-                        self.link.camera_rpc('camera_mode',{'processing_enabled':mode[0],'preview_fps':mode[1]});sent_mode=mode
+                        options={'processing_enabled':mode[0],'preview_fps':mode[1]}
+                        if mode[3] or sent_mode[3]:options['share_inference']=mode[3]
+                        self.link.camera_rpc('camera_mode',options);sent_mode=mode
                         last_at=None
                         self.transport.after_at=None
                     data=self.transport.request()

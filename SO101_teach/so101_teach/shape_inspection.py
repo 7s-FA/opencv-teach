@@ -485,8 +485,8 @@ class InspectionWorker(threading.Thread):
     """One latest-only job; UI never waits for vision. Old selection results expire."""
     def __init__(self):
         super().__init__(daemon=True,name='part-shape-inspector');self.jobs=queue.Queue(maxsize=1);self.stop=threading.Event();self.result=None;self.start()
-    def submit(self,key,at,frame,anchors,profile,*,recovery=None):
-        job=(key,at,frame.copy(),deepcopy(anchors),deepcopy(profile),deepcopy(recovery))
+    def submit(self,key,at,frame,anchors,profile,*,recovery=None,inference=None):
+        job=(key,at,frame.copy(),deepcopy(anchors),deepcopy(profile),deepcopy(recovery),deepcopy(inference))
         try:self.jobs.get_nowait()
         except queue.Empty:pass
         self.jobs.put_nowait(job)
@@ -501,7 +501,7 @@ class InspectionWorker(threading.Thread):
         except Exception as exc:error=str(exc)
         previous={};last_key=None;last_at=None;last_completed=None
         while not self.stop.is_set():
-            try:key,at,frame,anchors,profile,recovery=self.jobs.get(timeout=.1)
+            try:key,at,frame,anchors,profile,recovery,inference=self.jobs.get(timeout=.1)
             except queue.Empty:continue
             if inspector:error=None
             try:
@@ -516,7 +516,11 @@ class InspectionWorker(threading.Thread):
                         extra,_=anchors_for(frame,{jid:result},{},recovery['catalog'],profile,recovery['reference'],'완성품 팔레트','전체',recovery['placement'])
                         for a in extra:a['station']='완성품 팔레트'
                         anchors=[a for a in anchors if a['part']!='finished']+extra
-                rows=inspector.inspect(frame,anchors,profile) if inspector else []
+                from .shared_inference import FrameInference
+                from .ai_inspection import inspection_settings
+                shared=FrameInference.from_wire(frame,inspection_settings(profile),inference)
+                rows=(inspector.inspect(frame,anchors,profile,inference=shared) if shared is not None
+                      else inspector.inspect(frame,anchors,profile)) if inspector else []
             except Exception as exc:rows=[];error=str(exc)
             # A slow full-scene pass must not reset confirmation on every job.
             # Allow its own processing interval plus the normal one-second gap.

@@ -6,6 +6,7 @@ import time
 import os
 import tempfile
 import uuid
+import fcntl
 
 
 def record_notice(root, arm, status):
@@ -25,9 +26,9 @@ def status_word(success):
     return 'IDLE' if success else 'ERROR'
 
 
-def job_succeeded(code, last, check_only=False, *, chained=False):
+def job_succeeded(code, last, check_only=False, *, chained=False, home=False):
     if check_only:return code==0 and last.startswith('CHECK_OK ')
-    final=('A_CHAIN_DONE','B_CHAIN_DONE') if chained else ('A_DONE','B_DONE','SLIDE_DONE')
+    final=('HOME_RESET_DONE',) if home else ('A_CHAIN_DONE','B_CHAIN_DONE') if chained else ('A_DONE','B_DONE','SLIDE_DONE')
     return code==0 and last in final
 
 
@@ -39,7 +40,7 @@ def feedback_word(detail):
     if detail_failed(detail): return 'ERROR'
     if detail.endswith('_PAUSED'): return 'PAUSED'
     if detail.endswith('_RESUMED'): return 'RUNNING'
-    if detail in ('A_DONE', 'B_DONE', 'SLIDE_DONE', 'A_CHAIN_DONE', 'B_CHAIN_DONE'): return 'IDLE'
+    if detail in ('A_DONE', 'B_DONE', 'SLIDE_DONE', 'A_CHAIN_DONE', 'B_CHAIN_DONE','HOME_RESET_DONE'): return 'IDLE'
     return None
 
 
@@ -54,6 +55,44 @@ def control_state(root):
             if not part: break
             raw += part
     return json.loads(raw)
+
+
+def clear_paused_job(root, job_lock, timeout=10):
+    """End a paused executor; never reset poses, resume, or start a new job.
+
+    Success requires both executor and Action reservations to be released.
+    Missing sockets alone never prove idle. The caller checks linear completion.
+    """
+    try:
+        state = control_state(root)
+    except (FileNotFoundError, ConnectionRefusedError):
+        state = None
+    if state is not None:
+        if not state.get('paused') or not state.get('info'):
+            return False
+        # The executor checks paused/control-pending again atomically.
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
+            client.settimeout(3)
+            client.connect(str(Path(root) / 'data/episode-cli.sock'))
+            key = state['info'].get('run_id', '')
+            if len(key) != 32 or any(c not in '0123456789abcdef' for c in key):
+                return False
+            client.sendall(('clear_error ' + key).encode())
+            reply = client.recv(8192).decode().strip()
+        if reply != 'CLEAR_ERROR_REQUESTED':
+            return False
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if job_lock.acquire(blocking=False):
+            try:
+                with (Path(root) / 'data/episode-cli.lock').open('a') as reservation:
+                    try: fcntl.flock(reservation, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    except BlockingIOError: pass
+                    else: return True
+            finally:
+                job_lock.release()
+        time.sleep(.05)
+    return False
 
 
 def job_events(root, info):

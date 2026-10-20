@@ -91,6 +91,9 @@ def append_full_map(scene,placement,*,mujoco_display=True):
     if existing is None:existing=ET.SubElement(scene.find('visual'),'map')
     existing.set('shadowscale','.7')
 
+    from .preview_materials import apply_colors, append_robot_details
+    apply_colors(scene)
+    append_robot_details(scene, active_arm=placement.get('active_arm_id','arm2'))
     if mujoco_display:
         from .mujoco_finish import append_mujoco_finish
         append_mujoco_finish(scene,root)

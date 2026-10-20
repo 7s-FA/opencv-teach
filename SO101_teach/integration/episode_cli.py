@@ -1,6 +1,7 @@
 """Pi-local episode command; uses the existing device runtime without a PC UI."""
 import argparse
 from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as PlanTimeout
 import fcntl
 import json
 import os
@@ -31,6 +32,10 @@ class ResetRequested(Exception):
 
 
 class ShutdownRequested(Exception):
+    pass
+
+
+class PreparationRestart(Exception):
     pass
 
 
@@ -81,6 +86,8 @@ def load_job(arm, command):
     if has_inspections(episode):
         from so101_teach.episode_inspection_runtime import require_resources
         require_resources()
+    from so101_teach.model_regions import verify_profile_models
+    verify_profile_models(profile, inspect_parts=has_inspections(episode))
     bundle = configuration_bundle(app)
     bundle['mesh_hashes'] = {key: catalog.mesh(key)['sha256'] for key in catalog.items}
     return data, episode, bundle, settings['speed'], float(recipe['timeout_seconds'])
@@ -180,6 +187,14 @@ class Control:
         with self.lock:
             if command == 'inspect':
                 return json.dumps({'info': self.info, 'paused': self.paused})
+            if self.shutdown.is_set(): raise ValueError('JOB_ENDING')
+            if command.startswith('clear_error '):
+                if not self.info or command != 'clear_error ' + self.info['run_id']:
+                    raise ValueError('JOB_CHANGED')
+                if not self.paused or self.resume.is_set() or self.reset.is_set():
+                    raise ValueError('NOT_PAUSED_OR_CONTROL_PENDING')
+                self.shutdown.set()
+                return 'CLEAR_ERROR_REQUESTED'
             if command == 'estop':
                 self.resume.clear(); self.reset.clear(); self.pause.set()
                 if self.emergency: self.emergency()
@@ -202,6 +217,7 @@ class Runner:
         self.linear_target = None
         self.linear_until = None
         self.inspection_batch = None
+        self.prepared_inspector = None
         self.assembly_evidence = None
         self.inspection_jigs = {}
         self.inspection_due = []
@@ -214,6 +230,8 @@ class Runner:
         self.camera_owned = False
         self.camera_preparing = False
         self.camera_prepare_started = None
+        self.preparation_epoch = 0
+        self.planned_epoch = None
         from failure_images import FailureImages
         self.failure_images=FailureImages(ROOT/'data')
         self.failure_context={'phase':'preparation',**(self.control.info or {})}
@@ -354,8 +372,18 @@ class Runner:
             time.sleep(.05)
         if self.linear_active and not self.poll_linear():
             self.emit('LINEAR_CONTINUES:ESTOP_APPLIES_TO_ARM_ONLY')
-        with self.control.lock: self.control.paused = True
+        with self.control.lock:
+            self.control.paused = True
+            self.preparation_epoch += 1
         self.emit('PAUSED')
+        if self.link is None:
+            # A slide-only preparation has no arm sequence to resume. Drain the
+            # existing timed move, then terminate without reset or new PWM.
+            while self.linear_active:
+                self.state()
+                if self.poll_linear(): break
+                time.sleep(.05)
+            raise ShutdownRequested('SLIDE_PREPARATION_CANCELLED')
         while True:
             state = self.state()
             if state and not (settled(state) or torque_off(state)):
@@ -401,7 +429,7 @@ class Runner:
         return None
 
     def move(self, action, targets, steps=None, completion_events=None, *, progress_offset=0, total_steps=None):
-        self.failure_context.update(phase='motion',motion_action=action)
+        preparing = action == 'play' and self.planned_epoch is not None
         original = deepcopy(targets)
         offset, reported = 0, 0
         stage_ends = {}
@@ -426,6 +454,9 @@ class Runner:
                     if count>=after and step['id'] not in self.inspection_started:
                         self.inspection_batch.start(step);self.inspection_started.add(step['id'])
         self.check()
+        if preparing and self.planned_epoch != self.preparation_epoch:
+            raise PreparationRestart('준비 이후 재개 · 경로 재계산 필요')
+        self.failure_context.update(phase='motion',motion_action=action)
         request = self.link.rpc('command', {'action': action, 'targets': original})['request_id']
         while True:
             if self.control.pause.is_set():
@@ -507,12 +538,15 @@ class Runner:
         self.start_linear(target)
         self.wait_linear()
 
-    def prepare_work(self, steps, bundle, target, startup_checks=()):
-        # The user confirmed these are fixed jigs, independent of the linear stage.
-        self.start_linear(target)
+    def prepare_work(self, steps, bundle, target, startup_checks=(), *, linear_started=False, on_measured=None):
+        # Fixed jigs can be measured while the already-started linear stage moves.
+        if not linear_started:self.start_linear(target)
+        if startup_checks:
+            return self.prepare_startup(steps,bundle,startup_checks,on_measured=on_measured)
         while True:
             current = self.measure([*steps,*startup_checks], bundle)
             self.inspection_jigs=deepcopy(current)
+            if on_measured is not None:on_measured(current)
             deferred=[];inspection_resumed=False
             if startup_checks:
                 self.emit('STARTUP_INSPECTION_STARTED')
@@ -531,11 +565,113 @@ class Runner:
         if startup_checks:self.emit('STARTUP_INSPECTION_PASSED')
         return current
 
-    def measure(self, steps, bundle):
+    def prepare_startup(self,steps,bundle,startup_checks,*,on_measured=None):
+        from so101_teach.configuration import JigCatalog
+        from so101_teach.workcell_placement import load_placement
+        from so101_teach.startup_inspection import StartupInspection
+        data=ROOT/('data' if bundle['profile'].get('robot_id','arm2')=='arm2' else 'data/arm3-runtime')
+        catalog=JigCatalog(data,profile=bundle['profile']);placement=load_placement(ROOT/'data')
+        pipeline=None
+        def begin():
+            return StartupInspection(startup_checks,bundle['profile'],catalog,placement,
+                self.prepared_inspector,self.emit,linear_target=self.linear_target)
+        def progress(current,frame=None,*,resumed=False):
+            nonlocal pipeline
+            if resumed:
+                pipeline.close();pipeline=begin()
+                self.emit('INSPECTION_GROUP_RESTARTED')
+            # Main thread owns the device and all readiness checks.
+            state=self.last_state
+            if not (settled(state) or torque_off(state)):
+                raise RuntimeError('시작 전 검사 중 자세 유지 상태 변경')
+            linear=self.linear.call('status') if any(s['inspection']['station']=='linear' for s in startup_checks) and self.linear else None
+            pipeline.poll(current,frame,linear_state=linear)
+        try:
+            while True:
+                pipeline=begin();epoch=self.preparation_epoch
+                self.emit('STARTUP_INSPECTION_STARTED')
+                current=self.measure([*steps,*startup_checks],bundle,on_progress=progress)
+                epoch=self.preparation_epoch
+                self.inspection_jigs=deepcopy(current)
+                if on_measured is not None:on_measured(current)
+                self.link.rpc('camera_start',{'processing_enabled':False,'preview_fps':10})
+                after_at=after_preview=None;restart=False
+                while True:
+                    state,resumed=self.check()
+                    if resumed or self.preparation_epoch!=epoch:
+                        restart=True;break
+                    if self.linear_active:self.poll_linear()
+                    frame=self.camera_frame({'after_at':after_at,'after_preview_at':after_preview})
+                    progress(current,frame)
+                    after_at,after_preview=frame.get('at'),frame.get('preview_at')
+                    if pipeline.complete and not self.linear_active:break
+                    time.sleep(.05)
+                if restart:
+                    pipeline.close();pipeline=None
+                    self.emit('JIG_RECHECK_AFTER_RESUME');continue
+                # Only now publish PASS: every provisional result still refers
+                # to the final frozen jig snapshot and completed linear target.
+                for step in pipeline.passed.values():
+                    self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],
+                        'check':deepcopy(step['inspection']),'product':step['inspection_product'],
+                        'result':'PASS','at':time.time(),
+                        **({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
+                    if self.assembly_evidence:self.assembly_evidence.record(step,step['inspection_product'])
+                    self.emit('INSPECTION_PASS:'+step['id'])
+                atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,
+                    'product_type':self.inspection_product,'checks':self.inspection_records})
+                self.emit('WORK_READY:LINEAR_COMPLETE_AND_JIG_CONFIRMED')
+                self.emit('STARTUP_INSPECTION_PASSED')
+                return current
+        except Exception as exc:
+            self.emergency()
+            self.failure_inspection={'steps':deepcopy(startup_checks),
+                'result':deepcopy(pipeline.observed if pipeline else None),'result_role':'last_consumed_inspection_result'}
+            self.inspection_records.append({'result':'FAIL','error':str(exc),'at':time.time()})
+            atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,
+                'product_type':self.inspection_product,'checks':self.inspection_records})
+            self.emit('INSPECTION_FAILED:'+str(exc));raise
+        finally:
+            if pipeline:pipeline.close()
+            self.pause_camera()
+
+    def prepare_execution_plan(self, steps, bundle, target, startup_checks):
+        # Only read-only IK runs in the worker. All readiness gates and motion
+        # remain on this thread, with a new snapshot after every preparation pause.
+        with ThreadPoolExecutor(max_workers=1,thread_name_prefix='episode-plan') as pool:
+            future=None;snapshot=None
+            def begin(current):
+                nonlocal future,snapshot
+                if future is not None:future.cancel()
+                snapshot=(deepcopy(steps),deepcopy(bundle),deepcopy(current),self.preparation_epoch)
+                self.emit('PLAN_STARTED')
+                future=pool.submit(self.link.rpc,'plan_snapshot',{'steps':snapshot[0],'current':snapshot[2]})
+            while True:
+                current=self.prepare_work(steps,bundle,target,startup_checks,linear_started=True,on_measured=begin)
+                self.failure_context['phase']='planning'
+                while not future.done() and snapshot[3]==self.preparation_epoch:
+                    self.check()
+                    if snapshot[3]!=self.preparation_epoch:break
+                    try:future.result(timeout=.05)
+                    except PlanTimeout:pass
+                self.check();self.wait(settled,15)
+                if snapshot!=(steps,bundle,current,self.preparation_epoch):
+                    self.emit('PLAN_DISCARDED:PREPARATION_CHANGED');continue
+                plan=future.result()['plan']
+                self.check()
+                if snapshot[3]!=self.preparation_epoch:
+                    self.emit('PLAN_DISCARDED:PREPARATION_CHANGED');continue
+                self.planned_epoch=self.preparation_epoch
+                self.emit('PLAN_READY')
+                return plan
+
+    def measure(self, steps, bundle, *, on_progress=None):
         self.failure_context['phase']='jig_detection'
         from so101_teach.episode_inspection import inspection_jig_ids
         keys = {s['jig_id'] for s in steps if s.get('jig_id')} | inspection_jig_ids(steps)
-        if not keys: return {}
+        if not keys:
+            if on_progress:on_progress({})
+            return {}
         self.link.rpc('detect_freeze', {'enabled': False})
         if self.camera_owned:self.await_camera_ready()
         def begin():
@@ -543,6 +679,7 @@ class Runner:
             self.emit('JIG_DETECTION_STARTED')
             return time.monotonic()
         started = begin()
+        if on_progress:on_progress({})
         until = started + bundle['acquisition_seconds'] * bundle['acquisition_attempts']
         self.link.rpc('camera_start', {'processing_enabled': True, 'preview_fps': 10})
         self.camera_preparing=False
@@ -558,6 +695,7 @@ class Runner:
                     until = started + bundle['acquisition_seconds'] * bundle['acquisition_attempts']
                     self.link.rpc('camera_start', {'processing_enabled': True, 'preview_fps': 10})
                     self.camera_preparing=False
+                    if on_progress:on_progress({},resumed=True)
                 frame = self.camera_frame({'after_at': after_at, 'after_preview_at': after_preview_at})
                 after_at, after_preview_at = frame.get('at'), frame.get('preview_at')
                 if frame.get('error'): raise RuntimeError(frame['error'])
@@ -575,6 +713,7 @@ class Runner:
                             current[key] = {'pose': [*metric['center_xy_mm'], metric['yaw_deg']],
                                 'symmetry_deg': metric.get('symmetry_deg', 90), 'stl_sha256': bundle['mesh_hashes'][key],
                                 **({'mesh_yaw_offset_deg': metric['mesh_yaw_offset_deg']} if metric.get('mesh_yaw_offset_deg') else {})}
+                if on_progress:on_progress(current,frame)
                 if keys == current.keys():
                     self.link.rpc('detect_freeze', {'enabled': True})
                     self.failure_images.confirm_jigs(current)
@@ -604,7 +743,7 @@ class Runner:
         self.failure_context['phase']='checkpoint_inspection'
         def begin():
             product=step.get('inspection_product',self.inspection_product)
-            return FrameInspection(data,bundle['profile'],catalog,placement,step['inspection'],product,fixed_jigs=self.inspection_jigs),InspectionDecision(step['inspection'],product,time.monotonic(),evidence=self.assembly_evidence)
+            return FrameInspection(data,bundle['profile'],catalog,placement,step['inspection'],product,fixed_jigs=self.inspection_jigs,prepared_inspector=self.prepared_inspector),InspectionDecision(step['inspection'],product,time.monotonic(),evidence=self.assembly_evidence)
         try:
             if startup and step['inspection']['station']=='linear':
                 if not self.linear:raise RuntimeError('시작 전 검사: 리니어 제어기 상태를 확인할 수 없습니다.')
@@ -670,7 +809,7 @@ class Runner:
                 linear_target=state['target_mm'];placement['linear_stage']['startup_state']={'known':True,'commanded_mm':linear_target,'moving':False}
             def begin():
                 decision=GroupInspectionDecision(steps,time.monotonic(),evidence=self.assembly_evidence)
-                return FrameInspections(data,bundle['profile'],catalog,placement,steps,fixed_jigs=self.inspection_jigs),decision
+                return FrameInspections(data,bundle['profile'],catalog,placement,steps,fixed_jigs=self.inspection_jigs,prepared_inspector=self.prepared_inspector),decision
             worker,decision=begin()
             self.emit('INSPECTION_GROUP_STARTED:'+str(len(steps)))
             for step in steps:self.emit('INSPECTION_STARTED:'+step['id']+':'+step['name'])
@@ -731,7 +870,7 @@ class Runner:
             placement['linear_stage']['startup_state']={'known':not self.linear_active,'commanded_mm':self.linear_target,'moving':self.linear_active}
         def worker(step):
             self.emit('INSPECTION_STARTED:'+step['id']+':'+step['name'])
-            return FrameInspection(data,bundle['profile'],catalog,placement,step['inspection'],self.inspection_product,fixed_jigs=self.inspection_jigs)
+            return FrameInspection(data,bundle['profile'],catalog,placement,step['inspection'],self.inspection_product,fixed_jigs=self.inspection_jigs,prepared_inspector=self.prepared_inspector)
         def passed(step):
             self.inspection_records.append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
             atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
@@ -786,7 +925,11 @@ class Runner:
             failing=sys.exc_info()[0] is not None
             # Do not put camera RPC cleanup ahead of HOLD for a motion failure.
             if failing and self.failure_context.get('phase')=='motion':self.emergency()
-            try:self.close_episode_camera()
+            try:
+                try:
+                    if self.prepared_inspector is not None:
+                        self.prepared_inspector.close();self.prepared_inspector=None
+                finally:self.close_episode_camera()
             except Exception as exc:
                 if not failing:raise
                 print('에피소드 카메라 정리 실패: '+str(exc),file=sys.stderr)
@@ -802,8 +945,9 @@ class Runner:
             from so101_teach.workcell_placement import load_placement
             self.assembly_evidence=AssemblyEvidence(ROOT/'data/assembly-evidence.json',scope=geometry_scope(load_placement(ROOT/'data')),
                 episode_id=episode['id'])
-            from so101_teach.episode_inspection_runtime import require_resources
-            require_resources()
+            from so101_teach.episode_inspection_runtime import PreparedInspector
+            self.prepared_inspector=PreparedInspector(bundle['profile'])
+            self.emit('INSPECTION_MODEL_PREPARING')
             self.inspection_product=episode['product_type'];self.inspection_episode=episode['id'];self.inspection_records=[]
             self.inspection_log=ROOT/'data/diagnostics'/f'episode-inspection-{time.time_ns()}.json'
             atomic_json(self.inspection_log,{'episode_id':episode['id'],'product_type':self.inspection_product,'checks':[]})
@@ -812,45 +956,53 @@ class Runner:
         state = self.prepare_follower(bundle,speed)
         self.emit('ACCEPTED')
         steps = deepcopy(episode['steps'])
-        current = self.prepare_work(steps, bundle, target, startup_steps(episode))
         state, _ = self.check()
         if state['state'] == 'READ_ONLY': self.link.rpc('command', {'action': 'arm'})
         self.wait(settled, 15)
+        # User verified the initial safe path does not intersect the linear path.
+        # Model warm-up runs in the camera worker; no jig pose is adopted yet.
+        self.start_linear(target)
         if steps[0].get('safe_boundary') == 'start':
             self.emit('SAFE_POSE_STARTED')
             self.move('move', [steps.pop(0)['ticks']])
             self.emit('SAFE_POSE_REACHED')
-        self.failure_context['phase']='planning'
-        self.emit('PLAN_STARTED')
-        plan = self.link.rpc('plan', {'steps': steps, 'current': current})['plan']
-        self.emit('PLAN_READY')
-        self.check(); self.emit('EPISODE_STARTED')
-        if any('inspection' in step for step in steps):
-            events=episode.get('completion_events')
-            if events is None:
-                events={}
-                for step in steps:
-                    stage=self.stage(step['name'])
-                    if stage:events[stage]=step['id']
-            checked={step['id'] for step in steps if 'inspection' in step}
+        # Only jig adoption and startup checks wait for safe-pose arrival.
+        while True:
+            plan=self.prepare_execution_plan(steps,bundle,target,startup_steps(episode))
+            self.emit('EPISODE_STARTED')
             try:
-                self.begin_inspections(steps,bundle,events)
-                self.move('play',[point['ticks'] for point in plan],steps,{k:v for k,v in events.items() if v not in checked})
-                while self.inspection_batch.pending:
-                    state,resumed=self.check()
-                    if not settled(state):raise RuntimeError('최종 검사 중 자세 유지 상태 변경')
-                    if self.linear_active:self.poll_linear()
-                    if resumed:self.inspection_batch.restart()
-                    self.poll_inspections();time.sleep(.05)
-            except Exception as exc:
-                self.emergency()
-                self.inspection_records.append({'result':'FAIL','error':str(exc),'at':time.time()})
-                atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
-                self.emit('INSPECTION_FAILED:'+str(exc));raise
-            finally:
-                if self.inspection_batch:self.inspection_batch.close();self.inspection_batch=None
-                self.pause_camera()
-        else:self.move('play', [point['ticks'] for point in plan], steps, episode.get('completion_events'))
+                if any('inspection' in step for step in steps):
+                    events=episode.get('completion_events')
+                    if events is None:
+                        events={}
+                        for step in steps:
+                            stage=self.stage(step['name'])
+                            if stage:events[stage]=step['id']
+                    checked={step['id'] for step in steps if 'inspection' in step}
+                    try:
+                        self.begin_inspections(steps,bundle,events)
+                        self.move('play',[point['ticks'] for point in plan],steps,{k:v for k,v in events.items() if v not in checked})
+                        while self.inspection_batch.pending:
+                            state,resumed=self.check()
+                            if not settled(state):raise RuntimeError('최종 검사 중 자세 유지 상태 변경')
+                            if self.linear_active:self.poll_linear()
+                            if resumed:self.inspection_batch.restart()
+                            self.poll_inspections();time.sleep(.05)
+                    except PreparationRestart:
+                        raise
+                    except Exception as exc:
+                        self.emergency()
+                        self.inspection_records.append({'result':'FAIL','error':str(exc),'at':time.time()})
+                        atomic_json(self.inspection_log,{'episode_id':self.inspection_episode,'product_type':self.inspection_product,'checks':self.inspection_records})
+                        self.emit('INSPECTION_FAILED:'+str(exc));raise
+                    finally:
+                        if self.inspection_batch:self.inspection_batch.close();self.inspection_batch=None
+                        self.pause_camera()
+                else:self.move('play', [point['ticks'] for point in plan], steps, episode.get('completion_events'))
+            except PreparationRestart:
+                self.emit('PLAN_DISCARDED:PREPARATION_CHANGED')
+                continue
+            break
         if self.finished_return_step is not None:
             self.start_finished_return(defer_pause=False)
             if not self.linear_return_started:
@@ -978,7 +1130,7 @@ def send_control(command):
 def main(argv=None):
     from linear_client import LinearClient
     parser = argparse.ArgumentParser(description='조립대 직접 실행·비상정지·재시작')
-    commands = ('build_a', 'build_b', 'load_a', 'load_b', 'build_load_a', 'build_load_b', 'slide_build', 'slide_load',
+    commands = ('build_a', 'build_b', 'load_a', 'load_b', 'build_load_a', 'build_load_b', 'slide_build', 'slide_load', 'prepare_home',
                 'estop', 'restart', 'reset', 'build_status', 'load_status', 'slide_status')
     parser.add_argument('command', nargs='?', choices=commands)
     for arm in ('arm2', 'arm3'):
@@ -992,6 +1144,14 @@ def main(argv=None):
     args = parser.parse_args(argv)
     command = args.command or args.legacy
     if not command: parser.error('명령어가 필요합니다.')
+    if command=='prepare_home':
+        import episode_recovery
+        if args.check:
+            episode_recovery.workcell_records(SimpleNamespace(**globals()))
+            print('CHECK_OK prepare_home · 저장 자세 검증 · 장치 연결 없음');return 0
+        return episode_recovery.run(SimpleNamespace(**globals()),'arm2',ros=not args.no_ros,
+                                    startup=True,execution_lock_fd=args.execution_lock_fd,
+                                    managed=args.managed_completion)
     if command in ('estop', 'restart', 'reset'):
         if args.check:
             print('CHECK_OK '+command+' control request · 장치 연결 없음');return 0

@@ -18,7 +18,7 @@ class AIInspectionTests(unittest.TestCase):
         mask=np.zeros((80,80),bool);x0,y0,x1,y1=box;mask[y0:y1,x0:x1]=True
         return {'class_id':cls,'confidence':.9,'box':list(box),'mask':mask}
     def fuse(self,items,row=None,anchor=None):
-        return combine([row or self.row],[anchor or self.anchor],items,self.geometry,self.frame,{},.5)[0]
+        return combine([row or self.row],[anchor or self.anchor],items,self.geometry,self.frame,{},.5,mask_boundary=True)[0]
     def test_agreement_preserves_existing_geometry_and_input(self):
         original=deepcopy(self.row);out=self.fuse([self.item()]);self.assertEqual(out['quality'],'normal');self.assertEqual(out['ai_seating'],'inside')
         for key in ('center_error_mm','center_tolerance_mm','rotation_error_deg','rotation_tolerance_deg'):self.assertEqual(out[key],self.row[key])
@@ -101,6 +101,23 @@ class AIInspectionTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'unavailable'):inspector.inspect(self.frame,[self.anchor],settings)
         inspector.close();self.assertEqual(provider.close.call_count,2)
         self.assertEqual(RegionModel().class_ids,(0,1));self.assertEqual(len(RegionModel(class_ids=tuple(range(13))).class_ids),13)
+    def test_production_uses_labels_and_cad_without_mask_boundary_veto(self):
+        self.geometry.inspect.return_value=[self.row]
+        provider=Mock();provider.predict.return_value=[self.item(box=(10,30,50,50))]
+        inspector=ModelInspector(self.geometry,provider)
+        profile={'part_inspection':{'method':'model_roi','model':'n','confidence':.5,'model_identity':'a'*64}}
+        with patch('so101_teach.ai_inspection.containment',side_effect=AssertionError('No mask boundary gate in production')):
+            out=inspector.inspect(self.frame,[self.anchor],profile)[0]
+        self.assertEqual(out['quality'],'normal');self.assertEqual(out['ai_label'],'A 하단')
+        self.assertFalse(out['mask_boundary_check']);self.assertNotIn('ai_seating',out)
+        for fault in (
+            {'seating':'boundary','quality':'abnormal'},
+            {'rotation_error_deg':20.,'quality':'abnormal'},
+            {'center_error_mm':8.,'quality':'abnormal'},
+        ):
+            self.geometry.inspect.return_value=[{**self.row,**fault}]
+            out=inspector.inspect(self.frame,[self.anchor],profile)[0]
+            self.assertEqual(out['quality'],'abnormal')
     def test_explicit_inspection_selection_is_independent_of_jig_detection(self):
         from so101_teach.ai_inspection import inspection_settings,inspector_for
         ai={'method':'model_roi','model':'n','confidence':.5,'model_identity':'a'*64}

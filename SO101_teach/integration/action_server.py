@@ -20,11 +20,12 @@ from host_pkg.action import Arm
 
 ROOT = Path(os.environ.get('SO101_APP_DIR', '/home/ubuntu/OpenCV_teach'))
 COMMANDS = {
-    'arm2': {'BUILD_A', 'BUILD_B', 'BUILD_LOAD_A', 'BUILD_LOAD_B', 'BUILD_SLIDE'},
+    'arm2': {'BUILD_A', 'BUILD_B', 'BUILD_LOAD_A', 'BUILD_LOAD_B', 'BUILD_SLIDE', 'PREPARE_HOME'},
     'arm3': {'LOAD_A', 'LOAD_B', 'LOAD_SLIDE'},
 }
 CONTROLS = {
     'EMER_STOP': 'estop', 'RESTART': 'restart', 'RESET': 'reset',
+    'CLEAR_ERROR': 'clear_error',
 }
 
 
@@ -98,7 +99,7 @@ class ArmActionServer(Node):
             if is_control:
                 control = CONTROLS[command]
                 result.success = self.invoke_control(control)
-                state = {'estop': 'PAUSED', 'restart': 'RUNNING', 'reset': 'IDLE'}[control]
+                state = {'estop': 'PAUSED', 'restart': 'RUNNING', 'reset': 'IDLE', 'clear_error': 'IDLE'}[control]
             else:
                 reservation=self.dispatch_lock
                 args = [str(ROOT / 'run_episode.sh'), {'BUILD_SLIDE': 'slide_build', 'LOAD_SLIDE': 'slide_load'}.get(command, command.lower()), '--managed-completion','--execution-lock-fd',str(reservation.fileno())]
@@ -125,10 +126,15 @@ class ArmActionServer(Node):
                         self.notice('EXECUTOR_OUTPUT:'+command+':'+last)
                     state = self.protocol.feedback_word(last)
                     if command.startswith('BUILD_LOAD_') and last in ('A_DONE','B_DONE'):state=None
+                    # A correlated handoff milestone permits the transport robot
+                    # to leave while arm3 loads. It is not whole-job completion.
+                    if command.startswith('BUILD_LOAD_') and last == command[-1]+'_BUILD_DONE':
+                        state = 'BUILD_DONE'
                     if state:
                         publish_feedback(state)
                 result.success = self.protocol.job_succeeded(
                     process.wait(), last, self.check_only, chained=command.startswith('BUILD_LOAD_'),
+                    home=command=='PREPARE_HOME',
                 )
                 state = 'IDLE'
             if is_control or lock_owned or not result.success:publish_feedback(state if result.success else 'ERROR')
@@ -157,6 +163,13 @@ class ArmActionServer(Node):
     def invoke_control(self, command):
         if self.check_only:
             return True
+        if command == 'clear_error':
+            from linear_client import LinearClient
+            # Status only: no lease, PWM output, arm resume or safe return.
+            if LinearClient().call('status').get('phase') != 'TIMED_COMPLETE':
+                self.notice('CONTROL_REJECTED:clear_error:리니어 완료 확인 필요')
+                return False
+            return self.protocol.clear_paused_job(ROOT, self.job_lock)
         try:info = self.protocol.control_state(ROOT).get('info')
         except OSError:info=None
         if not info and command=='reset':

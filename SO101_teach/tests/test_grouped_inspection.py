@@ -69,8 +69,7 @@ class PiGroupTests(unittest.TestCase):
         self.assertIn('INSPECTION_GROUP_STARTED:2',events);self.assertIn('INSPECTION_PASS:one',events);self.assertIn('INSPECTION_PASS:two',events)
         self.assertTrue(any('INSPECTION_COUNT:one:1/2' in e for e in events));self.assertFalse(any(m=='command' for m,a in link.calls))
     def test_preparation_remeasures_after_resume_inside_group(self):
-        from tests.test_episode_cli import cli,FakeLink,FakeLinear
-        runner=cli.Runner(FakeLink(),lambda e:None,cli.Control(),20,linear=FakeLinear())
-        with patch.object(runner,'measure',return_value={}) as measure,patch.object(runner,'inspect_startup_group',side_effect=[True,False]) as inspect:
-            runner.prepare_work([],{},100,[{'inspection':{'station':'carrier'}}])
-        self.assertEqual(measure.call_count,2);self.assertEqual(inspect.call_count,2)
+        from tests.test_startup_pipeline import RunnerPipelineTests
+        events,_,records=RunnerPipelineTests().exercise(resume=True)
+        self.assertEqual(sum(e=='JIG_DETECTION_STARTED' for _,e in events),2)
+        self.assertEqual(len(records),3)

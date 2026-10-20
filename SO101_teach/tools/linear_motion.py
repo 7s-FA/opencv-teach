@@ -71,7 +71,7 @@ class LinearMotion:
             return self.status()
         if self.phase == 'MOVING':
             raise ValueError('LINEAR_BUSY: 진행 중인 목표를 변경할 수 없습니다.')
-        return self.start(target, 8.)
+        return self.start(target, 10.)
 
     def pause(self):
         raise ValueError('LINEAR_PAUSE_UNSUPPORTED: GPIO 신호로 실제 정지를 확인할 수 없습니다.')

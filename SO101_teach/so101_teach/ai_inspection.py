@@ -9,7 +9,7 @@ import numpy as np
 from .model_regions import RegionModel,checked_settings
 from .inspection_seating import containment,apply_quality
 
-METHODS={'OpenCV':'opencv','AI + OpenCV':'model_roi'}
+METHODS={'OpenCV':'opencv','AI 라벨 + CAD':'model_roi'}
 
 
 def inspection_settings(profile):
@@ -52,7 +52,7 @@ def prefer_ai_label(row,anchor,item,inspector,frame,profile,templates):
             row.update(state=state,product=product,product_certain=True,quality='waiting',template=None,
                        reason='AI 라벨에 대응하는 CAD 안착 기준 없음')
         else:
-            evidence={key:row[key] for key in ('inspection_method','cad_observation','ai_observations')}
+            evidence={key:row[key] for key in ('inspection_method','cad_observation','ai_observations','mask_boundary_check')}
             checked=inspector.inspect(frame,[{**anchor,'templates':names}],profile)[0]
             row={**checked,**evidence}
             row['cad_label_recheck']={key:checked.get(key) for key in ('template','state','quality','score')}
@@ -105,13 +105,13 @@ def inconclusive(row,reason):
     return row
 
 
-def combine(rows,anchors,detections,inspector,frame,profile,confidence):
+def combine(rows,anchors,detections,inspector,frame,profile,confidence,*,mask_boundary=False):
     from .shape_inspection import BOUNDARY_FRACTION
     # Match ShapeInspector's existing V > 30 image-evidence floor. A model
     # can attach a dark background spur to a correctly classified part. Such
     # pixels are not visible body evidence. This is full-frame filtering: it
     # never clips a displaced part to the permitted ROI or moves the ROI.
-    visible_body=frame.max(axis=2)>30
+    visible_body=frame.max(axis=2)>30 if mask_boundary else None
     prepared={};by_id={a['id']:a for a in anchors};assigned={a['id']:[] for a in anchors};ambiguous=set()
     for anchor in anchors:
         lo,hi,templates=inspector.projected(anchor,profile,frame.shape)
@@ -134,6 +134,7 @@ def combine(rows,anchors,detections,inspector,frame,profile,confidence):
     for original in rows:
         row=deepcopy(original);key=row['id'];anchor=by_id[key]
         row['inspection_method']='ai_and_cad'
+        row['mask_boundary_check']=bool(mask_boundary)
         row['cad_observation']={k:original.get(k) for k in ('state','quality','product','product_certain')}
         lo,hi,templates,region=prepared[key];items=assigned[key]
         row['ai_observations']=[{k:d[k] for k in ('class_id','confidence','box')} for d in items]
@@ -152,6 +153,9 @@ def combine(rows,anchors,detections,inspector,frame,profile,confidence):
         row=prefer_ai_label(row,anchor,item,inspector,frame,profile,templates)
         templates=dict(templates);masks=templates.get(row.get('template'))
         if masks is None:
+            output.append(describe_ai_row(row,anchor));continue
+        if not mask_boundary:
+            row['reason']='AI 라벨 + CAD 검사 · '+row['reason']
             output.append(describe_ai_row(row,anchor));continue
         # Test the entire instance, including pixels beyond the local crop.
         # Clipping the AI mask to the ROI would hide an actual seating violation.
@@ -179,17 +183,47 @@ class ModelInspector:
         self.geometry=geometry if geometry is not None else ShapeInspector()
         self.provider=provider if provider is not None else RegionModel(class_ids=tuple(range(13)))
         self.stop=None
-    def close(self):self.provider.close()
-    def inspect(self,frame,anchors,profile):
+        from concurrent.futures import ThreadPoolExecutor
+        self.inference_pool=ThreadPoolExecutor(max_workers=1,thread_name_prefix='inspection-ai')
+    def close(self):
+        self.inference_pool.shutdown(wait=True,cancel_futures=True)
+        self.provider.close()
+    def prepare_geometry(self,anchors,profile,shape):
+        for anchor in anchors:
+            if self.stop is not None and self.stop.is_set():break
+            # Projection is geometry only; no observation or decision is produced.
+            try:self.geometry.projected(anchor,profile,shape)
+            except Exception:
+                # The real-frame inspection reports invalid geometry normally.
+                continue
+    def predict_all(self,frame,settings):
+        return self.provider.predict(frame,settings)
+    def inspect(self,frame,anchors,profile,*,inference=None):
         self.geometry.stop=self.stop
-        rows=self.geometry.inspect(frame,anchors,profile)
-        if not anchors or self.stop is not None and self.stop.is_set():return rows
         settings=inspection_settings(profile)
-        if settings['method']!='model_roi':
-            self.provider.close()
+        if not anchors or settings['method']!='model_roi' or self.stop is not None and self.stop.is_set():
+            rows=self.geometry.inspect(frame,anchors,profile)
+            if settings['method']!='model_roi':self.provider.close()
             return rows
-        start=time.monotonic();detections=self.provider.predict(frame,settings);seconds=time.monotonic()-start
-        rows=combine(rows,anchors,detections,self.geometry,frame,profile,settings['confidence'])
+        def predict():
+            start=time.monotonic()
+            detections=inference.get(frame,settings) if inference is not None else None
+            if detections is None:detections=self.predict_all(frame,settings)
+            return detections,time.monotonic()-start
+        future=self.inference_pool.submit(predict)
+        try:
+            rows=self.geometry.inspect(frame,anchors,profile)
+        except BaseException:
+            # Drain before the caller can close/reuse the provider.
+            try:future.result()
+            except Exception:pass
+            raise
+        detections,seconds=future.result()
+        if self.stop is not None and self.stop.is_set():
+            return rows
+        # Production uses AI only for part identity/slot association. Seating
+        # remains the CAD/OpenCV result, without an extra AI-mask boundary veto.
+        rows=combine(rows,anchors,detections,self.geometry,frame,profile,settings['confidence'],mask_boundary=False)
         for row in rows:row['ai_seconds']=seconds
         return rows
 

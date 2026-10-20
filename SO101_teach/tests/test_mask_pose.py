@@ -60,6 +60,18 @@ class MaskPoseTests(unittest.TestCase):
         result=self.call('pallet',roi=[.2,.1,.3,.2]);self.assertIsNone(result['selected'])
         mesh=self.catalog.mesh('pallet');mesh['size_mm']=[100.,100.,25.]
         result=self.call('pallet',mesh=mesh);self.assertIsNone(result['selected']);self.assertEqual(result['candidates'],[])
+    def test_carrier_label_outside_roi_retains_rejection_cause(self):
+        key=next(k for k in self.catalog.items if self.catalog.mesh(k).get('shape')=='rectangle')
+        result=self.call(key,roi=[0.,0.,.05,.05])
+        self.assertIsNone(result['selected']);self.assertEqual(result['candidates'],[])
+        self.assertTrue(result['model_detected'])
+        self.assertEqual(result['rejection_reason'],'roi')
+        self.assertIn('ROI',result['error'])
+        self.assertLess(result['roi_visible_fraction'],.98)
+    def test_absent_label_has_no_fake_roi_rejection(self):
+        result=detect_mask_seeded(self.frame,self.catalog.mesh('pallet'),None,self.profile,[],SETTINGS)
+        self.assertFalse(result['model_detected']);self.assertEqual(result['status'],'model_not_found')
+        self.assertNotIn('rejection_reason',result);self.assertIn('라벨',result['error'])
     def test_box_only_or_wrong_frame_masks_are_rejected(self):
         for bad in ({'class_id':1,'confidence':.9,'box':[0,0,50,50]}, {'class_id':1,'confidence':.9,'box':[0,0,50,50],'mask':np.ones((5,5),bool)}):
             with self.assertRaises(ValueError):detect_mask_seeded(self.frame,self.catalog.mesh('pallet'),None,self.profile,[bad],SETTINGS)

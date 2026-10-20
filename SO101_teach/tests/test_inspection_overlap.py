@@ -45,20 +45,20 @@ class BatchTests(unittest.TestCase):
         def fail():
             self.assertEqual(link.mode,'MOVING');raise ValueError('camera failed')
         with tempfile.TemporaryDirectory() as temp,patch.object(cli,'ROOT',Path(temp)),patch.object(run,'begin_inspections',side_effect=begin),patch.object(run,'poll_inspections',side_effect=fail):
-            with self.assertRaisesRegex(ValueError,'camera failed'):run.execute(episode,{},400,100.)
+            with self.assertRaisesRegex(ValueError,'camera failed'):run.execute(episode,{'profile':{}},400,100.)
         self.assertEqual(link.mode,'HOLD');self.assertNotIn('DONE',events);self.assertNotIn('EPISODE_DONE',events);self.assertIn('cleanup',events)
         self.assertEqual([a['action'] for m,a in link.calls if m=='command'][-1],'hold')
 
 class PreparationTests(unittest.TestCase):
-    def test_linear_and_detection_then_fixed_check_then_linear_check_then_motion_ready(self):
-        events=[];run=cli.Runner(FakeLink(),events.append,cli.Control(),20,linear=FakeLinear())
-        checks=[{'inspection':{'station':'linear'}},{'inspection':{'station':'carrier'}}]
-        with patch.object(run,'start_linear',side_effect=lambda t:(events.append('linear'),setattr(run,'linear_active',True))),patch.object(run,'poll_linear',return_value=False),patch.object(run,'measure',side_effect=lambda *a:events.append('jig') or {}),patch.object(run,'wait_linear',side_effect=lambda:events.append('linear-stop') or False),patch.object(run,'inspect_startup_group',side_effect=lambda steps,*a:events.extend(s['inspection']['station'] for s in steps)):
-            run.prepare_work([],{},100,checks)
-        self.assertLess(events.index('linear'),events.index('jig'));self.assertLess(events.index('jig'),events.index('carrier'));self.assertLess(events.index('carrier'),events.index('linear-stop'));self.assertLess(events.index('linear-stop'),events.index('linear',1))
+    def test_ready_checks_overlap_detection_and_linear_arrival(self):
+        from tests.test_startup_pipeline import RunnerPipelineTests
+        events,_,_=RunnerPipelineTests().exercise()
+        when=lambda prefix:next(t for t,e in events if e.startswith(prefix))
+        self.assertLess(when('INSPECTION_PROVISIONAL_PASS:carrier'),when('JIG_CONFIRMED:'))
+        self.assertGreaterEqual(when('INSPECTION_STARTED:linear'),102.)
+        self.assertLess(when('INSPECTION_PROVISIONAL_PASS:linear'),when('WORK_READY:'))
     def test_start_failure_never_reaches_linear_station_check_or_work_ready(self):
-        events=[];run=cli.Runner(FakeLink(),events.append,cli.Control(),20,linear=FakeLinear())
-        with patch.object(run,'measure',return_value={}),patch.object(run,'inspect_startup_group',side_effect=ValueError('missing')),patch.object(run,'wait_linear') as wait:
-            with self.assertRaisesRegex(ValueError,'missing'):run.prepare_work([],{},100,[{'inspection':{'station':'carrier'}}])
-            wait.assert_not_called()
-        self.assertFalse(any(s.startswith('WORK_READY') for s in events))
+        from tests.test_startup_pipeline import RunnerPipelineTests
+        fixture=RunnerPipelineTests()
+        with self.assertRaisesRegex(RuntimeError,'missing'):fixture.exercise(fail=True)
+        self.assertFalse(any(s.startswith(('WORK_READY','INSPECTION_STARTED:linear')) for _,s in fixture.last_events))

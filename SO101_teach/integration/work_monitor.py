@@ -100,6 +100,8 @@ EVENT_LABELS={
     'STARTUP_INSPECTION_STARTED':'시작 조건 검사', 'STARTUP_INSPECTION_PASSED':'시작 조건 검사 통과',
     'INSPECTION_GROUP_STARTED':'검사 시작', 'INSPECTION_GROUP_RESTARTED':'검사 다시 시작',
     'INSPECTION_PASS':'검사 통과', 'STAGE_DONE':'단계 완료',
+    'INSPECTION_PROVISIONAL_PASS':'안착 확인 · 최종 지그 위치 확인 대기',
+    'INSPECTION_INVALIDATED':'지그 위치 변경 · 안착 재검사',
     'ESTOP_REQUESTED':'팔 정지 요청', 'PAUSED':'팔 정지·작업 보류 확인', 'RESUMED':'작업 재개',
     'LINEAR_CONTINUES':'팔 정지 중에도 리니어는 기존 목표까지 계속 이동',
     'RESET_WAIT_LINEAR_COMPLETE':'안전 복귀 전 리니어 완료 대기',

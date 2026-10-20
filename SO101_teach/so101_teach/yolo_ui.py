@@ -33,7 +33,7 @@ class YoloPanel(ttk.Frame):
         self.columnconfigure(0,weight=1);self.rowconfigure(2,weight=1)
         bar=ttk.Frame(self,style='Card.TFrame');bar.grid(row=0,column=0,columnspan=2,sticky='ew')
         bar.columnconfigure(6,weight=1)
-        self.start_button=app.button(bar,'인식 시작',self.start);self.start_button.grid(row=0,column=0,padx=(0,8))
+        self.start_button=app.button(bar,'인식 시작',self.start,True);self.start_button.grid(row=0,column=0,padx=(0,8))
         self.stop_button=app.button(bar,'인식 중지',self.stop);self.stop_button.grid(row=0,column=1,padx=(0,16));self.stop_button.state(['disabled'])
         self.model_choice=tk.StringVar(value='PC · YOLO26x')
         self.model_selector=ttk.Combobox(bar,textvariable=self.model_choice,values=tuple(MODEL_CHOICES),state='readonly',width=16)

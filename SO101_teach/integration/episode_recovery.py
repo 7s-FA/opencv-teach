@@ -66,7 +66,7 @@ def workcell_records(cli):
     return records
 
 
-def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='arm2',arms=('arm2','arm3')):
+def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='arm2',arms=('arm2','arm3'),startup=False):
     """Keep the workcell lease while returning each arm, then confirm once."""
     from so101_teach.motion import SPEED_PRESETS
     if not arms or not set(arms)<={'arm2','arm3'} or set(links)!=set(arms) or set(records)!=set(arms) or first not in arms:
@@ -82,6 +82,8 @@ def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='ar
             if state and state.get('running') and not (cli.settled(state) or cli.torque_off(state)):
                 raise ValueError('다른 팔의 정지 확인이 필요합니다: '+arm)
             stage=linear.call('status')
+            if startup and stage.get('phase')!='TIMED_COMPLETE':
+                raise ValueError('시작 자세 준비 전 리니어 정지 확인 필요 · 리니어 이동 없음')
             if stage.get('phase') not in ('TIMED_COMPLETE','MOVING'):
                 raise ValueError('안전 복귀 전 리니어 정지 상태를 확인하세요.')
             if stage['phase']=='MOVING':
@@ -98,30 +100,44 @@ def reset_workcell(cli,records,links,linear,control,emit,*,active=None,first='ar
         except BaseException:
             runner.emergency();raise
         finally:runner.emit=old_emit
-    for link in links.values():link.rpc('schedule_idle_release')
-    emit('RESET_DONE')
+    if not startup:
+        for link in links.values():link.rpc('schedule_idle_release')
+    if not startup:emit('RESET_DONE')
 
 
-def run(cli,arm=None,*,ros=False):
+def run(cli,arm=None,*,ros=False,startup=False,execution_lock_fd=None,managed=False):
     """Reuse the established safe-return motion after validating a saved failure."""
     from linear_client import LinearClient
     lock=link=peer=linear=status=runner=thread=None
     done=threading.Event();control=cli.Control()
     try:
-        lock=(cli.ROOT/'data/episode-cli.lock').open('a')
+        if execution_lock_fd is not None:
+            import os
+            path=cli.ROOT/'data/episode-cli.lock'
+            if Path(f'/proc/self/fd/{execution_lock_fd}').resolve()!=path.resolve():raise ValueError('실행 잠금 인계 오류')
+            lock=os.fdopen(execution_lock_fd,'a')
+        else:lock=(cli.ROOT/'data/episode-cli.lock').open('a')
         try:fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         except BlockingIOError:raise ValueError('BUSY: 다른 작업이 실행 중입니다.') from None
         if cli.control_path().exists():raise ValueError('실행 중인 작업의 reset을 사용하세요.')
         records=workcell_records(cli)
         # The request endpoint identifies the reporter, never limits reset scope.
         arm=arm or 'arm2';record=records[arm]
-        status=cli.Status(arm,record['product'],ros);control.info={'arm':arm,'run_id':status.run_id}
+        status=cli.Status(arm,'HOME' if startup else record['product'],ros);status.managed=managed
+        control.info={'arm':arm,'run_id':status.run_id}
         thread=threading.Thread(target=cli.control_server,args=(control,done),daemon=True);thread.start()
         signal.signal(signal.SIGINT,lambda *_:control.command('estop'))
         signal.signal(signal.SIGTERM,lambda *_:control.shutdown.set())
         link,peer=cli.Link('arm2'),cli.Link('arm3');link.open();peer.open()
         linear=LinearClient();linear.open()
-        reset_workcell(cli,records,{'arm2':link,'arm3':peer},linear,control,status.emit)
+        reset_workcell(cli,records,{'arm2':link,'arm3':peer},linear,control,status.emit,startup=startup)
+        if startup:
+            # Both arms reached their saved safe poses before retracting the
+            # carriage. Use the existing retracted preset, never a guessed 0mm.
+            runner=cli.Runner(link,status.emit,control,30,peer=peer,linear=linear)
+            control.emergency=runner.emergency
+            runner.prepare_linear(1.5)
+            status.emit('RESET_DONE')
         return 0
     except BaseException as exc:
         if runner:runner.emergency()

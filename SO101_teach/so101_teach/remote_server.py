@@ -135,6 +135,7 @@ class Runtime:
                     raise ValueError('Pi 팔로워의 토크 OFF를 확인한 뒤 좌표·TCP·모델 보정을 변경하세요.')
         camera_running=bool(self.camera and self.camera.running)
         camera_mode={'processing_enabled':getattr(self.camera,'processing_enabled',True),'preview_fps':getattr(self.camera,'preview_fps',10)}
+        if getattr(self.camera,'share_inference',False):camera_mode['share_inference']=True
         reuse_camera=bool(camera_running and self.profile['camera']==profile['camera'] and hasattr(self.camera,'set_processor'))
         self.camera_reconfiguring=camera_running
         try:
@@ -171,12 +172,13 @@ class Runtime:
         changing_before=getattr(self,'camera_reconfiguring',False);generation=self.generation
         c=self.camera;obs=c.observation if c and getattr(c,'processing_enabled',True) else None;now=time.monotonic()
         result={'server_now':now,'generation':generation,'running':bool(c and c.running),'error':c.error if c else None}
-        def encode(frame,at):
-            # Repeated HTTP readers share one JPEG for each captured frame.
-            key=(id(c),at)
+        def encode(frame,at,lossless=False):
+            # Repeated readers share one encoding per capture and lossless/JPEG mode.
+            key=(id(c),at,lossless)
             with self.camera_encode_lock:
                 if key not in self.camera_encoded:
-                    ok,encoded=cv2.imencode('.jpg',frame,[cv2.IMWRITE_JPEG_QUALITY,82])
+                    ok,encoded=(cv2.imencode('.png',frame,[cv2.IMWRITE_PNG_COMPRESSION,1]) if lossless
+                                else cv2.imencode('.jpg',frame,[cv2.IMWRITE_JPEG_QUALITY,82]))
                     self.camera_encoded[key]=base64.b64encode(encoded).decode() if ok else None
                     while len(self.camera_encoded)>4:self.camera_encoded.popitem(last=False)
                 return self.camera_encoded[key]
@@ -187,14 +189,14 @@ class Runtime:
         from .camera_lifecycle import MEASUREMENT_MAX_AGE_SECONDS
         if obs and 0<=now-obs[2]<MEASUREMENT_MAX_AGE_SECONDS and not changing:
             frame,detection,at=obs;result.update(detection=detection,at=at)
-            if at!=after_at:result['image']=encode(frame,at)
+            if at!=after_at:result['image']=encode(frame,at,lossless=bool(detection and detection.get('shared_ai')))
         raw_preview=getattr(c,'preview_frame',None) if c else None
         preview=(raw_preview[0],None,raw_preview[1]) if raw_preview else getattr(c,'preview_observation',None) if c else None
         if preview and now-preview[2]<1:
             frame,_,at=preview;result['preview_at']=at
             if at!=after_preview_at and (changing or not obs or at!=obs[2]):result['preview_image']=encode(frame,at)
         return result
-    def start_camera(self,*,prepare=False,**mode):
+    def start_camera(self,*,prepare=False,share_inference=False,**mode):
         if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
         processor=self.detector.prepare if prepare else self.detector.process
         if self.camera and self.camera.running and getattr(self.camera,'stop',None) and self.camera.stop.is_set():
@@ -202,11 +204,13 @@ class Runtime:
             if self.camera.running:raise ValueError('Pi 카메라 해제 중입니다. 잠시 후 다시 연결하세요.')
         if not self.camera or not self.camera.running:
             self.camera=self.camera_factory(**self.profile['camera'],processor=processor);self.camera.max_fps=10
+            if hasattr(self.camera,'set_shared_inference'):self.camera.set_shared_inference(share_inference)
             if mode:self.camera.set_mode(**mode)
             self.camera.start()
         else:
             if getattr(self.camera,'processor',processor)!=processor:self.camera.set_processor(processor)
             if mode:self.camera.set_mode(**mode)
+            if hasattr(self.camera,'set_shared_inference'):self.camera.set_shared_inference(share_inference)
         return {}
     def call(self,method,args):
         if method=='handoff_shutdown':
@@ -233,7 +237,10 @@ class Runtime:
         if method=='camera_prepare':return self.start_camera(prepare=True,processing_enabled=True,preview_fps=10)
         if method=='camera_start':return self.start_camera(**args)
         if method=='camera_mode':
-            if self.camera:self.camera.set_mode(**args)
+            options=dict(args);shared=options.pop('share_inference',None)
+            if self.camera:
+                self.camera.set_mode(**options)
+                if shared is not None:self.camera.set_shared_inference(shared)
             return {}
         if method=='camera_stop':
             if self.camera:self.camera.close()
@@ -276,24 +283,7 @@ class Runtime:
             key=args['id']
             if len(key)!=32 or any(c not in '0123456789abcdef' for c in key):raise ValueError('에피소드 ID 오류')
             self.store.delete(key);return {}
-        if method=='plan':
-            from .geometry import corrected_plan
-            steps=args['steps'];current=args.get('current') or {}
-            # Validate step ticks and references through the same episode validator.
-            ep=self.store.new('원격 계산');ep['steps']=deepcopy(steps)
-            # This RPC computes geometry for a step subset, not an episode.
-            # Validate check fields without requiring absent episode metadata;
-            # full episode validation remains at save/load and execution.
-            from .episode_inspection import validate_check
-            for step in ep['steps']:
-                if 'inspection' in step:
-                    validate_check(step['inspection'])
-                    if step.get('safe_boundary'):raise ValueError('안전 자세에는 안착 검사를 지정할 수 없습니다.')
-                    step.pop('inspection')
-                step.pop('safe_boundary',None)
-            self.store.validate(ep)
-            plans=corrected_plan(self.kin,steps,current,lambda key:self.catalog.mesh(key)['sha256'])
-            return {'plan':plans,'calibration_sha256':self.cal.sha256,'bundle_hash':self.bundle_hash}
+        if method=='plan':return self.calculate_plan(self.plan_inputs(args))
         if method=='cal_start':return self.start_calibration(args)
         if method=='cal_command':
             if not self.worker or not self.worker.running:raise ValueError('Pi 보정을 먼저 시작하세요.')
@@ -345,7 +335,62 @@ class Runtime:
                 raise ValueError('초기 연결용 파일은 모터 보정으로 적용할 수 없습니다. 새 3점 보정을 진행하세요.')
         resume=read_json(progress) if not preset and progress.exists() else None
         self.worker=CalibrationWorker(args['port'],cal,target,preset=preset,progress_path=progress,resume=resume);self.worker.start();return {}
+    def plan_inputs(self,args):
+        if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
+        steps=args['steps'];current=args.get('current') or {}
+        # Validate step ticks and references through the same episode validator.
+        ep=self.store.new('원격 계산');ep['steps']=deepcopy(steps)
+        # This RPC computes geometry for a step subset, not an episode.
+        # Validate check fields without requiring absent episode metadata;
+        # full episode validation remains at save/load and execution.
+        from .episode_inspection import validate_check
+        for step in ep['steps']:
+            if 'inspection' in step:
+                validate_check(step['inspection'])
+                if step.get('safe_boundary'):raise ValueError('안전 자세에는 안착 검사를 지정할 수 없습니다.')
+                step.pop('inspection')
+            step.pop('safe_boundary',None)
+        self.store.validate(ep)
+        # The solver owns copies; camera/configuration RPCs must remain available.
+        return (deepcopy(self.kin),deepcopy(steps),deepcopy(current),
+                {s['jig_id']:self.catalog.mesh(s['jig_id'])['sha256'] for s in steps if s.get('jig_id')},
+                self.cal.sha256,self.bundle_hash)
+
+    @staticmethod
+    def calculate_plan(inputs):
+        from .geometry import corrected_plan
+        kin,steps,current,meshes,calibration,bundle=inputs
+        return {'plan':corrected_plan(kin,steps,current,lambda key:meshes[key]),
+                'calibration_sha256':calibration,'bundle_hash':bundle}
+
+    def snapshot_plan_rpc(self,body):
+        with self.lock:
+            self.require_lease(body.get('lease'))
+            key=body.get('id');args=body.get('args',{})
+            if not isinstance(key,str) or len(key)>80:raise ValueError('명령 ID 오류')
+            signature=hashlib.sha256(json.dumps(['plan_snapshot',args,self.generation,self.bundle_hash],sort_keys=True).encode()).hexdigest()
+            if key in self.requests:
+                old,value=self.requests[key]
+                if old!=signature:raise ValueError('같은 ID의 다른 명령은 허용하지 않습니다.')
+                return value
+            try:inputs=self.plan_inputs(args)
+            except Exception as exc:return {'ok':False,'error':str(exc)}
+            generation=self.generation
+        try:
+            result=self.calculate_plan(inputs)
+            with self.lock:
+                self.require_lease(body.get('lease'))
+                if generation!=self.generation or inputs[-1]!=self.bundle_hash:
+                    raise ValueError('경로 계산 중 설정이 변경되었습니다. 새 기준으로 다시 준비하세요.')
+                if key in self.requests and self.requests[key][0]!=signature:
+                    raise ValueError('같은 ID의 다른 명령은 허용하지 않습니다.')
+                value={'ok':True,'value':result};self.requests[key]=(signature,value)
+                while len(self.requests)>256:self.requests.popitem(last=False)
+                return value
+        except Exception as exc:return {'ok':False,'error':str(exc)}
+
     def rpc(self,body):
+        if body.get('method')=='plan_snapshot':return self.snapshot_plan_rpc(body)
         if body.get('method')=='command' and body.get('args',{}).get('action') in ('hold','release'):
             with self.control_lock:
                 self.require_lease(body.get('lease'))

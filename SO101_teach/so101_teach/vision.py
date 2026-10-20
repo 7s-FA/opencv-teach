@@ -478,12 +478,14 @@ def annotate(frame,result,*,jig_color=None,legend=True,layout=None):
         cv2.putText(image,label,point,cv2.FONT_HERSHEY_SIMPLEX,.55,(170,220,210),1,cv2.LINE_AA)
     return image
 
+JIG_COLORS=[(170,190,40),(45,165,245),(225,155,180),(220,175,75),(105,170,235)]
+
 def annotate_all(frame,results,catalog,*,layout=None):
     """Name each current match; missing/ambiguous objects stay in the status list."""
     from .label_layout import LabelLayout
     if layout is None:layout=LabelLayout(frame.shape,[r['selected'].get('outline_px',r['selected']['quad']) for r in results.values() if r.get('selected')])
     image=annotate(frame,{'selected':None,'candidates':[]},layout=layout)
-    palette=[(170,190,40),(45,165,245),(225,155,180),(220,175,75),(105,170,235)]
+    palette=JIG_COLORS
     labels=[]
     for index,(key,config) in enumerate(catalog.items()):
         result=results.get(key,{})
@@ -513,7 +515,7 @@ def roi_font():
         if Path(path).exists():return ImageFont.truetype(path,16)
     return None
 
-def annotate_roi(frame,roi):
+def annotate_roi(frame,roi,*,label='감지 범위',color=(189,211,53),dashed=False,layout=None):
     """One rendered ROI shared by the live view and saved capture."""
     image=frame.copy()
     if roi is None:return image
@@ -521,13 +523,29 @@ def annotate_roi(frame,roi):
     from .roi_geometry import roi_vertices
     h,w=image.shape[:2];points=np.rint(np.asarray(roi_vertices(roi))*[w,h]).astype(np.int32)
     x1,y1=points.min(axis=0)
-    cv2.polylines(image,[points],True,(189,211,53),3,cv2.LINE_AA)
+    draw_outline(image,points,color,dashed=dashed) if dashed else cv2.polylines(image,[points],True,color,3,cv2.LINE_AA)
     rgb=Image.fromarray(cv2.cvtColor(image,cv2.COLOR_BGR2RGB));draw=ImageDraw.Draw(rgb)
     font=roi_font()
-    draw.text((x1+8,y1+8),'감지 범위' if font else 'ROI',font=font,fill='#35d3bd',stroke_width=1,stroke_fill='#192020')
+    text=label if font else 'ROI'
+    box=draw.textbbox((0,0),text,font=font);width=box[2]-box[0];height=box[3]-box[1]
+    position=layout.place(width+12,height+12,(x1,y1)) if layout else (min(x1+8,max(0,w-width-8)),min(y1+8,max(0,h-height-8)))
+    if position is not None:
+        x,y=position
+        draw.text((x,y-box[1]),text,font=font,fill=tuple(reversed(color)),stroke_width=1,stroke_fill='#192020')
     return cv2.cvtColor(np.asarray(rgb),cv2.COLOR_RGB2BGR)
 
-from .jig_consensus import StableCandidate,checked_seconds,HOLD_RANGE
+def annotate_rois(frame,catalog):
+    """Show every configured search boundary, including rejected/missing jigs."""
+    from .label_layout import LabelLayout
+    layout=LabelLayout(frame.shape);layout.protect([[20,15],[140,105]])
+    image=frame.copy()
+    for index,config in enumerate(catalog.values()):
+        if config.get('roi') is None:continue
+        image=annotate_roi(image,config['roi'],label=f"{index+1} · {config['name']} ROI",
+                           color=JIG_COLORS[index%len(JIG_COLORS)],dashed=True,layout=layout)
+    return image
+
+from .jig_consensus import StableCandidate,checked_seconds,HOLD_RANGE,agrees
 
 from copy import deepcopy
 
@@ -566,10 +584,31 @@ class PoseLatch:
                       hold_remaining_s=max(0.,self.seconds-(now-self.measured_at)) if self.saved else 0.,verified_for_motion=False)
         self.last_output=output
         return deepcopy(output)
+    def _early_pose_changed(self,result,now):
+        method=(self.saved or {}).get('adoption_method')
+        if method not in ('cad_three_frame_gate','carrier_three_frame_gate'):return False
+        if result.get('pose_held') or result.get('pose_frozen'):return False
+        if self.stability.last_at is not None and now<=self.stability.last_at:return False
+        current=self.stability.candidate(result)
+        if current is None:return False
+        previous=self.saved['selected']
+        if not agrees(current,previous):return True
+        if method=='carrier_three_frame_gate':
+            from .two_frame_gate import pose_delta
+            return max(pose_delta(current,previous))>.5
+        return False
     def update(self,result,now,*,profile=None,mesh=None):
         with self.lock:
             if self.frozen and self.saved is None:return {'candidates':[],'selected':None,'status':'not_measured','pose_held':True,'pose_frozen':True,'verified_for_motion':False,'hold_remaining_s':0}
-            if not self.frozen:result=self.stability.update(result,now,profile=profile,mesh=mesh)
+            if not self.frozen:
+                changed=self._early_pose_changed(result,now)
+                if changed:
+                    # A display hold must not hide evidence against an early pose.
+                    # Drop queued poses and old votes; this frame starts reacquisition.
+                    self.saved=None;self.measured_at=None;self.next_saved=None;self.last_output=None
+                    self.stability.clear(now)
+                result=self.stability.update(result,now,profile=profile,mesh=mesh)
+                if changed:result.update(pose_invalidated=True,pose_invalidation_reason='최신 지그 위치 변경 · 새 위치 확인 중')
             return self._output(result,now)
     def poll(self,now):
         with self.lock:

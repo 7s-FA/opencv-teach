@@ -1367,7 +1367,7 @@
         0.0
       ],
       "controller_state_basis": {
-        "host": "10.10.142.113",
+        "host": "<PI_HOST>",
         "file": "/home/ubuntu/project/linear_controller_pi5.py",
         "user_state": "forward",
         "commanded_mm": 100.0,

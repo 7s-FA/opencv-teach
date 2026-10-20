@@ -80,6 +80,8 @@ LABELS={'FOLLOWER_CONNECTING':'팔 연결 확인','FOLLOWER_READY':'팔 연결 �
         'PLAN_STARTED':'동작 경로 준비','EPISODE_STARTED':'에피소드 실행 중','EPISODE_DONE':'동작 완료 · 마무리 중',
         'DONE':'에피소드 완료','PAUSED':'팔 정지 · 작업 보류','RESUMED':'작업 재개',
         'INSPECTION_PASS':'안착 검사 통과','INSPECTION_GROUP_STARTED':'안착 검사 중',
+        'INSPECTION_PROVISIONAL_PASS':'안착 확인 · 최종 지그 위치 확인 대기',
+        'INSPECTION_INVALIDATED':'지그 위치 변경 · 안착 재검사',
         'INSPECTION_FAILED':'안착 검사 실패','FAILED':'에피소드 중단','REJECTED':'실행 거절'}
 
 

@@ -464,7 +464,8 @@ class SettingsPanel:
         for i,axis in enumerate('XYZ'):self.tcp_fields.append(self.field(p,2+i,'집게 로컬 '+axis+' mm','tcp_xyz_'+axis,f"{d['xyz_mm'][i]:.6f}"))
         for i,axis in enumerate(('roll','pitch','yaw')):self.tcp_fields.append(self.field(p,5+i,axis+' °','tcp_rpy_'+axis,f"{d['rpy_deg'][i]:.6f}"))
         selector.bind('<<ComboboxSelected>>',lambda e:self.update_tcp_inputs());self.update_tcp_inputs()
-        self.button(p,8,'끝단 값 불러오기',self.load_model_tcp,0);self.button(p,8,'TCP 적용·저장',self.save_tcp,1)
+        self.button(p,8,'끝단 값 불러오기',self.load_model_tcp,0)
+        self.button(p,8,'TCP 적용·저장',self.save_tcp,1).configure(style='Primary.TButton')
         self.label(p,9,'미리보기는 입력한 값을 보여줍니다. 적용·저장을 눌러야 실행 계산에 반영됩니다. 모터 영점은 바꾸지 않습니다.')
         self.label(p,10,'A는 집게 끝 근처에 정의된 모델 원점입니다. 모델 내부 이름: gripper_frame_link. 베이스 원점이나 손목 모터 중심이 아닙니다.')
     def selected_tcp(self):

@@ -119,4 +119,12 @@ def apply_finish(scene, layout, out, root):
     visual_map=scene.find('./visual/map')
     if visual_map is None:visual_map=ET.SubElement(scene.find('visual'),'map')
     visual_map.set('shadowscale','0.7')
+    from so101_teach.preview_materials import apply_colors, append_background, append_robot_details
+    from so101_teach.workcell_preview import load_placement
+    apply_colors(scene, layout['appearance'])
+    append_robot_details(scene, appearance=layout['appearance'])
+    append_background(scene, load_placement(root/'data'), layout['appearance'])
+    layout['arm1']['appearance']['rgba'] = [
+        *layout['appearance']['surfaces']['arm1_gray_filament']['color_srgb'], 1]
+    layout['appearance']['scope'] += ' Shared photo-match.json supplies optical updates and massless, non-colliding details.'
     (out/'appearance.json').write_text(json.dumps(layout['appearance'],ensure_ascii=False,indent=2)+'\n')

@@ -209,3 +209,20 @@ class ActionContractTests(unittest.TestCase):
         with patch.object(self.module.subprocess,'Popen',return_value=Process(['B_DONE'])):
             result=self.execute('arm2',Goal('BUILD_LOAD_B'))
         self.assertEqual(result.message,'ERROR')
+
+    def test_combined_job_reports_only_its_own_build_milestone_before_final_idle(self):
+        for product,other in [('A','B'),('B','A')]:
+            with self.subTest(product=product):
+                goal=Goal('BUILD_LOAD_'+product)
+                lines=[other+'_BUILD_DONE',product+'_BUILD_DONE',product+'_DONE',product+'_CHAIN_DONE']
+                with patch.object(self.module.subprocess,'Popen',return_value=Process(lines)):
+                    result=self.execute('arm2',goal)
+                self.assertEqual(goal.messages,['RUNNING','BUILD_DONE','IDLE'])
+                self.assertTrue(result.success)
+
+    def test_build_milestone_does_not_complete_the_combined_job(self):
+        goal=Goal('BUILD_LOAD_A')
+        with patch.object(self.module.subprocess,'Popen',return_value=Process(['A_BUILD_DONE'])):
+            result=self.execute('arm2',goal)
+        self.assertEqual(goal.messages,['RUNNING','BUILD_DONE','ERROR'])
+        self.assertFalse(result.success)

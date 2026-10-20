@@ -122,7 +122,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.safe_editing=False;self.safe_draft=None;self.safe_entry=None;self.leader_session=None;self.camera_restart_pending=False;self.transport=Playback();self.pending_execution=None;self.play_targets=[];self.last_plan=[];self.session=None;self.camera=None;self.latest=None;self.playing=False;self.play_index=0;self.play_start=0
         self.render_enabled=render;self.renderer=None;self.last_render=None;self.last_rgb=None;self.render_context=0;self.pending_render_context=None;self.displayed_token=0;self.live_was_fresh=False;self.last_fk_angles=None;self.last_camera_at=0;self.photo=None
         self.render_poll_job=None;self.render_pose_available=False
-        self.view=overhead_view(self.profile);self.drag_start=None;self.roi_start=None;self.roi_points=[];self.roi_hover=None;self.camera_rect=None
+        self.view=overhead_view(self.profile,photo_match=True);self.drag_start=None;self.roi_start=None;self.roi_points=[];self.roi_hover=None;self.camera_rect=None
         from .display_pose import DisplayPoses
         self.display_poses=DisplayPoses()
         self.camera_display_poses=DisplayPoses(duration=.12)
@@ -256,7 +256,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.page_title=tk.StringVar(value='티칭 워크스페이스');ttk.Label(header,textvariable=self.page_title,style='Title.TLabel').grid(row=0,column=0,sticky='w')
         self.build_arm_selector(header)
         self.connection=tk.StringVar(value='모터 미연결');self.badge=tk.Label(header,textvariable=self.connection,font=('Noto Sans CJK KR',11),width=30,height=2,wraplength=245,anchor='w',justify='left',padx=8,pady=0,bg=COLORS['bg'],fg=COLORS['ink']);self.badge.grid(row=0,column=2,padx=8)
-        self.connect_btn=self.button(header,'팔로워 연결',self.toggle_connection,True,width=12);self.connect_btn.configure(style='Shell.Primary.TButton');self.connect_btn.grid(row=0,column=3)
+        self.connect_btn=self.button(header,'팔로워 연결',self.toggle_connection,width=12);self.connect_btn.configure(style='Shell.TButton');self.connect_btn.grid(row=0,column=3)
         banner=tk.Frame(shell,bg=COLORS['bg'],padx=12,pady=4);banner.grid(row=1,column=0,sticky='ew',pady=(0,8))
         self.guidance=tk.StringVar(value='스텝을 선택하고 자세를 편집하세요. 오른쪽 3D에서 확인한 뒤 저장하거나 실행합니다.')
         tk.Label(banner,textvariable=self.guidance,bg=COLORS['bg'],fg=COLORS['muted'],anchor='w').pack(fill='x')
@@ -628,7 +628,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.camera_view_area=ttk.Frame(card,style='Card.TFrame');self.camera_view_area.grid(row=1,column=0,sticky='nsew');self.camera_view_area.columnconfigure(0,weight=1);self.camera_view_area.rowconfigure(0,weight=1)
         self.camera_canvas=tk.Canvas(self.camera_view_area,bg=COLORS['nav'],highlightthickness=0);self.camera_canvas.grid(row=0,column=0,sticky='nsew')
         self.camera_canvas.bind('<ButtonPress-1>',self.roi_press);self.camera_canvas.bind('<B1-Motion>',self.roi_move);self.camera_canvas.bind('<ButtonRelease-1>',self.roi_release);self.camera_canvas.bind('<Button-3>',lambda e:self.cancel_roi_points())
-        self.camera_overview=ttk.Frame(self.camera_view_area,style='Card.TFrame',padding=(12,0,0,0));self.camera_overview.grid(row=0,column=1,sticky='nsew');self.camera_overview.columnconfigure(0,weight=1);self.camera_overview.rowconfigure(3,weight=1)
+        self.camera_overview=ttk.Frame(self.camera_view_area,style='Card.TFrame',padding=(12,0,0,0));self.camera_overview.grid(row=0,column=1,sticky='nsew');self.camera_overview.columnconfigure(0,weight=1);self.camera_overview.rowconfigure(6,weight=1)
         self.camera_overview_title=tk.StringVar(value='전체 지그 · 영상 대기')
         ttk.Label(self.camera_overview,textvariable=self.camera_overview_title,style='Section.TLabel').grid(row=0,column=0,columnspan=2,sticky='w',pady=(0,6))
         self.camera_jig_status=ttk.Treeview(self.camera_overview,columns=('name','status','adoption'),displaycolumns=('name','status'),show='headings',height=4,selectmode='browse')
@@ -639,19 +639,20 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.camera_jig_status.tag_configure('detected',foreground='#12634D');self.camera_jig_status.tag_configure('missing',foreground='#8A3D15');self.camera_jig_status.tag_configure('waiting',foreground=COLORS['muted'])
         self.camera_jig_status.bind('<Double-1>',self.open_camera_overview_jig)
         self.camera_overview_details={};self.camera_overview_detail=tk.StringVar(value='행 선택: 상세 상태 · 더블클릭: 범위 편집')
-        detail=StatusText(self.camera_overview,self.camera_overview_detail,height=5)
+        detail=StatusText(self.camera_overview,self.camera_overview_detail,height=3)
         detail.grid(row=2,column=0,columnspan=2,sticky='ew',pady=(8,0))
         self.camera_jig_status.bind('<<TreeviewSelect>>',self.show_camera_overview_detail)
         self.camera_overview.grid_remove()
         self.camera_status=tk.StringVar(value='카메라 연결 대기')
-        self.camera_status_label=StatusText(card,self.camera_status,height=3,font=('Noto Sans CJK KR',11))
+        self.camera_status_label=StatusText(card,self.camera_status,height=2,font=('Noto Sans CJK KR',11))
         self.camera_status_label.grid(row=2,column=0,sticky='ew',pady=10)
         self.camera_adoption_text=tk.StringVar(value='채택 상태 · 미채택')
         self.camera_adoption_label=ttk.Label(card,textvariable=self.camera_adoption_text,style='Small.TLabel');self.camera_adoption_label.grid(row=3,column=0,sticky='w',pady=(0,5))
         self.refresh_adoption_display()
         sx,sy=self.mesh_profile['size_mm'][:2];ratio=max(sx,sy)/min(sx,sy)
         self.camera_profile_text=tk.StringVar()
-        ttk.Label(card,textvariable=self.camera_profile_text,style='Small.TLabel').grid(row=4,column=0,sticky='w')
+        self.camera_profile_label=ttk.Label(card,textvariable=self.camera_profile_text,style='Small.TLabel',justify='left')
+        self.camera_profile_label.grid(row=4,column=0,sticky='w')
         saved=ttk.Frame(card,style='Card.TFrame');saved.grid(row=5,column=0,sticky='ew',pady=(6,0));saved.columnconfigure(1,weight=1)
         ttk.Label(saved,text='영상 저장 위치',style='Small.TLabel').grid(row=0,column=0,padx=(0,8))
         self.camera_save_path=tk.StringVar(value=str((self.data_dir/'captures').resolve()))
@@ -1454,7 +1455,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if camera_return is not None:self.show_page(camera_return,internal=True)
         if camera_return is not None and self.page!='camera':self.suspend_camera()
         if not quiet:self.notice('3D 미리보기 정지 · 실물 정지는 별도 버튼 또는 Esc를 사용하세요.')
-    def reset_view(self):self.view=overhead_view(self.profile);self.last_render=None
+    def reset_view(self):self.view=overhead_view(self.profile,photo_match=True);self.last_render=None
     def workcell_view(self):
         from .workcell_preview import WORKCELL_VIEW
         self.view=WORKCELL_VIEW;self.last_render=None
@@ -1590,6 +1591,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if not self.roi_edit_allowed():return
         self.apply_camera_roi(None)
     def apply_camera_roi(self,region):
+        if not self.roi_edit_allowed():return
         from .roi_geometry import roi_vertices
         roi_vertices(region)
         self.roi=region;self.cancel_roi_points();self.save_preferences()
@@ -1611,9 +1613,10 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             self.camera_display_snapshot=None;c.delete('image');return
         if snapshot is not None:
             import cv2
-            from .vision import annotate_roi
+            from .vision import annotate_roi,annotate_rois
             snapshot['roi']=None if self.camera_all.get() else deepcopy(self.roi)
-            snapshot['image']=annotate_roi(snapshot['base_image'],snapshot['roi'])
+            snapshot['image']=annotate_rois(snapshot['base_image'],self.catalog.items) if self.camera_all.get() else annotate_roi(snapshot['base_image'],snapshot['roi'])
+            if self.camera_all.get():snapshot['result']['roi_by_jig']={key:deepcopy(config.get('roi')) for key,config in self.catalog.items.items()}
             self.camera_rect=self.fit_image(c,cv2.cvtColor(snapshot['image'],cv2.COLOR_BGR2RGB),resample=Image.Resampling.BILINEAR)
         self.draw_roi_draft()
     def save_preferences(self):
@@ -1935,8 +1938,19 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.camera_jig_choice.current(0 if all_jigs else list(self.catalog.items).index(self.active_jig)+1)
         self.roi_mode_choice.configure(state='disabled' if all_jigs else 'readonly')
         for button in (self.roi_cancel_button,self.roi_clear_button):button.state(['disabled'] if all_jigs else ['!disabled'])
-        if all_jigs:self.camera_overview.grid();self.update_camera_overview({})
-        else:self.camera_overview.grid_remove()
+        if all_jigs:
+            self.camera_overview.grid();self.update_camera_overview({})
+            self.camera_status_label.grid(in_=self.camera_overview,row=3,column=0,columnspan=2,sticky='ew',pady=(12,4))
+            self.camera_adoption_label.grid(in_=self.camera_overview,row=4,column=0,columnspan=2,sticky='w',pady=(4,4))
+            self.camera_profile_label.grid(in_=self.camera_overview,row=5,column=0,columnspan=2,sticky='w',pady=(4,0))
+            self.camera_adoption_label.configure(wraplength=440);self.camera_profile_label.configure(wraplength=440)
+        else:
+            self.camera_overview.grid_remove()
+            card=self.camera_view_area.master
+            self.camera_status_label.grid(in_=card,row=2,column=0,columnspan=1,sticky='ew',pady=6)
+            self.camera_adoption_label.grid(in_=card,row=3,column=0,columnspan=1,sticky='w',pady=(0,5))
+            self.camera_profile_label.grid(in_=card,row=4,column=0,columnspan=1,sticky='w',pady=0)
+            self.camera_adoption_label.configure(wraplength=0);self.camera_profile_label.configure(wraplength=0)
         self.refresh_adoption_display();self.update_camera_profile_text();self.camera_display_snapshot=None;self.camera_canvas.delete('image')
         if persist:self.preferences['camera_all_jigs']=all_jigs;atomic_json(self.data_dir/'preferences.json',self.preferences)
         self.draw_camera_frame(time.monotonic())
@@ -1982,7 +1996,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if not urgent and context==getattr(self,'camera_overview_context',None) and now-getattr(self,'camera_overview_updated_at',float('-inf'))<1:return
         self.camera_overview_context=context
         self.camera_overview_updated_at=now if results else float('-inf')
-        from .adoption_display import adoption_summary
+        from .adoption_display import adoption_summary,detection_reason
         table=self.camera_jig_status;known=set(table.get_children());detected=0;adoption=self.adoption_labels() if self.show_adoption.get() else {}
         for index,(key,config) in enumerate(self.catalog.items.items(),1):
             result=results.get(key);status='영상 대기';tag='waiting'
@@ -1995,9 +2009,12 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
                         if result['selected'].get('orientation_verified'):status='방향 확인'
                 else:
                     status={'ambiguous':'후보 여러 개','orientation_unconfirmed':'방향 확인 중','processing':'갱신 중','paused':'검출 정지','calibration_mismatch':'보정 확인','error':'검출 오류','settings_changed':'설정 적용 중'}.get(result.get('status'),'미검출');tag='waiting' if result.get('status') in ('processing','settings_changed','paused') else 'missing'
+                    status=detection_reason(result) or status
                 if result.get('display_pending'):status='갱신 중';tag='waiting'
             full=adoption.get(key,'')
-            self.camera_overview_details[key]=config['name']+'\n현재 상태: '+status+('\n채택 상태: '+full if full else '')
+            detail=('\nAI 지그 라벨 확인' if (result or {}).get('model_detected') else '')
+            if result and not result.get('selected') and result.get('error'):detail+='\n불가 사유: '+result['error']
+            self.camera_overview_details[key]=config['name']+'\n현재 상태: '+status+('\n채택 상태: '+full if full else '')+detail
             values=(f"{index} · {config['name']}",status,adoption_summary(full))
             if key not in known:table.insert('','end',iid=key,values=values,tags=(tag,))
             elif tuple(table.item(key,'values'))!=values:table.item(key,values=values,tags=(tag,))
@@ -2045,6 +2062,14 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if inspection and self.camera_inspection.mode.get()=='CAD 설명':return
         obs=self.camera_view_observation()
         now=max(now,time.monotonic())  # A new frame may arrive after the render tick began.
+        if inspection and self.camera:
+            completed=self.camera.observation
+            # Preserve the existing one-second image freshness bound. Shared
+            # masks belong to the completed detector's lossless capture, never
+            # to a newer JPEG preview carrying older detection metadata.
+            if (completed and completed[1] and completed[1].get('shared_ai')
+                    and 0<=now-completed[2]<1):
+                obs=completed
         if not obs or not 0<=now-obs[2]<1:
             self.camera_display_poses.clear()
             self.camera_paint_key=None
@@ -2069,7 +2094,8 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
                 and key==getattr(self,'camera_paint_key',None)
                 and 0<=now-getattr(self,'camera_painted_at',0)<.2):return
         if inspection:
-            self.camera_inspection.update_frame(frame,self.camera_view_results(data) if detection_fresh else {},detection_fresh=detection_fresh,frame_at=at)
+            self.camera_inspection.update_frame(frame,self.camera_view_results(data) if detection_fresh else {},detection_fresh=detection_fresh,frame_at=at,
+                                               inference=(data or {}).get('shared_ai'))
             self.camera_paint_key=key;self.camera_painted_at=now
             return
         self.camera_paint_key=key;self.camera_painted_at=now
@@ -2250,7 +2276,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
                         if chosen.get('orientation_verified'):info+='\n'+('A/B 중단 접합부로 앞뒤 방향 확인' if chosen.get('orientation_method')=='central_junction' else 'A 지그 원형 구멍으로 앞뒤 방향 확인')
                         if chosen.get('grid_verified'):info+='\n내부 교차점 2개와 외곽 방향 일치'+('' if chosen.get('orientation_verified') else ' · 앞뒤 180° 대칭')
                         if chosen.get('partial_visible'):info+='\n일부가 화면 밖에 있습니다. 보이는 네 변과 STL 크기로 중심을 계산했습니다.'
-                    elif result:info+='  |  '+(f"획득 {result['stable_candidate_seconds']:.1f}/{result.get('acquisition_seconds',3.):g}초 · 새 관측 {result.get('stable_candidate_samples',0)}회" if 'stable_candidate_seconds' in result else '여러 후보 · 영역을 좁혀 주세요' if result.get('status')=='ambiguous' else result.get('error','지그 형상 미확인'))
+                    elif result:
+                        info+='  |  '+(f"획득 {result['stable_candidate_seconds']:.1f}/{result.get('acquisition_seconds',3.):g}초 · 새 관측 {result.get('stable_candidate_samples',0)}회" if 'stable_candidate_seconds' in result else '여러 후보 · 영역을 좁혀 주세요' if result.get('status')=='ambiguous' else result.get('error','지그 형상 미확인'))
+                        if 'stable_candidate_seconds' in result and result.get('error'):info+='\n채택 불가: '+result['error']
                     set_text(self.camera_status,info)
                 elif not self.camera.running:set_text(self.camera_status,'카메라 연결 해제됨')
                 else:set_text(self.camera_status,'최신 카메라 영상 대기')

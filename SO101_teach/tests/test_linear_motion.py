@@ -19,16 +19,16 @@ class LinearMotionTests(unittest.TestCase):
         for method in (self.motion.pause, self.motion.resume):
             with self.assertRaisesRegex(ValueError, 'PAUSE_UNSUPPORTED'): method()
         self.assertEqual(self.motion.phase, 'MOVING')
-        self.assertEqual(self.motion.deadline - self.now, 5.)
+        self.assertEqual(self.motion.deadline - self.now, 7.)
         self.assertFalse(self.motion.status()['pause_supported'])
         self.assertNotIn('remaining_s', self.motion.status())
         self.out.assert_called_once_with(2000)
-        self.now=108.; self.motion.tick()
+        self.now=110.; self.motion.tick()
         self.assertEqual(self.motion.phase, 'TIMED_COMPLETE')
 
     def test_duplicate_does_not_extend_move(self):
         self.motion.ensure(1.5); self.now=102.; self.motion.ensure(1.5)
-        self.assertEqual(self.motion.deadline - self.now,6.); self.assertEqual(self.out.call_count,1)
+        self.assertEqual(self.motion.deadline - self.now,8.); self.assertEqual(self.out.call_count,1)
     def test_completed_position_skips_but_unknown_history_does_not(self):
         restored={'phase':'TIMED_COMPLETE','target_mm':1.5,'remaining_s':0}
         driver=m.LinearMotion(self.out,self.save,restored,clock=lambda:self.now)
@@ -38,7 +38,7 @@ class LinearMotionTests(unittest.TestCase):
     def test_cancel_does_not_restart_or_freeze_timed_move(self):
         self.motion.ensure(100.); self.now=103.; self.motion.cancel()
         self.assertEqual(self.motion.phase, 'MOVING')
-        self.assertEqual(self.motion.deadline - self.now, 5.)
+        self.assertEqual(self.motion.deadline - self.now, 7.)
         self.out.assert_called_once_with(2000)
         with self.assertRaisesRegex(ValueError, 'BUSY'): self.motion.ensure(1.5)
 
@@ -48,7 +48,7 @@ class LinearMotionTests(unittest.TestCase):
         self.assertEqual(self.motion.phase, 'MOVING'); self.assertIsNone(self.motion.owner)
         with self.assertRaisesRegex(ValueError,'BUSY'): self.motion.claim('other')
         self.out.assert_called_once_with(2000)
-        self.now=108.; self.motion.tick(); self.motion.claim('other')
+        self.now=110.; self.motion.tick(); self.motion.claim('other')
         self.assertEqual(self.motion.phase, 'TIMED_COMPLETE')
 
     def test_pwm_failure_is_never_done(self):
@@ -65,7 +65,7 @@ class LinearMotionTests(unittest.TestCase):
         self.motion.claim('job'); self.motion.call({'op':'ensure','owner':'job','target_mm':100.})
         self.now=102.; self.motion.call({'op':'release','owner':'job'})
         self.assertEqual(self.motion.phase, 'MOVING')
-        self.assertEqual(self.motion.deadline - self.now, 6.)
+        self.assertEqual(self.motion.deadline - self.now, 8.)
         with self.assertRaisesRegex(ValueError,'BUSY'): self.motion.claim('other')
         self.out.assert_called_once_with(2000)
 

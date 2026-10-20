@@ -142,7 +142,7 @@ class EpisodePreparationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError,'카메라·모델 준비 실패'):
             self.runner.execute(self.episode,self.bundle,400,100.)
         self.assertEqual(self.link.calls[-1][0],'camera_stop')
-        self.assertFalse(any(m=='command' for m,_ in self.link.calls))
+        self.assertFalse(any(m=='command' and a.get('action') in ('move','play','follow') for m,a in self.link.calls))
         self.assertIsNone(self.link.started)
 
     def test_shutdown_while_preparing_closes_camera(self):
@@ -150,7 +150,7 @@ class EpisodePreparationTests(unittest.TestCase):
         with patch.object(cli.time,'sleep',side_effect=stop),self.assertRaises(cli.ShutdownRequested):
             self.runner.execute(self.episode,self.bundle,400,100.)
         self.assertEqual(self.link.calls[-1][0],'camera_stop')
-        self.assertFalse(any(m=='command' for m,_ in self.link.calls))
+        self.assertFalse(any(m=='command' and a.get('action') in ('move','play','follow') for m,a in self.link.calls))
 
     def test_stale_ready_result_is_not_readiness_for_this_episode(self):
         self.runner.prepare_camera();asked=[]

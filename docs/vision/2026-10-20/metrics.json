@@ -1,0 +1,491 @@
+{
+  "date": "2026-10-20",
+  "host": "Pi CPU",
+  "model": "YOLO26n NCNN FP16",
+  "confidence": 0.5,
+  "scope": {
+    "primary_scope": "All 304 reviewed real photographs, unchanged 13-class masks. Per-image jig search and carrier/finished inspection at common current-hybrid anchors. Linear fixed command metadata is unavailable in the 304-image capture schema; linear operational checks use separately preserved real fixtures.",
+    "sequence_scope": "All chronological photographs grouped into 61 non-overlapping blocks of up to five. Uniform replay times 0,.8,1.6,2.4,3.2 seconds; actual photos were manually captured with different time gaps. Replay is not physical camera latency or independent pose accuracy.",
+    "label_variant": "Same AI mask-to-slot association and semantic/CAD recheck as production, but omit the additional AI mask containment gate. It still needs segmentation for assigning labels to slots.",
+    "ground_truth": "Human-reviewed class/masks are label and visible-contour reference, not independent mm pose or physical seating truth. Report model TP/FP/FN at same-class maskIoU>=.5; label accuracy on uniquely associated visible parts; GT-mask boundary agreement separately; final pass/fail only manual fixtures. Training/val/test split results are separate, do not label pooled304 as unseen test.",
+    "manual_scope": "44 real photographs / 53 target entries, includes overlaps with304; do not add cohort counts. Saved anchors fixed equally for all three inspection variants; missing anchor is reported unavailable.",
+    "timing": "CPU warm inference and postprocessing; decoded images preloaded one at a time, disk I/O excluded. Fresh inference for jig masks (classes0,1) and part masks(13classes) is measured separately; shared cost charged once to each relevant comparison variant. Variant order rotated by image."
+  },
+  "jig": {
+    "opencv": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "images": 304,
+            "gt_present": 213,
+            "gt_roi_eligible": 161,
+            "selected": 133,
+            "reason:not_found": 169,
+            "matched": 133,
+            "unmatched": 0,
+            "eligible_selected": 133,
+            "eligible_matched": 133,
+            "absent": 91,
+            "absent_selected": 0,
+            "reason:ambiguous": 1,
+            "reason:orientation_unconfirmed": 1
+          },
+          "roi_yield": 0.8260869565217391
+        },
+        "pallet": {
+          "counts": {
+            "images": 304,
+            "gt_present": 304,
+            "gt_roi_eligible": 285,
+            "selected": 226,
+            "matched": 226,
+            "unmatched": 0,
+            "eligible_selected": 226,
+            "eligible_matched": 226,
+            "reason:not_found": 78
+          },
+          "roi_yield": 0.7929824561403509
+        }
+      },
+      "frame_total_s": {
+        "n": 304,
+        "mean": 0.4455207918150623,
+        "median": 0.4456845970125869,
+        "p95": 0.8116185310878791,
+        "max": 1.0807237880071625
+      }
+    },
+    "ai_cv": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "images": 304,
+            "gt_present": 213,
+            "gt_roi_eligible": 161,
+            "selected": 132,
+            "reason:model_not_found": 143,
+            "matched": 132,
+            "unmatched": 0,
+            "eligible_selected": 132,
+            "eligible_matched": 132,
+            "absent": 91,
+            "absent_selected": 0,
+            "reason:not_found": 19,
+            "reason:mask_rim_not_found": 4,
+            "reason:ambiguous": 5,
+            "reason:orientation_unconfirmed": 1
+          },
+          "roi_yield": 0.8198757763975155
+        },
+        "pallet": {
+          "counts": {
+            "images": 304,
+            "gt_present": 304,
+            "gt_roi_eligible": 285,
+            "selected": 230,
+            "matched": 230,
+            "unmatched": 0,
+            "eligible_selected": 230,
+            "eligible_matched": 230,
+            "reason:mask_rim_not_found": 55,
+            "reason:model_not_found": 19
+          },
+          "roi_yield": 0.8070175438596491
+        }
+      },
+      "frame_total_s": {
+        "n": 304,
+        "mean": 0.6699939313799214,
+        "median": 0.7272471034957562,
+        "p95": 1.0768020138057117,
+        "max": 1.3696185440057889
+      }
+    },
+    "current": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "images": 304,
+            "gt_present": 213,
+            "gt_roi_eligible": 161,
+            "selected": 132,
+            "reason:model_not_found": 143,
+            "matched": 132,
+            "unmatched": 0,
+            "eligible_selected": 132,
+            "eligible_matched": 132,
+            "absent": 91,
+            "absent_selected": 0,
+            "reason:not_found": 19,
+            "reason:mask_rim_not_found": 4,
+            "reason:ambiguous": 5,
+            "reason:orientation_unconfirmed": 1
+          },
+          "roi_yield": 0.8198757763975155
+        },
+        "pallet": {
+          "counts": {
+            "images": 304,
+            "gt_present": 304,
+            "gt_roi_eligible": 285,
+            "selected": 284,
+            "matched": 284,
+            "unmatched": 0,
+            "eligible_selected": 284,
+            "eligible_matched": 284,
+            "reason:roi": 20
+          },
+          "roi_yield": 0.9964912280701754
+        }
+      },
+      "frame_total_s": {
+        "n": 304,
+        "mean": 0.5620817590451656,
+        "median": 0.6134124379605055,
+        "p95": 0.937986999322304,
+        "max": 1.2469345050049014
+      }
+    }
+  },
+  "inspection": {
+    "opencv": {
+      "counts": {
+        "images_with_anchor": 284,
+        "anchors": 1076,
+        "quality:abnormal": 498,
+        "state:empty": 450,
+        "not_labeled:no_visible_part": 827,
+        "quality:waiting": 377,
+        "state:unknown": 378,
+        "state:housing_seated": 18,
+        "labeled_parts": 249,
+        "label_correct": 247,
+        "label_unknown": 1,
+        "label_wrong": 1,
+        "state:insert_added": 13,
+        "quality:normal": 201,
+        "state:cap_added": 18,
+        "state:present": 192,
+        "state:wrong_part": 2,
+        "state:cap_only": 5
+      },
+      "label_accuracy": 0.9919678714859438,
+      "by_split": {
+        "train": {
+          "labeled": 207,
+          "correct": 205,
+          "accuracy": 0.9903381642512077
+        },
+        "val": {
+          "labeled": 15,
+          "correct": 15,
+          "accuracy": 1.0
+        },
+        "test": {
+          "labeled": 27,
+          "correct": 27,
+          "accuracy": 1.0
+        }
+      },
+      "frame_total_s": {
+        "n": 284,
+        "mean": 0.9372259395034709,
+        "median": 0.3559516975074075,
+        "p95": 1.6824848042073426,
+        "max": 1.7389338729553856
+      }
+    },
+    "label": {
+      "counts": {
+        "images_with_anchor": 284,
+        "anchors": 1076,
+        "quality:abnormal": 498,
+        "state:empty": 450,
+        "not_labeled:no_visible_part": 827,
+        "quality:waiting": 377,
+        "state:unknown": 377,
+        "state:housing_seated": 18,
+        "labeled_parts": 249,
+        "label_correct": 249,
+        "label_unknown": 0,
+        "label_wrong": 0,
+        "state:insert_added": 13,
+        "quality:normal": 201,
+        "state:cap_added": 18,
+        "state:present": 193,
+        "state:cap_only": 6,
+        "state:wrong_part": 1
+      },
+      "label_accuracy": 1.0,
+      "by_split": {
+        "train": {
+          "labeled": 207,
+          "correct": 207,
+          "accuracy": 1.0
+        },
+        "val": {
+          "labeled": 15,
+          "correct": 15,
+          "accuracy": 1.0
+        },
+        "test": {
+          "labeled": 27,
+          "correct": 27,
+          "accuracy": 1.0
+        }
+      },
+      "frame_total_s": {
+        "n": 284,
+        "mean": 1.5920146881464563,
+        "median": 0.9723559809790459,
+        "p95": 2.7248233025486113,
+        "max": 2.95052127802046
+      }
+    },
+    "full": {
+      "counts": {
+        "images_with_anchor": 284,
+        "anchors": 1076,
+        "quality:abnormal": 498,
+        "state:empty": 450,
+        "not_labeled:no_visible_part": 827,
+        "quality:waiting": 377,
+        "state:unknown": 377,
+        "state:housing_seated": 18,
+        "labeled_parts": 249,
+        "label_correct": 249,
+        "label_unknown": 0,
+        "label_wrong": 0,
+        "state:insert_added": 13,
+        "quality:normal": 201,
+        "state:cap_added": 18,
+        "state:present": 193,
+        "state:cap_only": 6,
+        "state:wrong_part": 1
+      },
+      "label_accuracy": 1.0,
+      "by_split": {
+        "train": {
+          "labeled": 207,
+          "correct": 207,
+          "accuracy": 1.0
+        },
+        "val": {
+          "labeled": 15,
+          "correct": 15,
+          "accuracy": 1.0
+        },
+        "test": {
+          "labeled": 27,
+          "correct": 27,
+          "accuracy": 1.0
+        }
+      },
+      "frame_total_s": {
+        "n": 284,
+        "mean": 1.6015649302376838,
+        "median": 0.9698757230071351,
+        "p95": 2.7423496076953597,
+        "max": 2.981379200005904
+      }
+    }
+  },
+  "manual": {
+    "opencv": {
+      "counts": {
+        "targets": 53,
+        "negative": 34,
+        "fail": 33,
+        "correct": 52,
+        "wrong": 0,
+        "true_reject": 33,
+        "unavailable": 1,
+        "negative_wait": 1,
+        "positive": 19,
+        "pass": 19,
+        "true_accept": 19
+      },
+      "strict_accuracy": 0.9811320754716981,
+      "resolved_accuracy": 1.0,
+      "failures": []
+    },
+    "label": {
+      "counts": {
+        "targets": 53,
+        "negative": 34,
+        "fail": 33,
+        "correct": 52,
+        "wrong": 0,
+        "true_reject": 33,
+        "unavailable": 1,
+        "negative_wait": 1,
+        "positive": 19,
+        "pass": 19,
+        "true_accept": 19
+      },
+      "strict_accuracy": 0.9811320754716981,
+      "resolved_accuracy": 1.0,
+      "failures": []
+    },
+    "full": {
+      "counts": {
+        "targets": 53,
+        "negative": 34,
+        "fail": 33,
+        "correct": 52,
+        "wrong": 0,
+        "true_reject": 33,
+        "unavailable": 1,
+        "negative_wait": 1,
+        "positive": 19,
+        "pass": 19,
+        "true_accept": 19
+      },
+      "strict_accuracy": 0.9811320754716981,
+      "resolved_accuracy": 1.0,
+      "failures": []
+    }
+  },
+  "adoption": {
+    "opencv": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 18,
+            "at_4s": 18,
+            "full_4s": 18,
+            "early": 0
+          },
+          "first_wall_s": {
+            "n": 18,
+            "mean": 4.003591535108474,
+            "median": 4.003821976017207,
+            "p95": 4.006018592789769,
+            "max": 4.009068572951946
+          }
+        },
+        "pallet": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 36,
+            "at_4s": 36,
+            "full_4s": 36,
+            "early": 0,
+            "first_vs_latest_gt_0_5": 7
+          },
+          "first_wall_s": {
+            "n": 36,
+            "mean": 4.003546177605232,
+            "median": 4.003857967036311,
+            "p95": 4.006069892726373,
+            "max": 4.009068572951946
+          }
+        }
+      }
+    },
+    "ai_cv": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 16,
+            "at_4s": 16,
+            "full_4s": 16,
+            "early": 13
+          },
+          "first_wall_s": {
+            "n": 16,
+            "mean": 3.069882390067505,
+            "median": 2.9064872624876443,
+            "p95": 4.015204755254672,
+            "max": 4.047766534029506
+          }
+        },
+        "pallet": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 38,
+            "at_4s": 38,
+            "full_4s": 38,
+            "early": 0,
+            "first_vs_latest_gt_0_5": 9
+          },
+          "first_wall_s": {
+            "n": 38,
+            "mean": 4.004160370293232,
+            "median": 4.002580233005574,
+            "p95": 4.007794141003979,
+            "max": 4.047766534029506
+          }
+        }
+      }
+    },
+    "current": {
+      "targets": {
+        "b5ebdb54807c441c8267c15d77713b6a": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 16,
+            "at_4s": 16,
+            "full_4s": 16,
+            "early": 13
+          },
+          "first_wall_s": {
+            "n": 16,
+            "mean": 2.851434385509492,
+            "median": 2.628035981528228,
+            "p95": 4.003753028999199,
+            "max": 4.003767243004404
+          }
+        },
+        "pallet": {
+          "counts": {
+            "windows": 61,
+            "first_adopted": 41,
+            "at_4s": 38,
+            "full_4s": 38,
+            "early": 41,
+            "early_without_full_reference": 3,
+            "first_vs_latest_gt_0_5": 3
+          },
+          "first_wall_s": {
+            "n": 41,
+            "mean": 2.5398414645460434,
+            "median": 2.4782384560094215,
+            "p95": 3.2176754259853624,
+            "max": 3.452480785024818
+          }
+        }
+      }
+    }
+  },
+  "paired_adoption": {
+    "b5ebdb54807c441c8267c15d77713b6a": {
+      "both_adopted": 13,
+      "saved_seconds": {
+        "n": 13,
+        "mean": 1.3017320700679333,
+        "median": 1.3836620329529978,
+        "p95": 1.5546516523929312,
+        "max": 1.5722392039606348
+      }
+    },
+    "pallet": {
+      "both_adopted": 36,
+      "saved_seconds": {
+        "n": 36,
+        "mean": 1.4429216123454454,
+        "median": 1.5231887314876076,
+        "p95": 1.9343603072484257,
+        "max": 1.9450070779421367
+      }
+    }
+  },
+  "limitations": [
+    "304 photographs pool train/validation/test; not 304 held-out test images",
+    "44 manual photographs overlap the 304; not 348 independent photographs",
+    "Saved masks are used only in deployment-equivalence replay, not fresh-inference timing",
+    "No new physical full assembly or transport episode was executed"
+  ]
+}

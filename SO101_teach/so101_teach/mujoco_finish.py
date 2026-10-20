@@ -16,7 +16,11 @@ def append_mujoco_finish(scene, room=None):
     if room is None:room=scene.find('worldbody')
     floor=assets.find("material[@name='workcell_stone']")
     if floor is None:return
-    floor.attrib.update(rgba='.62 .62 .62 1',specular='.25',shininess='.22',reflectance='.035')
+    from .preview_materials import profile, numbers
+    photo=profile()
+    floor.attrib.update(rgba=numbers([*photo['surfaces']['workcell_stone']['color_srgb'],1]),
+                        specular='.12',shininess='.15',
+                        reflectance=str(photo['mujoco']['floor_reflectance']))
     ET.SubElement(assets,'texture',name='mujoco_panel_texture',type='2d',
                   file=str(ROOT/'assets/textures/mujoco-ceiling-panel.png'))
     ET.SubElement(assets,'material',name='mujoco_ceiling_panel',texture='mujoco_panel_texture',
@@ -35,7 +39,9 @@ def append_mujoco_finish(scene, room=None):
         light.set('diffuse',f'{level} {level*1.02} {level*1.045}')
         light.set('specular','.14 .14 .14')
     head=scene.find('./visual/headlight')
-    head.attrib.update(ambient='.32 .33 .34',diffuse='.06 .06 .06',specular='.035 .035 .035')
+    head.attrib.update(ambient=numbers(photo['mujoco']['headlight_ambient']),
+                      diffuse=numbers(photo['mujoco']['headlight_diffuse']),
+                      specular='.035 .035 .035')
     quality=scene.find('./visual/quality')
     quality.attrib.update(numquads='32',offsamples='4',shadowsize='4096')
 

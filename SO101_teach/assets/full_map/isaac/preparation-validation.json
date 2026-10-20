@@ -9,6 +9,6 @@
     "arm3_preview_base_link": 0.0,
     "arm3_preview_gripper_link": 2.220446049250313e-16
   },
-  "geoms": 814,
+  "geoms": 1674,
   "physics_steps": 0
 }

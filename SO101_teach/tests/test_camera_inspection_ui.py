@@ -12,14 +12,14 @@ class CameraInspectionUITests(unittest.TestCase):
     camera=camera_fixtures.CameraOverviewTests.camera
     def test_inspection_method_switch_persists_without_changing_geometry_or_jig_settings(self):
         a=self.app;p=a.camera_inspection;before=deepcopy(a.profile)
-        p.method.set('AI + OpenCV');p.update_method_controls()
+        p.method.set('AI 라벨 + CAD');p.update_method_controls()
         self.assertFalse(p.method_apply.instate(['disabled']))
         self.assertIn('적용 중: OpenCV',p.method_status.get())
         with patch('so101_teach.model_regions.runtime',return_value=({},None,{'files':{'model.ncnn.bin':'a'*64}})):
             p.apply_method()
         self.assertEqual({k:v for k,v in a.profile.items() if k!='part_inspection'},before)
         self.assertEqual(json.loads((a.data_dir/'profile.json').read_text())['part_inspection'],a.profile['part_inspection'])
-        self.assertIn('적용 중: AI + OpenCV',p.method_status.get())
+        self.assertIn('적용 중: AI 라벨 + CAD',p.method_status.get())
         self.assertTrue(p.method_apply.instate(['disabled']))
         old_generation=p.generation
         p.previous_rows={'old':(time.monotonic(),{'state':'present'})};p.capture_snapshot={'old':True}
@@ -31,7 +31,7 @@ class CameraInspectionUITests(unittest.TestCase):
         self.assertIn('적용 중: OpenCV',p.method_status.get())
 
     def test_inspection_method_rejects_running_or_unavailable_model_without_change(self):
-        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI + OpenCV')
+        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI 라벨 + CAD')
         a.camera_task={'kind':'jig'}
         with self.assertRaisesRegex(ValueError,'끝난 뒤'):p.apply_method()
         a.camera_task=None
@@ -40,7 +40,7 @@ class CameraInspectionUITests(unittest.TestCase):
         self.assertEqual(a.profile,before);self.assertIn('적용 중: OpenCV',p.method_status.get())
 
     def test_inspection_method_remote_sync_failure_does_not_commit_local_selection(self):
-        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI + OpenCV')
+        a=self.app;p=a.camera_inspection;before=deepcopy(a.profile);p.method.set('AI 라벨 + CAD')
         a.remote_mode=True;a.remote=Mock(error=None)
         try:
             with patch('so101_teach.model_regions.runtime',return_value=({},None,{'files':{'model.ncnn.bin':'a'*64}})):
@@ -237,7 +237,9 @@ class CameraInspectionUITests(unittest.TestCase):
         self.assertIn('미리보기',p.status.get())
         self.assertTrue(all(p.table.item(k,'values')[1]=='분석 중' for k in ('linear_100_0','linear_100_1')))
         self.assertNotIn('중단 삽입',p.parts.get())
+        p.title.set('AI 라벨 + CAD · 전체 9 · 정상 4 / 비정상 5')
         p.clear();self.assertFalse(p.table.get_children());self.assertFalse(p.canvas.find_withtag('image'))
+        self.assertEqual(p.title.get(),'영상 대기 · 검사 결과 없음')
     def test_adopted_jig_stays_visible_when_live_detection_expires(self):
         from unittest.mock import patch
         frame,data=self.camera();a=self.app;p=a.camera_inspection;a.camera_tabs.select(p);p.station.set('완성품 팔레트');self.root.update()

@@ -94,7 +94,7 @@ class PiExecutionTests(unittest.TestCase):
             self.assertIn('STEP_DONE:1/3:하단 놓고 들기',events);self.assertNotIn('STAGE_DONE:LOWER',events)
             events.extend(['INSPECTION_PASS:a','STAGE_DONE:LOWER']);pending.clear()
         with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'begin_inspections',side_effect=begin),patch.object(runner,'poll_inspections',side_effect=poll):
-            runner.execute(episode,{},400,100.)
+            runner.execute(episode,{'profile':{}},400,100.)
         plays=[a for m,a in link.calls if m=='command' and a['action']=='play'];self.assertEqual(len(plays),1);self.assertEqual(len(plays[0]['targets']),3)
         self.assertLess(events.index('INSPECTION_PASS:a'),events.index('EPISODE_DONE'));self.assertEqual(events[-1],'DONE')
 

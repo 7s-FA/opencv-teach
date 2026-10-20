@@ -60,6 +60,10 @@ class CameraLifecycle:
         yolo_view=bool(yolo is not None and yolo.visible())
         processing=not inspecting and (measuring or not photo and not yolo_view and not self.jig_updates_paused and not self.detector.frozen)
         camera.set_mode(processing_enabled=processing,preview_fps=10 if processing or photo or inspecting else 5)
+        panel=getattr(self,'camera_inspection',None)
+        shared=bool(processing and panel is not None and getattr(self,'page',None)=='camera'
+                    and self.camera_tabs.select()==str(panel) and panel.mode.get()=='카메라 영상')
+        if hasattr(camera,'set_shared_inference'):camera.set_shared_inference(shared)
 
     def camera_page_changed(self,previous):
         if self.page=='camera' and previous!='camera':

@@ -75,18 +75,23 @@ class PCStartTests(unittest.TestCase):
 
 class PiStartTests(unittest.TestCase):
     def episode(self):return {'id':'e','product_type':'A','startup_inspections':[ALL,EMPTY],'steps':[{'id':'s','name':'안전','ticks':{},'safe_boundary':'start'},{'id':'n','name':'작업','ticks':{}}]}
-    def test_start_checks_precede_linear_and_safe_pose_and_only_then_move(self):
+    def test_start_checks_follow_safe_arrival_and_precede_episode_play(self):
         cli=cli_fixture.cli;link=cli_fixture.FakeLink();linear=cli_fixture.FakeLinear();runner=cli.Runner(link,lambda x:None,cli.Control(),20,linear=linear);seen=[]
-        def inspect(steps,bundle):
-            self.assertEqual(len(steps),4);self.assertFalse(any(m=='command' for m,_ in link.calls));self.assertTrue(any(op=='ensure' for op,_ in linear.calls));seen.extend(step['id'] for step in steps)
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'inspect_startup_group',side_effect=inspect),patch.object(runner,'measure',return_value={}):
-            runner.execute(self.episode(),{},400,100.)
+        def inspect(steps,bundle,checks,*,on_measured=None):
+            self.assertEqual(len(checks),4)
+            self.assertTrue(any(m=='command' and a['action']=='move' for m,a in link.calls))
+            self.assertFalse(any(m=='command' and a['action']=='play' for m,a in link.calls))
+            self.assertTrue(any(op=='ensure' for op,_ in linear.calls));seen.extend(step['id'] for step in checks)
+            if on_measured:on_measured({})
+            return {}
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'prepare_startup',side_effect=inspect):
+            runner.execute(self.episode(),{'profile':{}},400,100.)
         self.assertEqual(len(seen),4);self.assertTrue(any(op=='ensure' for op,_ in linear.calls));self.assertTrue(any(m=='command' and args['action']=='move' for m,args in link.calls))
-    def test_start_failure_prevents_linear_and_motor_commands(self):
+    def test_start_failure_blocks_episode_play_after_safe_arrival(self):
         cli=cli_fixture.cli;link=cli_fixture.FakeLink();linear=cli_fixture.FakeLinear();runner=cli.Runner(link,lambda x:None,cli.Control(),20,linear=linear)
-        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'inspect_startup_group',side_effect=ValueError('부품 없음')),patch.object(runner,'measure',return_value={}):
-            with self.assertRaisesRegex(ValueError,'부품 없음'):runner.execute(self.episode(),{},400,100.)
-        self.assertFalse(any(m=='command' for m,_ in link.calls));self.assertTrue(any(op=='ensure' for op,_ in linear.calls))
+        with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'prepare_startup',side_effect=ValueError('부품 없음')):
+            with self.assertRaisesRegex(ValueError,'부품 없음'):runner.execute(self.episode(),{'profile':{}},400,100.)
+        self.assertFalse(any(m=='command' and a['action']=='play' for m,a in link.calls));self.assertTrue(any(op=='ensure' for op,_ in linear.calls))
 
     def inspect(self,phase='TIMED_COMPLETE'):
         cli=cli_fixture.cli;clock=[100.];link=cli_fixture.FakeLink();linear=cli_fixture.FakeLinear();linear.phase=phase;events=[]

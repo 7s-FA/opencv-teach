@@ -11,12 +11,16 @@ FRAME_SECONDS=1/PREVIEW_FPS
 DEFAULT_LOOKAT=(.15,-.025,.15)
 DEFAULT_VIEW=(40.,-25.,1.0,.09,.03,.25)
 
-def overhead_view(profile):
+def overhead_view(profile, *, photo_match=False):
     """Orbit pose with its eye and forward direction at the overhead camera."""
     import math
     from .arm_workspace import preview_profile
     profile=preview_profile(profile)
     matrix=profile.get('extrinsics',{}).get('base_from_camera')
+    if photo_match and matrix is not None:
+        from .preview_materials import profile as appearance_profile
+        # Common workcell display frame only. Never mutate camera calibration.
+        matrix=appearance_profile()['base_from_camera_mm']
     if matrix is None:return DEFAULT_VIEW
     eye=[float(matrix[i][3])/1000 for i in range(3)]
     forward=[float(matrix[i][2]) for i in range(3)]

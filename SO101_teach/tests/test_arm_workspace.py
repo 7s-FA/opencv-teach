@@ -43,7 +43,7 @@ class ArmWorkspaceTests(unittest.TestCase):
 
     def test_pi_rejects_connect_and_motion_for_pending_arm(self):
         with tempfile.TemporaryDirectory() as folder:
-            runtime=Runtime(folder);runtime.profile=deepcopy(self.three)
+            runtime=Runtime(folder);runtime.profile=deepcopy(self.three);runtime.acquire()
             try:
                 with self.assertRaisesRegex(ValueError,'새 3점 보정'):runtime.call('connect',{'speed':300})
                 with self.assertRaisesRegex(ValueError,'새 3점 보정'):runtime.call('command',{'action':'arm'})

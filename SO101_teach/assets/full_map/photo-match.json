@@ -1,0 +1,1208 @@
+{
+  "material_revision": "all-visible-materials-v5-wall-layout",
+  "static_appearance_rules": [
+    {
+      "pattern": "linear_rail_*_visual",
+      "color": [
+        0.57,
+        0.6,
+        0.57
+      ],
+      "surface": {
+        "roughness": 0.48,
+        "metallic": 0.65
+      }
+    },
+    {
+      "pattern": "linear_l12_rod_visual",
+      "color": [
+        0.69,
+        0.7,
+        0.68
+      ],
+      "surface": {
+        "roughness": 0.25,
+        "metallic": 0.9
+      }
+    },
+    {
+      "pattern": "workcell_leg_*_visual",
+      "color": [
+        0.61,
+        0.64,
+        0.62
+      ],
+      "surface": {
+        "roughness": 0.45,
+        "metallic": 0.7
+      }
+    },
+    {
+      "pattern": "tape_*",
+      "surface": {
+        "roughness": 0.82
+      }
+    },
+    {
+      "pattern": "tape_parking_*",
+      "color": [
+        0.46,
+        0.48,
+        0.45
+      ]
+    },
+    {
+      "pattern": "tape_mat_*_approach_*",
+      "color": [
+        0.46,
+        0.48,
+        0.45
+      ]
+    },
+    {
+      "pattern": "tape_assembly_inner_approach_*",
+      "color": [
+        0.46,
+        0.48,
+        0.45
+      ]
+    },
+    {
+      "pattern": "tape_rest_outline_*",
+      "color": [
+        0.46,
+        0.48,
+        0.45
+      ]
+    },
+    {
+      "pattern": "tape_mat_stop_*_tab_*",
+      "color": [
+        0.46,
+        0.48,
+        0.45
+      ]
+    }
+  ],
+  "lighting": {
+    "color_temperature_k": 7000,
+    "isaac_panel_intensity": 7800.0,
+    "isaac_room_bounce_intensity": 400.0,
+    "ambient_color": [
+      0.83,
+      0.91,
+      1.0
+    ]
+  },
+  "base_from_camera_mm": [
+    [
+      8.236175720257466e-06,
+      -0.9063119925854385,
+      0.4226092427148011,
+      31.19156962566638
+    ],
+    [
+      -0.9999999999660827,
+      -7.46454482856353e-06,
+      3.4806839841220946e-06,
+      116.01640430034435
+    ],
+    [
+      0.0,
+      -0.42260924272913486,
+      -0.9063119926161781,
+      534.5111573839188
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "camera_scope": "scene-relative fit to fixed rail landmarks; not physical extrinsic calibration",
+  "camera_response": {
+    "blur_sigma_px": 0.45,
+    "read_noise_std_8bit": 1.15,
+    "seed": 16427,
+    "basis": "Provisional native-resolution sensor response based on homogeneous real board patches; not radiometric sensor calibration",
+    "raw_render_preserved": true
+  },
+  "printed_layer_height_mm": 0.2,
+  "accessory_layout": {
+    "mode": "wall_side",
+    "clearance_mm": 10.0,
+    "gap_mm": 12.0,
+    "group_along_wall_shift_mm": 60.0
+  },
+  "material_reference_images": [
+    {
+      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/finished-empty-arm3/camera.jpg",
+      "sha256": "31067127c87907776407163422a3f9a2244ebe1e438422afde29cbef68e876e9"
+    },
+    {
+      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/carrier-moved/camera-0.png",
+      "sha256": "9d781ba4af65e53b6ff6c826b897e6c3fc4ac20707e9ef8838708171267d3a8f"
+    },
+    {
+      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/b-housing-seating/camera-1.jpg",
+      "sha256": "b9c84019b599d72218d5ef5474dbf3260a27bf4fc760f2e1b49a3b48d471280d"
+    },
+    {
+      "path": "/path/to/Final_Arm/SO101_teach/verification/arm2_video_20261014/run_03_b_view1/frame_10.png",
+      "sha256": "dd7089cafd70b94f29f5531eaa959aed7c7383fd1092a7a74c9e55cf6d85678a"
+    }
+  ],
+  "schema": 1,
+  "source": "Photo-matched unloading scene promoted to common display appearance; no control calibration or physical parameters",
+  "surfaces": {
+    "robot_and_camera_mount_plastic": {
+      "color_srgb": [
+        0.085,
+        0.1,
+        0.088
+      ],
+      "roughness": 0.8,
+      "normal_strength": 0.1,
+      "ior": 1.42
+    },
+    "photo_servo": {
+      "color_srgb": [
+        0.12,
+        0.128,
+        0.112
+      ],
+      "roughness": 0.48,
+      "clearcoat": 0.06
+    },
+    "gripper_rubber": {
+      "color_srgb": [
+        0.045,
+        0.048,
+        0.043
+      ],
+      "roughness": 0.94
+    },
+    "workcell_white_pla": {
+      "color_srgb": [
+        0.78,
+        0.835,
+        0.8
+      ],
+      "roughness": 0.78,
+      "normal_strength": 0.1
+    },
+    "workcell_white_board": {
+      "color_srgb": [
+        0.72,
+        0.732,
+        0.745
+      ],
+      "roughness": 0.78,
+      "clearcoat": 0.025,
+      "clearcoat_roughness": 0.5
+    },
+    "photo_blue_tpu": {
+      "color_srgb": [
+        0.09,
+        0.52,
+        0.77
+      ],
+      "roughness": 0.76,
+      "normal_strength": 0.09
+    },
+    "photo_purple_pla": {
+      "color_srgb": [
+        0.43,
+        0.386,
+        0.625
+      ],
+      "roughness": 0.75,
+      "normal_strength": 0.08
+    },
+    "photo_orange_pla": {
+      "color_srgb": [
+        1.0,
+        0.51,
+        0.31
+      ],
+      "roughness": 0.75,
+      "normal_strength": 0.08
+    },
+    "photo_green_ball": {
+      "color_srgb": [
+        0.29,
+        0.315,
+        0.17
+      ],
+      "roughness": 0.65
+    },
+    "workcell_silver_metal": {
+      "color_srgb": [
+        0.64,
+        0.66,
+        0.64
+      ],
+      "roughness": 0.38,
+      "metallic": 0.78
+    },
+    "photo_d435_aluminum": {
+      "color_srgb": [
+        0.65,
+        0.67,
+        0.65
+      ],
+      "roughness": 0.5,
+      "metallic": 0.72
+    },
+    "arm1_gray_filament": {
+      "color_srgb": [
+        0.61,
+        0.62,
+        0.6
+      ],
+      "roughness": 0.75,
+      "normal_strength": 0.1
+    },
+    "burger_frame_plastic": {
+      "color_srgb": [
+        0.115,
+        0.13,
+        0.118
+      ],
+      "roughness": 0.65
+    },
+    "burger_tire_rubber": {
+      "color_srgb": [
+        0.055,
+        0.06,
+        0.055
+      ],
+      "roughness": 0.92
+    },
+    "burger_sensor_plastic": {
+      "color_srgb": [
+        0.12,
+        0.13,
+        0.12
+      ],
+      "roughness": 0.48
+    },
+    "burger_pcb_green": {
+      "color_srgb": [
+        0.12,
+        0.18,
+        0.13
+      ],
+      "roughness": 0.6
+    },
+    "workcell_stone": {
+      "color_srgb": [
+        0.395,
+        0.417,
+        0.382
+      ],
+      "roughness": 0.66,
+      "clearcoat": 0.08,
+      "clearcoat_roughness": 0.4,
+      "texture": "textures/photo-matched-floor.png",
+      "texture_scale": 5
+    }
+  },
+  "background_details": [
+    {
+      "name": "photo_board_screw_0",
+      "mesh": "photo-assets/photo_board_screw_0.stl",
+      "color": [
+        0.64,
+        0.66,
+        0.65
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.38,
+        "metallic": 0.6,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_board_screw_1",
+      "mesh": "photo-assets/photo_board_screw_1.stl",
+      "color": [
+        0.64,
+        0.66,
+        0.65
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.38,
+        "metallic": 0.6,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_corner_clip",
+      "mesh": "photo-assets/photo_corner_clip.stl",
+      "color": [
+        0.035,
+        0.035,
+        0.035
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_power_supply",
+      "mesh": "photo-assets/photo_power_supply.stl",
+      "color": [
+        0.035,
+        0.035,
+        0.035
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.09914938766762592
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.051530735461090035
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_blue_pack",
+      "mesh": "photo-assets/photo_blue_pack.stl",
+      "color": [
+        0.06,
+        0.36,
+        0.65
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.08415958294943567
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.1883677513663815
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_blue_pack_2",
+      "mesh": "photo-assets/photo_blue_pack_2.stl",
+      "color": [
+        0.06,
+        0.36,
+        0.65
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.10439094831620754
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.20328570668324672
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_power_label",
+      "mesh": "photo-assets/photo_power_label.stl",
+      "color": [
+        0.94,
+        0.94,
+        0.94
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.09914938766762592
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.051530735461090035
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/power_label.png",
+        "texrepeat": [
+          9.734907528793732,
+          -20.504621081165364
+        ],
+        "world_from_texture": [
+          [
+            -0.009531061650042028,
+            -0.9958695029713343,
+            0.0,
+            0.46120907644927733
+          ],
+          [
+            -0.9999545784003507,
+            -0.09079610702903369,
+            0.0,
+            0.7074058542343676
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9949588856917898,
+            -0.16690000000000005
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            158,
+            127
+          ],
+          [
+            237,
+            117
+          ],
+          [
+            224,
+            157
+          ],
+          [
+            148,
+            165
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations"
+      }
+    },
+    {
+      "name": "photo_battery_label_1",
+      "mesh": "photo-assets/photo_battery_label_1.stl",
+      "color": [
+        0.94,
+        0.94,
+        0.94
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.08415958294943567
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.1883677513663815
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/battery_label_1.png",
+        "texrepeat": [
+          28.21828076736846,
+          -33.44647522524531
+        ],
+        "world_from_texture": [
+          [
+            0.5333448905956981,
+            -0.6811676690753266,
+            0.0,
+            0.6309324342633068
+          ],
+          [
+            -0.8458978825339752,
+            -0.7321274524333086,
+            -0.0,
+            0.7907496924230937
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9666747249415725,
+            -0.18389999999999995
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            223,
+            42
+          ],
+          [
+            250,
+            26
+          ],
+          [
+            260,
+            37
+          ],
+          [
+            234,
+            53
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations"
+      }
+    },
+    {
+      "name": "photo_battery_label_2",
+      "mesh": "photo-assets/photo_battery_label_2.stl",
+      "color": [
+        0.94,
+        0.94,
+        0.94
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -0.10439094831620754
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.20328570668324672
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/battery_label_2.png",
+        "texrepeat": [
+          46.365206015482414,
+          -15.162623401674104
+        ],
+        "world_from_texture": [
+          [
+            0.3129036451065918,
+            -0.9662848364992206,
+            0.0,
+            0.529252228416156
+          ],
+          [
+            -0.9497848750527711,
+            -0.2574754643683057,
+            -0.0,
+            0.7518012790199609
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9983277340261548,
+            -0.18389999999999995
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            258,
+            61
+          ],
+          [
+            276,
+            54
+          ],
+          [
+            275,
+            99
+          ],
+          [
+            256,
+            106
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations"
+      }
+    },
+    {
+      "name": "photo_clip_metal",
+      "mesh": "photo-assets/photo_clip_metal.stl",
+      "color": [
+        0.79,
+        0.8,
+        0.77
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.38,
+        "metallic": 0.5,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_wall_cable_0",
+      "mesh": "photo-assets/photo_wall_cable_0.stl",
+      "color": [
+        0.025,
+        0.028,
+        0.025
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_wall_cable_1",
+      "mesh": "photo-assets/photo_wall_cable_1.stl",
+      "color": [
+        0.025,
+        0.028,
+        0.025
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_wall_cable_2",
+      "mesh": "photo-assets/photo_wall_cable_2.stl",
+      "color": [
+        0.025,
+        0.028,
+        0.025
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    },
+    {
+      "name": "photo_wall_cable_3",
+      "mesh": "photo-assets/photo_wall_cable_3.stl",
+      "color": [
+        0.025,
+        0.028,
+        0.025
+      ],
+      "collision": false,
+      "group": null,
+      "bodies": [
+        "photo_details"
+      ],
+      "world_from_mesh_m": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "surface": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46
+      }
+    }
+  ],
+  "robot_wires": {
+    "upper_arm_link": [
+      [
+        0.006,
+        -0.005,
+        0.055
+      ],
+      [
+        -0.018,
+        -0.0135,
+        0.055
+      ],
+      [
+        -0.06,
+        -0.0135,
+        0.055
+      ],
+      [
+        -0.104,
+        -0.0135,
+        0.055
+      ],
+      [
+        -0.12,
+        -0.005,
+        0.055
+      ]
+    ],
+    "lower_arm_link": [
+      [
+        0.007,
+        -0.005,
+        0.0535
+      ],
+      [
+        -0.015,
+        -0.0135,
+        0.0535
+      ],
+      [
+        -0.063,
+        -0.0135,
+        0.0535
+      ],
+      [
+        -0.104,
+        -0.0135,
+        0.0535
+      ],
+      [
+        -0.115,
+        -0.005,
+        0.0535
+      ]
+    ],
+    "shoulder_link": [
+      [
+        -0.02,
+        -0.025,
+        -0.025
+      ],
+      [
+        -0.038,
+        -0.025,
+        -0.012
+      ],
+      [
+        -0.04,
+        -0.025,
+        0.026
+      ],
+      [
+        -0.018,
+        -0.025,
+        0.048
+      ],
+      [
+        0.004,
+        -0.025,
+        0.045
+      ]
+    ]
+  },
+  "wire_colors": {
+    "red": [
+      0.5,
+      0.035,
+      0.035
+    ],
+    "white": [
+      0.79,
+      0.8,
+      0.76
+    ],
+    "black": [
+      0.035,
+      0.038,
+      0.035
+    ]
+  },
+  "mujoco": {
+    "floor_reflectance": 0.012,
+    "headlight_ambient": [
+      0.32,
+      0.35,
+      0.38
+    ],
+    "headlight_diffuse": [
+      0.06,
+      0.065,
+      0.07
+    ],
+    "floor_texture_contrast": 1.0
+  }
+}

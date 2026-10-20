@@ -9,9 +9,10 @@ class MultiDetector:
         self.catalog=catalog;self.profile=profile;self.active=active;self.lock=threading.RLock();self.meshes={};self.revision=-1
         self.latches={active:default_latch or PoseLatch()};self.frozen=False;self.seconds=10.;self.generation=0;self.sequence=0
         self.acquisition_seconds=self.latches[active].stability.seconds;self.attempts_limit=self.latches[active].stability.attempts_limit
-        self.region_model=None;self.region_tracks={};self.region_retry_after={};self.region_context=None
+        self.region_model=None;self.shared_region_model=None;self.region_tracks={};self.region_retry_after={};self.region_context=None
     def close(self):
         if self.region_model:self.region_model.close()
+        if self.shared_region_model:self.shared_region_model.close()
         with self.lock:
             self.region_tracks.clear();self.region_retry_after.clear();self.region_context=None;self.generation+=1
     def refresh(self):
@@ -40,7 +41,25 @@ class MultiDetector:
             called=self.region_model.prepare(frame,settings)
         return {'status':'prepared','vision_ready':True,'selected':None,'candidates':[],
                 'model_inference_called':called,'processing_seconds':time.monotonic()-began}
-    def process(self,frame):
+    def process_shared(self,frame):
+        """Live inspection view: one raw capture supplies both model consumers."""
+        from .ai_inspection import inspection_settings
+        from .model_regions import checked_settings,RegionModel
+        from .shared_inference import FrameInference
+        with self.lock:profile=deepcopy(self.profile)
+        settings=inspection_settings(profile)
+        if settings['method']!='model_roi' or settings!=checked_settings(profile):
+            return self.process(frame)
+        if self.shared_region_model is None:self.shared_region_model=RegionModel(class_ids=tuple(range(13)))
+        inference=FrameInference(frame,settings,self.shared_region_model.predict)
+        result=self.process(frame,inference=inference)
+        if result.get('status')=='settings_changed':return result
+        # An attempted, failed jig inference cannot be retried behind its
+        # existing retry budget. Carrier tracking may need no jig AI at all.
+        if inference.rows is None and result.get('model_inference_called'):return result
+        if inference.get(frame,settings) is not None:result['shared_ai']=inference.to_wire()
+        return result
+    def process(self,frame,*,inference=None):
         began=time.monotonic()
         with self.lock:
             self.refresh();items=deepcopy(self.catalog.items);meshes=deepcopy(self.meshes);revision=self.catalog.revision;generation=self.generation;base_profile=deepcopy(self.profile)
@@ -91,8 +110,10 @@ class MultiDetector:
         if pending and any(began>=retry_after.get(key,0.) for key in pending):
             model_called=True;start=time.monotonic()
             try:
-                if self.region_model is None:self.region_model=RegionModel()
-                detections=self.region_model.predict(frame,settings)
+                detections=inference.get(frame,settings) if inference is not None else None
+                if detections is None:
+                    if self.region_model is None:self.region_model=RegionModel()
+                    detections=self.region_model.predict(frame,settings)
             except Exception as exc:model_error='모델 영역 검출 실패 · '+str(exc)
             model_seconds=time.monotonic()-start
         for key in pending:
@@ -154,5 +175,6 @@ class MultiDetector:
             results={key:(self.latches[key].poll(now) or value) if key in self.latches else value
                      for key,value in detection['by_jig'].items()}
             main=deepcopy(results.get(self.active,detection));main.update(by_jig=results,live_by_jig=detection.get('live_by_jig',{}),detector_generation=self.generation,detector_sequence=self.sequence,processing_seconds=detection.get('processing_seconds'))
-            for name in ('model_inference_called','model_seconds','opencv_seconds'):main[name]=detection.get(name)
+            for name in ('model_inference_called','model_seconds','opencv_seconds','shared_ai'):
+                if name in detection:main[name]=detection[name]
             return main

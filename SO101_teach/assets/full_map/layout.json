@@ -195,9 +195,9 @@
     "appearance": {
       "printed_parts": "gray filament",
       "rgba": [
-        0.68,
-        0.7,
-        0.71,
+        0.61,
+        0.62,
+        0.6,
         1
       ],
       "material_properties": "copied from robot_and_camera_mount_plastic",
@@ -1379,162 +1379,168 @@
     "surfaces": {
       "robot_and_camera_mount_plastic": {
         "color_srgb": [
-          0.18,
-          0.2,
-          0.215
+          0.085,
+          0.1,
+          0.088
         ],
-        "roughness": 0.94,
+        "roughness": 0.8,
         "metallic": 0,
         "specular": 0.035,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
-        "layer_appearance": "fine printed plastic"
+        "normal_strength": 0.1,
+        "layer_appearance": "fine printed plastic",
+        "ior": 1.42
       },
       "arm1_gray_filament": {
         "color_srgb": [
-          0.68,
-          0.7,
-          0.71
+          0.61,
+          0.62,
+          0.6
         ],
-        "roughness": 0.94,
+        "roughness": 0.75,
         "metallic": 0,
         "specular": 0.035,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
+        "normal_strength": 0.1,
         "layer_appearance": "fine printed plastic"
       },
       "workcell_white_board": {
         "color_srgb": [
-          0.88,
-          0.885,
-          0.875
+          0.72,
+          0.732,
+          0.745
         ],
-        "roughness": 0.97,
+        "roughness": 0.78,
         "metallic": 0,
-        "specular": 0.02
+        "specular": 0.02,
+        "clearcoat": 0.025,
+        "clearcoat_roughness": 0.5
       },
       "workcell_white_pla": {
         "color_srgb": [
-          0.91,
-          0.915,
-          0.9
+          0.78,
+          0.835,
+          0.8
         ],
-        "roughness": 0.94,
+        "roughness": 0.78,
         "metallic": 0,
         "specular": 0.035,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
+        "normal_strength": 0.1,
         "layer_appearance": "fine printed plastic"
       },
       "gripper_rubber": {
         "color_srgb": [
-          0.025,
-          0.025,
-          0.025
+          0.045,
+          0.048,
+          0.043
         ],
-        "roughness": 0.9,
+        "roughness": 0.94,
         "metallic": 0,
         "specular": 0.05
       },
       "photo_servo": {
         "color_srgb": [
-          0.095,
-          0.105,
-          0.115
+          0.12,
+          0.128,
+          0.112
         ],
-        "roughness": 0.9,
+        "roughness": 0.48,
         "metallic": 0,
-        "specular": 0.04
+        "specular": 0.04,
+        "clearcoat": 0.06
       },
       "photo_blue_tpu": {
         "color_srgb": [
-          0.1,
-          0.57,
-          0.84
+          0.09,
+          0.52,
+          0.77
         ],
-        "roughness": 0.95,
+        "roughness": 0.76,
         "metallic": 0,
         "specular": 0.03,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
+        "normal_strength": 0.09,
         "layer_appearance": "fine printed plastic"
       },
       "photo_purple_pla": {
         "color_srgb": [
-          0.58,
-          0.4,
-          0.76
+          0.43,
+          0.386,
+          0.625
         ],
-        "roughness": 0.94,
+        "roughness": 0.75,
         "metallic": 0,
         "specular": 0.035,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
+        "normal_strength": 0.08,
         "layer_appearance": "fine printed plastic"
       },
       "photo_orange_pla": {
         "color_srgb": [
           1.0,
-          0.52,
-          0.075
+          0.51,
+          0.31
         ],
-        "roughness": 0.94,
+        "roughness": 0.75,
         "metallic": 0,
         "specular": 0.035,
         "normal_texture": "textures/filament-normal.png",
-        "normal_strength": 0.055,
+        "normal_strength": 0.08,
         "layer_appearance": "fine printed plastic"
       },
       "photo_green_ball": {
         "color_srgb": [
-          0.28,
-          0.34,
-          0.15
+          0.29,
+          0.315,
+          0.17
         ],
-        "roughness": 0.9,
+        "roughness": 0.65,
         "metallic": 0,
         "specular": 0.04
       },
       "photo_d435_aluminum": {
         "color_srgb": [
-          0.68,
-          0.7,
-          0.7
+          0.65,
+          0.67,
+          0.65
         ],
-        "roughness": 0.58,
-        "metallic": 0.65,
+        "roughness": 0.5,
+        "metallic": 0.72,
         "specular": 0.3
       },
       "workcell_silver_metal": {
         "color_srgb": [
           0.64,
-          0.67,
-          0.69
+          0.66,
+          0.64
         ],
-        "roughness": 0.42,
-        "metallic": 0.8,
+        "roughness": 0.38,
+        "metallic": 0.78,
         "specular": 0.4
       },
       "workcell_stone": {
         "color_srgb": [
-          0.72,
-          0.72,
-          0.72
+          0.395,
+          0.417,
+          0.382
         ],
-        "roughness": 0.42,
+        "roughness": 0.66,
         "metallic": 0,
         "specular": 0.48,
-        "texture": "/path/to/Final_Arm/SO101_teach/assets/textures/grey-stone-tiles.png",
-        "texture_scale": 2,
-        "source": "Existing real-stone reference texture; visible broad sheen without mirror reflection. Updated 2026-10-12."
+        "texture": "textures/photo-matched-floor.png",
+        "texture_scale": 5,
+        "source": "Existing real-stone reference texture; visible broad sheen without mirror reflection. Updated 2026-10-12.",
+        "clearcoat": 0.08,
+        "clearcoat_roughness": 0.4
       },
       "burger_frame_plastic": {
         "color_srgb": [
-          0.18,
-          0.2,
-          0.215
+          0.115,
+          0.13,
+          0.118
         ],
-        "roughness": 0.94,
+        "roughness": 0.65,
         "metallic": 0,
         "specular": 0.035,
         "shininess": 0.027,
@@ -1545,9 +1551,9 @@
         "color_srgb": [
           0.055,
           0.06,
-          0.065
+          0.055
         ],
-        "roughness": 0.96,
+        "roughness": 0.92,
         "metallic": 0,
         "specular": 0.025,
         "shininess": 0.03,
@@ -1558,9 +1564,9 @@
         "color_srgb": [
           0.12,
           0.13,
-          0.14
+          0.12
         ],
-        "roughness": 0.7,
+        "roughness": 0.48,
         "metallic": 0,
         "specular": 0.12,
         "shininess": 0.12,
@@ -1571,19 +1577,726 @@
         "color_srgb": [
           0.12,
           0.18,
-          0.145
+          0.13
         ],
-        "roughness": 0.8,
+        "roughness": 0.6,
         "metallic": 0,
         "specular": 0.06,
         "shininess": 0.08,
         "source": "https://www.robotis.com/shop/item.php?it_id=901-0118-201",
         "basis": "User selected ARM2/3 frame color, with separate dark rubber, green PCB and metallic supports; manufacturer photographs are the component reference, not measured material values."
+      },
+      "photo_rule_2_workcell_leg_0_visual": {
+        "color_srgb": [
+          0.61,
+          0.64,
+          0.62
+        ],
+        "roughness": 0.45,
+        "metallic": 0.7
+      },
+      "photo_rule_2_workcell_leg_1_visual": {
+        "color_srgb": [
+          0.61,
+          0.64,
+          0.62
+        ],
+        "roughness": 0.45,
+        "metallic": 0.7
+      },
+      "photo_rule_2_workcell_leg_2_visual": {
+        "color_srgb": [
+          0.61,
+          0.64,
+          0.62
+        ],
+        "roughness": 0.45,
+        "metallic": 0.7
+      },
+      "photo_rule_2_workcell_leg_3_visual": {
+        "color_srgb": [
+          0.61,
+          0.64,
+          0.62
+        ],
+        "roughness": 0.45,
+        "metallic": 0.7
+      },
+      "photo_rule_0_linear_rail_-1_0_visual": {
+        "color_srgb": [
+          0.57,
+          0.6,
+          0.57
+        ],
+        "roughness": 0.48,
+        "metallic": 0.65
+      },
+      "photo_rule_0_linear_rail_-1_1_visual": {
+        "color_srgb": [
+          0.57,
+          0.6,
+          0.57
+        ],
+        "roughness": 0.48,
+        "metallic": 0.65
+      },
+      "photo_rule_0_linear_rail_1_0_visual": {
+        "color_srgb": [
+          0.57,
+          0.6,
+          0.57
+        ],
+        "roughness": 0.48,
+        "metallic": 0.65
+      },
+      "photo_rule_0_linear_rail_1_1_visual": {
+        "color_srgb": [
+          0.57,
+          0.6,
+          0.57
+        ],
+        "roughness": 0.48,
+        "metallic": 0.65
+      },
+      "photo_rule_1_linear_l12_rod_visual": {
+        "color_srgb": [
+          0.69,
+          0.7,
+          0.68
+        ],
+        "roughness": 0.25,
+        "metallic": 0.9
+      },
+      "photo_rule_3_tape_parking_left_to_assembly_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_left_to_assembly_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_parking_right_to_rest_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_right_to_rest_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_parking_right_to_rest_1": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_right_to_rest_1": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_parking_right_outline_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_right_outline_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_parking_right_outline_1": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_right_outline_1": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_parking_right_outline_2": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_4_tape_parking_right_outline_2": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_upper_approach_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_5_tape_mat_upper_approach_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_upper_approach_1": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_5_tape_mat_upper_approach_1": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_lower_approach_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_5_tape_mat_lower_approach_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_lower_approach_1": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_5_tape_mat_lower_approach_1": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_assembly_inner_approach_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_6_tape_assembly_inner_approach_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_rest_outline_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_7_tape_rest_outline_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_rest_outline_1": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_7_tape_rest_outline_1": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_rest_outline_2": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_7_tape_rest_outline_2": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_rest_outline_3": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_7_tape_rest_outline_3": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_stop_upper_tab_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_8_tape_mat_stop_upper_tab_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_mat_stop_lower_tab_0": {
+        "color_srgb": [
+          0.95,
+          0.95,
+          0.92
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_8_tape_mat_stop_lower_tab_0": {
+        "color_srgb": [
+          0.46,
+          0.48,
+          0.45
+        ]
+      },
+      "photo_rule_3_tape_park_stop_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_3_tape_rest_stop_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_3_tape_assembly_stop_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_3_tape_mat_stop_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_3_tape_mat_upper_registration_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "photo_rule_3_tape_mat_lower_registration_0": {
+        "color_srgb": [
+          0.018,
+          0.022,
+          0.025
+        ],
+        "roughness": 0.82
+      },
+      "matched_wire_red": {
+        "color_srgb": [
+          0.5,
+          0.035,
+          0.035
+        ],
+        "roughness": 0.52
+      },
+      "matched_wire_white": {
+        "color_srgb": [
+          0.79,
+          0.8,
+          0.76
+        ],
+        "roughness": 0.52
+      },
+      "matched_wire_black": {
+        "color_srgb": [
+          0.035,
+          0.038,
+          0.035
+        ],
+        "roughness": 0.52
+      },
+      "matched_joint_head": {
+        "color_srgb": [
+          0.62,
+          0.64,
+          0.62
+        ],
+        "metallic": 0.85,
+        "roughness": 0.32
+      },
+      "shared_photo_board_screw_0": {
+        "roughness": 0.38,
+        "metallic": 0.6,
+        "ior": 1.46,
+        "color_srgb": [
+          0.64,
+          0.66,
+          0.65
+        ]
+      },
+      "shared_photo_board_screw_1": {
+        "roughness": 0.38,
+        "metallic": 0.6,
+        "ior": 1.46,
+        "color_srgb": [
+          0.64,
+          0.66,
+          0.65
+        ]
+      },
+      "shared_photo_corner_clip": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.035,
+          0.035,
+          0.035
+        ]
+      },
+      "shared_photo_power_supply": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.035,
+          0.035,
+          0.035
+        ]
+      },
+      "shared_photo_blue_pack": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.06,
+          0.36,
+          0.65
+        ]
+      },
+      "shared_photo_blue_pack_2": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.06,
+          0.36,
+          0.65
+        ]
+      },
+      "shared_photo_power_label": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/power_label.png",
+        "texrepeat": [
+          9.734907528793732,
+          -20.504621081165364
+        ],
+        "world_from_texture": [
+          [
+            -0.009531061650042028,
+            -0.9958695029713343,
+            0.0,
+            0.46120907644927733
+          ],
+          [
+            -0.9999545784003507,
+            -0.09079610702903369,
+            0.0,
+            0.7074058542343676
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9949588856917898,
+            -0.16690000000000005
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            158,
+            127
+          ],
+          [
+            237,
+            117
+          ],
+          [
+            224,
+            157
+          ],
+          [
+            148,
+            165
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations",
+        "color_srgb": [
+          0.94,
+          0.94,
+          0.94
+        ]
+      },
+      "shared_photo_battery_label_1": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/battery_label_1.png",
+        "texrepeat": [
+          28.21828076736846,
+          -33.44647522524531
+        ],
+        "world_from_texture": [
+          [
+            0.5333448905956981,
+            -0.6811676690753266,
+            0.0,
+            0.6309324342633068
+          ],
+          [
+            -0.8458978825339752,
+            -0.7321274524333086,
+            -0.0,
+            0.7907496924230937
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9666747249415725,
+            -0.18389999999999995
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            223,
+            42
+          ],
+          [
+            250,
+            26
+          ],
+          [
+            260,
+            37
+          ],
+          [
+            234,
+            53
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations",
+        "color_srgb": [
+          0.94,
+          0.94,
+          0.94
+        ]
+      },
+      "shared_photo_battery_label_2": {
+        "roughness": 0.8,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "texture": "photo-assets/battery_label_2.png",
+        "texrepeat": [
+          46.365206015482414,
+          -15.162623401674104
+        ],
+        "world_from_texture": [
+          [
+            0.3129036451065918,
+            -0.9662848364992206,
+            0.0,
+            0.529252228416156
+          ],
+          [
+            -0.9497848750527711,
+            -0.2574754643683057,
+            -0.0,
+            0.7518012790199609
+          ],
+          [
+            0.0,
+            0.0,
+            -0.9983277340261548,
+            -0.18389999999999995
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "source_pixels": [
+          [
+            258,
+            61
+          ],
+          [
+            276,
+            54
+          ],
+          [
+            275,
+            99
+          ],
+          [
+            256,
+            106
+          ]
+        ],
+        "texture_scope": "fixed accessory label only; no product or policy annotations",
+        "color_srgb": [
+          0.94,
+          0.94,
+          0.94
+        ]
+      },
+      "shared_photo_clip_metal": {
+        "roughness": 0.38,
+        "metallic": 0.5,
+        "ior": 1.46,
+        "color_srgb": [
+          0.79,
+          0.8,
+          0.77
+        ]
+      },
+      "shared_photo_wall_cable_0": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.025,
+          0.028,
+          0.025
+        ]
+      },
+      "shared_photo_wall_cable_1": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.025,
+          0.028,
+          0.025
+        ]
+      },
+      "shared_photo_wall_cable_2": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.025,
+          0.028,
+          0.025
+        ]
+      },
+      "shared_photo_wall_cable_3": {
+        "roughness": 0.7,
+        "metallic": 0.0,
+        "ior": 1.46,
+        "color_srgb": [
+          0.025,
+          0.028,
+          0.025
+        ]
       }
     },
     "lighting": {
       "type": "evenly distributed rectangular diffuse ceiling panel grid",
-      "color_temperature_k": 5000,
+      "color_temperature_k": 7000,
       "ceiling_height_m": 2.4,
       "measured": false,
       "reference_photo": "1000015420.jpg",
@@ -1738,10 +2451,15 @@
       "headlight_ambient": 0.48,
       "headlight_diffuse": 0.04,
       "per_light_ambient": 0,
-      "isaac_panel_intensity": 900.0,
-      "isaac_room_bounce_intensity": 500.0,
+      "isaac_panel_intensity": 7800.0,
+      "isaac_room_bounce_intensity": 400.0,
       "geometry_basis": "Panel shape and even distribution follow the photograph and user clarification. The 4x3 grid, sizes, spacing and height are illustrative, not measured.",
-      "reason": "Strong distributed fill and a weak shadow component produce only faint shadows while retaining white surface detail."
+      "reason": "Strong distributed fill and a weak shadow component produce only faint shadows while retaining white surface detail.",
+      "ambient_color": [
+        0.83,
+        0.91,
+        1.0
+      ]
     },
     "fasteners": [
       {
@@ -1784,6 +2502,8 @@
       }
     ],
     "retained_fastener_heads": 41,
-    "scope": "Only supported mounting axes are populated. Intentional carrier openings, gripper clearance and unused mounting slots remain open."
+    "scope": "Only supported mounting axes are populated. Intentional carrier openings, gripper clearance and unused mounting slots remain open. Shared photo-match.json supplies optical updates and massless, non-colliding details.",
+    "photo_match_revision": "all-visible-materials-v5-wall-layout",
+    "printed_layer_height_mm": 0.2
   }
 }

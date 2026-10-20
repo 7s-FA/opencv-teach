@@ -18,7 +18,9 @@ MISSING={'selected':None,'candidates':[],'status':'not_found'}
 class ModelReacquisitionTests(unittest.TestCase):
     def setUp(self):
         self.frame=np.zeros((100,200,3),np.uint8)
-        self.catalog=SimpleNamespace(items={'pallet':{}},revision=0,mesh=lambda key:{'shape':'ring'})
+        # Local OpenCV tracking belongs to the rectangular carrier. Ring pallets
+        # now require a fresh AI mask on every frame for CAD silhouette fitting.
+        self.catalog=SimpleNamespace(items={'pallet':{}},revision=0,mesh=lambda key:{'shape':'rectangle'})
         self.detector=MultiDetector(self.catalog,{'jig_detection':deepcopy(SETTINGS)})
         self.provider=Mock();self.provider.predict.return_value=[{'class_id':1,'confidence':.9,'box':[20,20,50,50]}]
         self.detector.region_model=self.provider;self.detector.refresh()

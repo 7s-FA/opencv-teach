@@ -24,6 +24,10 @@ def prepare():
         na=int(m.mesh_normaladr[i]);nn=int(m.mesh_normalnum[i])
         arrays[f'normals_{i}']=m.mesh_normal[na:na+nn].copy()
         arrays[f'normal_indices_{i}']=m.mesh_facenormal[b:b+f].copy()
+        ta=int(m.mesh_texcoordadr[i]);tn=int(m.mesh_texcoordnum[i])
+        if ta>=0 and tn:
+            arrays[f'texcoords_{i}']=m.mesh_texcoord[ta:ta+tn].copy()
+            arrays[f'texcoord_indices_{i}']=m.mesh_facetexcoord[b:b+f].copy()
         meshes.append({'id':i,'name':m.mesh(i).name,'vertices':n,'triangles':f})
     bodies=[]
     robot_roots={m.body(n).id:label for n,label in [('base_link','ARM2'),('arm1_base_link','ARM1'),('arm3_preview_base_link','ARM3')]}
@@ -62,7 +66,10 @@ def prepare():
     appearance,rendering=scene_appearance()
     source_paths={HERE/'full-map-preview.xml',HERE/'full-map-articulated.xml',HERE/'appearance.json',HERE/'layout.json',
                   Path(__file__).resolve(),HERE/'isaac/export_scene.py',
-                  build.ROOT.parent/'SO101_rl/render_settings.py',build.ROOT.parent/'SO101_rl/config/rendering.json'}
+                  build.ROOT.parent/'SO101_rl/render_settings.py',build.ROOT.parent/'SO101_rl/config/rendering.json',
+                  HERE/'photo-match.json',HERE/'scene_finish.py',
+                  build.ROOT/'so101_teach/preview_materials.py',
+                  build.ROOT/'data/robot_profiles.json'}
     for node in ET.parse(HERE/'full-map-articulated.xml').iter():
         if node.get('file'):source_paths.add((HERE/node.get('file')).resolve())
     data={'schema':1,'units':'m','up_axis':'Z','geometry_source':'approved full-map-articulated.xml',
@@ -70,6 +77,15 @@ def prepare():
         'meshes':meshes,'bodies':bodies,'geoms':geoms,'joints':joints,
         'sources':{str(path):hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(source_paths)},
         'physics_scope':'Three fixed-base articulations with position drives; contact/grasp/control validation is separate.'}
+    photo=json.loads((HERE/'photo-match.json').read_text())
+    camera=np.asarray(photo['base_from_camera_mm']);camera[:3,3]/=1000
+    from so101_teach.full_map import map_from_preview
+    rotation,shift=map_from_preview(reference)
+    matrix=np.eye(4);matrix[:3,:3]=rotation.as_matrix();matrix[:3,3]=shift
+    profiles=json.loads((build.ROOT/'data/robot_profiles.json').read_text())
+    data['photo_camera']={'pose_m':(matrix@camera).tolist(),
+        'intrinsics':profiles['default']['intrinsics'],
+        'scope':'Display-only photo registration; saved control calibration is unchanged'}
     folder=HERE/'isaac';folder.mkdir(exist_ok=True)
     np.savez_compressed(folder/'geometry.npz',**arrays)
     (folder/'scene-manifest.json').write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n')

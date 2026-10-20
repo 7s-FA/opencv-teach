@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Simple ROS 2 position command node for an Actuonix L12-R on Raspberry Pi 5."""
 
-import lgpio
+from linear_pwm import HardwarePWM
 import rclpy
 import time
 import json
@@ -16,10 +16,9 @@ from rclpy.node import Node
 from std_msgs.msg import Float32, Int32
 
 
-GPIO_CHIP = 4
 PWM_GPIO = 18
 PWM_FREQUENCY_HZ = 50
-AUTO_STOP_SECONDS = 8.0
+AUTO_STOP_SECONDS = 10.0
 
 # Actuonix L12-100-R: 100 mm stroke, 1000 us = retract, 2000 us = extend.
 STROKE_MM = 100.0
@@ -75,7 +74,7 @@ def store_command(path, pulse, status="accepted"):
 class LinearController(Node):
     def __init__(self, *, control=False):
         super().__init__("linear_controller", namespace="/arm3")
-        self._chip = lgpio.gpiochip_open(GPIO_CHIP)
+        self._pwm = HardwarePWM()
         self._closed = False
         self._pwm_active = False
         self._position = -1
@@ -100,7 +99,7 @@ class LinearController(Node):
         self.create_timer(0.1, self._publish_state)
 
         self.get_logger().info(
-            f"Ready: /arm3/linear_cmd, GPIO{PWM_GPIO}, "
+            f"Ready: /arm3/linear_cmd, GPIO{PWM_GPIO} hardware PWM, "
             f"{MIN_PULSE_US}-{MAX_PULSE_US} us"
         )
 
@@ -136,9 +135,9 @@ class LinearController(Node):
             self.get_logger().error(f"Command not sent: cannot save linear history: {exc}")
             return
         try:
-            result = lgpio.tx_servo(self._chip, PWM_GPIO, pulse_us, PWM_FREQUENCY_HZ)
+            result = self._pwm.write(pulse_us)
             if result < 0:
-                raise RuntimeError(f"lgpio error {result}")
+                raise RuntimeError(f"PWM error {result}")
         except Exception as exc:
             if self._position != -1:
                 self._recorded = self._save_accepted()
@@ -170,10 +169,10 @@ class LinearController(Node):
                 from std_msgs.msg import String
                 self.detail_pub.publish(String(data=json.dumps(self.motion.status(), ensure_ascii=False)))
         if self._stop_at is not None and time.monotonic() >= self._stop_at:
-            result = lgpio.tx_servo(self._chip, PWM_GPIO, 0, PWM_FREQUENCY_HZ)
+            result = self._pwm.write(0)
             self._stop_at = None
             if result < 0:
-                self.get_logger().error(f"PWM stop failed (lgpio error {result})")
+                self.get_logger().error(f"PWM stop failed (PWM error {result})")
             else:
                 self._pwm_active = False
                 self.get_logger().info(
@@ -202,7 +201,7 @@ class LinearController(Node):
         def output(pulse):
             if pulse == 0 and not self._pwm_active:
                 return
-            result = lgpio.tx_servo(self._chip, PWM_GPIO, pulse, PWM_FREQUENCY_HZ)
+            result = self._pwm.write(pulse)
             if result < 0: raise RuntimeError(f'PWM output failed: {result}')
             self._pwm_active = bool(pulse)
             if pulse:
@@ -252,10 +251,10 @@ class LinearController(Node):
         if hasattr(self, "control_thread"): self.control_thread.join(2)
         try:
             if self._pwm_active:
-                lgpio.tx_servo(self._chip, PWM_GPIO, 0, PWM_FREQUENCY_HZ)
+                self._pwm.write(0)
                 self._pwm_active = False
         finally:
-            lgpio.gpiochip_close(self._chip)
+            self._pwm.close()
 
 
 def main(args=None):

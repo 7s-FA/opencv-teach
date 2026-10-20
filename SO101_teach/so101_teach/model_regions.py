@@ -35,6 +35,29 @@ def runtime(model):
                                  for name in ('yolo_worker.py','yolo_inference.py','inference_protocol.py')}
     return config,model_path,manifest
 
+def verify_profile_models(profile, *, inspect_parts=False):
+    """Validate saved selections and actual weights without starting inference."""
+    settings=[checked_settings(profile)]
+    if inspect_parts:
+        from .ai_inspection import inspection_settings
+        settings.append(inspection_settings(profile))
+    checked=set()
+    for item in settings:
+        if item['method']!='model_roi':continue
+        key=(item['model'],item['model_identity'])
+        if key in checked:continue
+        _,path,manifest=runtime(item['model'])
+        if identity(manifest)!=item['model_identity']:
+            raise ValueError('선택한 지그 모델의 가중치 또는 실행 코드가 다릅니다. 검출 설정을 다시 적용하세요.')
+        for name,expected in manifest['files'].items():
+            if Path(name).name!=name:raise ValueError('잘못된 모델 파일 이름: '+name)
+            digest=hashlib.sha256()
+            with (path/name).open('rb') as stream:
+                for chunk in iter(lambda:stream.read(1024*1024),b''):digest.update(chunk)
+            if digest.hexdigest()!=expected:raise ValueError('모델 파일 해시가 다릅니다: '+name)
+        checked.add(key)
+
+
 class DeadlineStream:
     def __init__(self,stream,deadline):self.stream=stream;self.deadline=deadline
     def read(self,size):
