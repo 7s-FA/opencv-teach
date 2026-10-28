@@ -63,7 +63,7 @@ class TaughtExecutionTests(unittest.TestCase):
             while not condition() and time.monotonic()<end:self.root.update();time.sleep(.02)
             self.assertTrue(condition(),a.message.get())
         with patch('so101_teach.devices.new_bus',side_effect=AssertionError('No hardware')),patch.object(a,'start_camera',side_effect=AssertionError('No camera')):
-            a.toggle_connection()
+            a.connect_devices(control_requested=True)
             try:
                 pump(lambda:a.latest is not None);a.motion_request('arm');pump(lambda:a.session.state=='HOLD')
                 a.execute_taught_episode();pump(lambda:not a.session.program_active.is_set() and a.session.state=='HOLD')

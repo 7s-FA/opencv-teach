@@ -6,6 +6,9 @@ class IdleRelease:
     def __init__(self):self.lock=threading.RLock();self.cancel()
     def cancel(self):
         with self.lock:self.session=None;self.since=None;self.baseline=None
+    def defer(self):
+        """Keep an existing release intent, requiring a fresh idle interval."""
+        with self.lock:self.since=None;self.baseline=None
     def schedule(self,session,seconds=3.):
         with self.lock:
             self.cancel()

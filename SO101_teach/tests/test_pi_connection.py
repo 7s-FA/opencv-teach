@@ -53,7 +53,7 @@ class PiSettingsTests(unittest.TestCase):
             p.probe();self.assertTrue(p.probe_btn.instate(['disabled']))
             end=time.monotonic()+2
             while p.job and time.monotonic()<end:p.poll();time.sleep(.01)
-        self.assertIsNone(p.job);self.assertIn('SSH 접속 확인됨',p.status.get());self.assertIn('별도 확인',p.status.get());self.assertIsNone(a.session)
+        self.assertIsNone(p.job);self.assertIn('SSH 접속 확인됨',p.status.get());self.assertIn('전체 연결',p.status.get());self.assertIsNone(a.session)
     def test_calibration_review_allows_save_without_verification_input(self):
         s=self.app.settings;p=s.calibration_panel
         self.assertNotIn('cal_verify',s.vars);self.assertFalse(hasattr(p,'verify'))

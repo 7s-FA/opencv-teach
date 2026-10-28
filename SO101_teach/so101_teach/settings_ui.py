@@ -65,7 +65,7 @@ class SettingsPanel:
             outer.columnconfigure(0,weight=3);outer.columnconfigure(2,weight=3,minsize=350)
             pane=ModelView(outer,'tcp' if key=='tcp' else 'jig');pane.grid(row=0,column=2,sticky='nsew',padx=(8,0));self.model_views[key]=pane
         return body
-    def label(self,p,row,text):ttk.Label(p,text=text,wraplength=420 if p.inspection_form else 850).grid(row=row,column=0,columnspan=3,sticky='w',pady=7)
+    def label(self,p,row,text):ttk.Label(p,text=text,style='Muted.TLabel',wraplength=420 if p.inspection_form else 850).grid(row=row,column=0,columnspan=3,sticky='w',pady=7)
     def field(self,p,row,label,key,value,choices=None):
         ttk.Label(p,text=label,wraplength=135 if p.inspection_form else 250).grid(row=row,column=0,sticky='w',padx=(0,12),pady=5)
         var=tk.StringVar(value=str(value));self.vars[key]=var
@@ -172,7 +172,7 @@ class SettingsPanel:
         if hasattr(self,'camera_source_choice'):
             self.set_camera_choices(getattr(self.app.remote,'health',{}).get('devices',{}).get('camera_details',[]) if self.app.remote_mode else [])
     def build_robot(self):
-        p=self.form('robot');self.label(p,0,'로봇 설정 · 팔별 보정 파일을 구분합니다. 연결만으로 토크가 켜지지 않습니다.')
+        p=self.form('robot');self.label(p,0,'팔별 연결·보정 설정 · 연결만으로 토크가 켜지지 않습니다.')
         self.profile_choice=self.field(p,1,'저장된 로봇','profile_choice','',[])
         self.profile_choice.bind('<<ComboboxSelected>>',lambda event:self.app.guard(self.select_profile))
         ports=sorted(str(x) for x in Path('/dev/serial/by-id').glob('*'));a=self.app
@@ -189,10 +189,8 @@ class SettingsPanel:
             self.grip_load_percent.set(text)
         self.vars['grip_contact_load'].trace_add('write',show_load_percent);show_load_percent()
         ttk.Label(p,textvariable=self.grip_load_percent,style='Small.TLabel').grid(row=8,column=2,sticky='w',padx=(8,0),pady=5)
-        self.label(p,9,'표시 부하 기준: 1023을 100%로 환산합니다. 실제 모터 최대 힘·토크의 비율을 뜻하지는 않습니다.\n'
-            '예: 50: 4.9% · 80: 7.8% · 100: 9.8% · 200: 19.6%. 작은 값일수록 작은 부하에서 접촉으로 판단합니다.\n'
-            '부하가 약 6%이면 설정 50(약 5%)에서는 접촉 후보가 되고, 설정 80(약 8%)에서는 기준 미달입니다.\n'
-            '닫는 중 부하와 위치 정체가 0.12초·3회 이상 확인되면 더 닫지 않고 유지합니다. 최대 100%는 입력 상한이며 권장값이 아닙니다.')
+        self.label(p,9,'낮을수록 작은 부하에서 접촉을 판단합니다. 1023=100%는 원시값 환산이며 실제 힘의 비율은 아닙니다.\n'
+            '닫는 중 부하·위치 정체가 0.12초·3회 확인되면 유지합니다. 최대값은 권장값이 아닙니다.')
         robot_actions=ttk.Frame(p,style='Card.TFrame');robot_actions.grid(row=10,column=0,columnspan=3,sticky='w',pady=6)
         self.app.button(robot_actions,'로봇 설정 저장·적용',self.save_profile,True).pack(side='left',padx=(0,8))
         self.app.button(robot_actions,'3점 각도 보정 열기',lambda:self.tabs.select(self.pages['calibration'])).pack(side='left')
@@ -202,11 +200,10 @@ class SettingsPanel:
         self.button(p,12,'보조 설정 적용',a.save_leader_assist)
         a.leader_assist_status=tk.StringVar(value='대기 · 따라가기에서 약하게')
         ttk.Label(p,textvariable=a.leader_assist_status,style='Small.TLabel').grid(row=13,column=1,sticky='w',pady=4)
-        self.label(p,14,'따라가기 중 어깨·팔꿈치의 무게를 일부 받쳐 줍니다. 처음에는 약하게 사용하세요.\n'
-            '움직일 때는 보조를 줄이고, 느려지면 천천히 회복합니다.\n'
-            '동작 정지·토크 해제·Esc로 보조도 해제합니다. 손을 놓아도 자세를 유지하는 기능은 아닙니다.')
+        self.label(p,14,'어깨·팔꿈치 무게 보조 · 처음에는 약하게 사용하세요. 손을 놓으면 자세가 유지되지 않습니다.\n'
+            '동작 정지·토크 해제·Esc로 보조도 해제합니다.')
         self.field(p,15,'최초 합류 속도','follow_start_speed','빠르게',list(FOLLOW_START_SPEEDS))
-        self.label(p,16,'리더 따라가기 시작 시에만 적용합니다. 합류 후 조정 속도는 그대로 유지합니다.\n아주 느리게 100 · 느리게 200 · 보통 300 · 빠르게 400틱/초 · 로봇 설정 저장·적용으로 저장합니다.')
+        self.label(p,16,'따라가기 시작 시 적용 · 100 / 200 / 300 / 400틱/초 · 로봇 설정 저장 시 반영')
         self.refresh_profiles();self.fill_robot()
     def start_calibration(self,use_file=False):
         if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
@@ -249,7 +246,7 @@ class SettingsPanel:
         jig_actions=ttk.Frame(p,style='Card.TFrame');jig_actions.grid(row=7,column=0,columnspan=3,sticky='ew',pady=6)
         self.app.button(jig_actions,'지그 저장',self.save_jig,True).pack(side='left',padx=(0,8))
         self.app.button(jig_actions,'삭제',self.delete_jig).pack(side='right')
-        self.jig_detection_note=ttk.Label(p,text='운반용 지그는 외곽·교차점과 고정 원형 구멍으로 위치·방향을 확인합니다. 완제품 팔레트는 윤곽·돌출 모서리를 확인합니다. 감지 범위는 상단 카메라에서 편집합니다.',wraplength=380)
+        self.jig_detection_note=ttk.Label(p,text='감지 범위는 상단 카메라 → 지그 검출에서 편집합니다.',style='Muted.TLabel',wraplength=380)
         self.jig_detection_note.grid(row=8,column=0,columnspan=3,sticky='w',pady=7)
         self.refresh_jigs();self.fill_jig()
     def refresh_jigs(self):
@@ -458,7 +455,7 @@ class SettingsPanel:
         value=camera_reference_for_profile(self.app.profile,read_json(ROOT/'assets/reference/camera.json')['extrinsics'])
         self.apply_camera_geometry('extrinsics',value);self.camera_info.set('선택 팔 좌표의 좌측 마운트 CAD 추정값 적용 · 실측 보정 아님')
     def build_tcp(self):
-        p=self.form('tcp');d=self.app.profile['tcp'];self.label(p,0,'오른쪽 모델의 A(파랑)에서 B(주황)까지의 차이입니다. B는 선택한 TCP입니다. 끝단은 현재 사용하던 STL 끝점, 중앙은 기존 모델 원점(XYZ 0, 0, 0)입니다.')
+        p=self.form('tcp');d=self.app.profile['tcp'];self.label(p,0,'모델 원점 A(파랑) → TCP B(주황)의 위치 차이')
         selector=self.field(p,1,'TCP 기준','tcp_mode',tcp_label(d),[*TCP_PRESETS,'직접 설정'])
         self.tcp_fields=[]
         for i,axis in enumerate('XYZ'):self.tcp_fields.append(self.field(p,2+i,'집게 로컬 '+axis+' mm','tcp_xyz_'+axis,f"{d['xyz_mm'][i]:.6f}"))
@@ -466,8 +463,8 @@ class SettingsPanel:
         selector.bind('<<ComboboxSelected>>',lambda e:self.update_tcp_inputs());self.update_tcp_inputs()
         self.button(p,8,'끝단 값 불러오기',self.load_model_tcp,0)
         self.button(p,8,'TCP 적용·저장',self.save_tcp,1).configure(style='Primary.TButton')
-        self.label(p,9,'미리보기는 입력한 값을 보여줍니다. 적용·저장을 눌러야 실행 계산에 반영됩니다. 모터 영점은 바꾸지 않습니다.')
-        self.label(p,10,'A는 집게 끝 근처에 정의된 모델 원점입니다. 모델 내부 이름: gripper_frame_link. 베이스 원점이나 손목 모터 중심이 아닙니다.')
+        self.label(p,9,'적용·저장 후 실행 계산에 반영 · 모터 영점 유지')
+        self.label(p,10,'A는 집게의 모델 원점이며 베이스 원점과 다릅니다.')
     def selected_tcp(self):
         choice=self.value('tcp_mode')
         if choice in TCP_PRESETS:return model_tcp(point=TCP_PRESETS[choice])

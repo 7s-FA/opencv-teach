@@ -26,13 +26,19 @@ class Runtime:
         from .devices import CameraSession
         self.data_dir=Path(data_dir);self.motion_factory=motion_factory or MotionSession;self.camera_factory=camera_factory or CameraSession
         self.camera_encode_lock=threading.Lock();self.camera_encoded=OrderedDict()
+        from .plan_worker import PlanWorker
+        self.planner=PlanWorker()
         from .idle_release import IdleRelease
-        self.idle_release=IdleRelease();self.handoff_ready=False
+        self.idle_release=IdleRelease();self.handoff_ready=False;self.stop_generation=0
+        from .prepared_standby import Standby,InspectorCache
+        self.standby=Standby();self.inspector_cache=InspectorCache();self.compute=None
         self.lock=threading.RLock();self.control_lock=threading.RLock();self.session=None;self.leader=None;self.camera=None;self.worker=None
         self.profile=None;self.cal=None;self.ref=None;self.kin=None;self.catalog=None;self.detector=None
         self.lease=None;self.last_heartbeat=0.;self.detached=True;self.events=deque(maxlen=256);self.event_id=0
         self.requests=OrderedDict();self.generation=0;self.bundle_hash=None;self.stop=threading.Event();self.version=code_version()
         self.runtime_version=manifest(ROOT)
+        from .preview_watch import PreviewWatch
+        self.preview_watch=PreviewWatch(self)
         self.instance=uuid.uuid4().hex;self.plans=OrderedDict();self.watch=threading.Thread(target=self.watchdog,daemon=True);self.watch.start()
     def event(self,role,kind,value):
         self.event_id+=1;self.events.append({'id':self.event_id,'role':role,'kind':kind,'value':value})
@@ -42,7 +48,19 @@ class Runtime:
         if self.detached or time.monotonic()-self.last_heartbeat>2:raise ValueError('PC 연결이 끊겨 동작을 정지했습니다. Pi 연결을 다시 열어 주세요.')
     def watchdog(self):
         while not self.stop.wait(.03):
+            try:self.poll_standby()
+            except Exception as exc:
+                self.standby.cancel();self.idle_release.cancel();self.handoff_ready=False
+                if self.session and self.session.running:self.session.hold_requested.set()
+                try:
+                    if self.camera:self.camera.close()
+                    self.inspector_cache.clear()
+                except Exception:pass
+                self.event('remote','error','준비 대기 확인 실패 · 자세 유지: '+str(exc))
             self.poll_idle_release()
+            if self.lock.acquire(blocking=False):
+                try:self.preview_watch.expire()
+                finally:self.lock.release()
             # Drain event queues without waiting behind an IK/file request.
             for role,worker in (('follower',self.session),('leader',self.leader),('calibration',self.worker)):
                 if not worker:continue
@@ -54,6 +72,7 @@ class Runtime:
                     self.event(role,kind,value)
             if self.lease and not self.detached and time.monotonic()-self.last_heartbeat>2:
                 self.detached=True
+                self.cancel_standby()
                 if self.session and self.session.running:
                     self.session.hold_requested.set()
                 if self.worker and self.worker.running:self.worker.close()
@@ -82,25 +101,43 @@ class Runtime:
         if lease==self.lease and not self.detached and alive is True:
             self.last_heartbeat=time.monotonic()
             if self.session:self.session.heartbeat=self.last_heartbeat
-    def detach(self,lease):
+    def detach(self,lease,*,retain_prepared=False):
+        if type(retain_prepared) is not bool:raise ValueError('준비 유지 인계 옵션 오류')
         if lease!=self.lease:raise ValueError('종료할 Pi 연결이 다릅니다.')
         self.detached=True
         if self.busy():self.session.hold_requested.set()
-        if self.camera:self.camera.close()
+        if not retain_prepared or self.standby.until is None:self.cancel_standby()
         if self.worker and self.worker.running:self.worker.close()
         return {}
-    def acquire(self):
+    def acquire(self,*,preserve_idle_release=False):
+        if type(preserve_idle_release) is not bool:raise ValueError('자동 토크 해제 인계 옵션 오류')
+        try:
+            self.preview_watch.begin_acquire()
+            return self._acquire(preserve_idle_release=preserve_idle_release)
+        finally:self.preview_watch.acquiring=False
+
+    def _acquire(self,*,preserve_idle_release=False):
         with (ROOT/'data/runtime-update.lock').open('a') as update,self.lock,self.control_lock:
             try:fcntl.flock(update,fcntl.LOCK_SH|fcntl.LOCK_NB)
             except BlockingIOError:raise ValueError('Pi 실행부 갱신 중입니다. 완료 후 다시 연결하세요.') from None
             if self.lease and not self.detached and time.monotonic()-self.last_heartbeat<2 and not self.handoff_ready:raise ValueError('다른 PC 창이 Pi를 사용 중입니다.')
             if self.busy():raise ValueError('Pi에서 동작 정리 중입니다. 잠시 후 다시 연결하세요.')
             if self.worker and self.worker.running:raise ValueError('Pi 보정 정리 중입니다.')
-            self.idle_release.cancel();self.handoff_ready=False
+            # Linear-only jobs reserve both controllers but do not use their
+            # motors. Retain a previous successful job's release intent; the
+            # workcell lock postpones its timer until this job has finished.
+            if preserve_idle_release:self.idle_release.defer()
+            else:self.idle_release.cancel()
+            self.handoff_ready=False
+            if not (preserve_idle_release and self.standby.until is not None):self.standby.begin()
             self.lease=uuid.uuid4().hex;self.last_heartbeat=time.monotonic();self.detached=False;self.requests.clear()
             if self.leader:self.leader.latest=None;self.leader.last_sequence=-1
             return {'lease':self.lease,'instance':self.instance,'event_id':self.event_id}
-    def configure(self,bundle):
+    def configure(self,bundle,*,compute=None):
+        remote_compute=None
+        if compute is not None:
+            from .pc_compute import ComputeClient
+            remote_compute=ComputeClient(compute);remote_compute.call('hello')
         from .model_regions import checked_settings
         checked_settings(bundle['profile'])
         from .ai_inspection import inspection_settings
@@ -114,7 +151,12 @@ class Runtime:
         attempts_limit=checked_attempts(bundle.get('acquisition_attempts',3))
         checked_seconds(bundle['hold_seconds'],HOLD_RANGE,'실행 기준 유지 시간')
         digest=bundle_digest(bundle)
+        if remote_compute is not None:
+            import hashlib,json
+            digest=hashlib.sha256((digest+json.dumps(compute,sort_keys=True)).encode()).hexdigest()
         if digest==self.bundle_hash:return {'generation':self.generation}
+        self.inspector_cache.clear()
+        self.compute=remote_compute
         with tempfile.TemporaryDirectory() as temp:
             materialize(temp,bundle);profile,cal,ref=load_profile(temp)
             from .configuration import JigCatalog,model_tcp
@@ -147,7 +189,7 @@ class Runtime:
             self.kin=Kinematics(self.ref,tcp=self.profile['tcp']);self.catalog=JigCatalog(self.data_dir,profile=self.profile,persist_migration=True)
             from .vision_service import MultiDetector
             previous_detector=self.detector
-            self.detector=MultiDetector(self.catalog,self.profile,active=bundle['active_jig']);self.detector.seconds=float(bundle['hold_seconds']);self.detector.acquisition_seconds=acquisition_seconds;self.detector.attempts_limit=attempts_limit;self.detector.refresh()
+            self.detector=MultiDetector(self.catalog,self.profile,active=bundle['active_jig'],**({'compute':remote_compute} if remote_compute is not None else {}));self.detector.seconds=float(bundle['hold_seconds']);self.detector.acquisition_seconds=acquisition_seconds;self.detector.attempts_limit=attempts_limit;self.detector.refresh()
             for latch in self.detector.latches.values():latch.configure(self.detector.seconds,acquisition_seconds=acquisition_seconds,attempts_limit=attempts_limit)
             self.store=EpisodeStore(self.data_dir/'episodes',self.cal,profile.get('robot_id','arm2'))
             self.generation+=1;self.bundle_hash=digest;self.plans.clear()
@@ -159,12 +201,20 @@ class Runtime:
     def snapshot(self,s):
         if not s:return None
         return {'role':s.role,'ticks':s.ticks,'telemetry':s.telemetry,'monotonic':s.monotonic,'wall_time':s.wall_time,'calibration_sha256':s.calibration_sha256,'calibration_matches':s.calibration_matches,'port':s.port}
-    def state(self,lease,alive=False,after=0):
-        self.heartbeat(lease,alive)
+    def follower_state(self):
         s=self.session
-        return {'server_now':time.monotonic(),'instance':self.instance,'generation':self.generation,'detached':self.detached,
+        return None if not s else {'stop_generation':self.stop_generation,'running':s.running,'error':s.error,'state':s.state,'latest':self.snapshot(s.latest),**s.request_progress(),'program_active':s.program_active.is_set(),'command_pending':s.command_pending.is_set(),'release_pending':s.release_requested.is_set(),'gripper_hold_tick':s.grip_contact.hold_tick,
+                    'arrival_evidence':{'controller_session_id':getattr(s,'diagnostic_session_id',None),
+                        'last_arrival_seq':getattr(s,'arrival_seq',0),'retention_limit':16,
+                        'arrivals':deepcopy(getattr(s,'report',{}).get('step_arrivals',[])[-16:])},
+                    **({'activation_hold':{'goals':s.enabled.copy(),'since':s.activation_paused_at}} if s.state=='ACTIVATION_PAUSED' else {})}
+    def state(self,lease,alive=False,after=0,*,heartbeat_only=False):
+        self.heartbeat(lease,alive)
+        header={'server_now':time.monotonic(),'instance':self.instance,'generation':self.generation,'stop_generation':self.stop_generation,'detached':self.detached}
+        if heartbeat_only:return header
+        return {**header,
                 'events':[deepcopy(e) for e in list(self.events) if e['id']>after],
-                'follower':None if not s else {'running':s.running,'error':s.error,'state':s.state,'latest':self.snapshot(s.latest),'index':s.index,'request_id':s.active_request_id,'completed_request_id':s.completed_request_id,'program_active':s.program_active.is_set(),'command_pending':s.command_pending.is_set(),'release_pending':s.release_requested.is_set(),'gripper_hold_tick':s.grip_contact.hold_tick},
+                'follower':self.follower_state(),
                 'leader':None if not self.leader else {'running':self.leader.running,'error':self.leader.error,'latest':self.snapshot(self.leader.latest)},
                 'calibration':None if not self.worker else {'running':self.worker.running,'state':self.worker.state}}
     def camera_frame(self,after_at=None,after_preview_at=None):
@@ -195,6 +245,9 @@ class Runtime:
         if preview and now-preview[2]<1:
             frame,_,at=preview;result['preview_at']=at
             if at!=after_preview_at and (changing or not obs or at!=obs[2]):result['preview_image']=encode(frame,at)
+        # Encoding can overlap a new preview capture. Timestamp the completed
+        # response so that its legitimate frame never appears to be from the future.
+        result['server_now']=time.monotonic()
         return result
     def start_camera(self,*,prepare=False,share_inference=False,**mode):
         if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
@@ -204,15 +257,173 @@ class Runtime:
             if self.camera.running:raise ValueError('Pi 카메라 해제 중입니다. 잠시 후 다시 연결하세요.')
         if not self.camera or not self.camera.running:
             self.camera=self.camera_factory(**self.profile['camera'],processor=processor);self.camera.max_fps=10
+            if self.robot_id in ('arm2','arm3'):
+                from .shared_capture import SharedCapture
+                self.camera.capture_factory=lambda source,width,height:SharedCapture(self,source,width,height)
+            # Reconnect starts a new acquisition, after device/model startup.
+            # clear() preserves poses frozen for an executing episode.
+            if not prepare:self.detector.clear(start_on_frame=True)
             if hasattr(self.camera,'set_shared_inference'):self.camera.set_shared_inference(share_inference)
             if mode:self.camera.set_mode(**mode)
             self.camera.start()
         else:
-            if getattr(self.camera,'processor',processor)!=processor:self.camera.set_processor(processor)
+            if getattr(self.camera,'processor',processor)!=processor:
+                if not prepare:self.detector.clear(start_on_frame=True)
+                self.camera.set_processor(processor)
             if mode:self.camera.set_mode(**mode)
             if hasattr(self.camera,'set_shared_inference'):self.camera.set_shared_inference(share_inference)
         return {}
+    def finish_decision_evidence(self):
+        evidence=getattr(self.detector,'evidence',None)
+        if evidence is None:return {}
+        self.detector.evidence=None
+        result=evidence.close(timeout=.2)
+        return {'decision_evidence':{key:result[key] for key in
+            ('session','manifest','stream','complete','closing','pending_bytes','dropped_frames','evicted_frames','errors')}}
+
+    def shared_root(self):
+        return (self.data_dir.parent if self.data_dir.name=='arm3-runtime' else self.data_dir).parent
+
+    def cancel_standby(self):
+        had=self.standby.cancel();self.handoff_ready=False
+        if self.camera:self.camera.close()
+        self.inspector_cache.clear()
+        return had
+
+    def standby_motor_error(self):
+        session=self.session;sample=session.latest if session else None
+        if (not session or not session.running or session.error or session.state!='HOLD' or self.busy()
+                or not sample or not sample.fresh() or not sample.calibration_matches
+                or len(sample.telemetry)!=6 or any(h.get('torque')!=1 or h.get('moving')!=0 for h in sample.telemetry.values())):
+            return '양팔 정지·토크 ON 확인 필요'
+        return None
+
+    def standby_resource_error(self):
+        motor_error=self.standby_motor_error()
+        if motor_error:return motor_error
+        camera=self.camera
+        if not camera or not camera.running or camera.error or not camera.preview_frame or not 0<=time.monotonic()-camera.preview_frame[1]<1:
+            return '최신 카메라 영상 확인 필요'
+        observation=getattr(camera,'observation',None)
+        if (not observation or not 0<=time.monotonic()-observation[2]<3
+                or not (observation[1] or {}).get('vision_ready') or observation[1].get('error')):
+            return '지그 모델 준비 응답 확인 필요'
+        prepared=self.inspector_cache.prepared
+        if prepared is None or prepared.closed.is_set() or not prepared.ready.is_set() or prepared.error:
+            return '검사 모델 준비 확인 필요'
+        process=getattr(getattr(getattr(prepared,'inspector',None),'provider',None),'process',None)
+        if process is not None and process.poll() is not None:return '검사 모델 프로세스 종료'
+        return None
+
+    def poll_standby(self):
+        from .prepared_standby import health,configuration_stamp
+        if self.standby.until is None:return
+        if not self.lock.acquire(blocking=False):return
+        try:
+            now=time.monotonic()
+            if now-getattr(self,'last_standby_check',float('-inf'))<.2:return
+            self.last_standby_check=now
+            changed=configuration_stamp(self)!=getattr(self,'standby_files',None)
+            resource_error=self.standby_resource_error()
+            if not changed and not resource_error and not self.standby.expired(now,health(self.shared_root())):return
+            # A new accepted job owns this lock before claiming either runtime.
+            with (self.shared_root()/'data/episode-cli.lock').open('a') as work:
+                try:fcntl.flock(work,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                except BlockingIOError:return
+                disconnected=not self.standby.valid_client(health(self.shared_root()),time.monotonic())
+                expired_by_time=now>=self.standby.until
+                unsafe=self.standby_motor_error()
+                self.cancel_standby()
+                # Both arms share the same deadline. The physical camera may
+                # already be closing at expiry; only fresh idle motor evidence
+                # controls the normal torque-release path after that deadline.
+                if disconnected or changed or unsafe or (resource_error and not expired_by_time):
+                    self.idle_release.cancel()
+                    if self.session and self.session.running:self.session.hold_requested.set()
+                    self.event('remote','error',('설정 변경' if changed else resource_error or '관제 연결 종료')+' · 준비 대기 취소·자세 유지')
+                else:
+                    try:self.idle_release.schedule(self.session)
+                    except ValueError:
+                        if self.session and self.session.running:self.session.hold_requested.set()
+                    self.event('remote','notice','3분 준비 대기 종료 · 정지 확인 후 토크 해제')
+        finally:self.lock.release()
+
+    def standby_control(self,body):
+        if body.get('operation')=='status':return self.standby.status(time.monotonic())
+        if body.get('operation')!='cancel':raise ValueError('준비 대기 제어 요청 오류')
+        with self.control_lock:
+            # This endpoint can invalidate idle preparation, never resume motion.
+            if self.standby.until is None:return {'cancelled':False}
+            self.stop_generation+=1
+            had=self.cancel_standby()
+            if self.session and self.session.running:self.session.hold_requested.set()
+            sample=self.session.latest if self.session else None
+            stopped=bool(self.session and self.session.running and not self.session.error and self.session.state=='HOLD'
+                         and not self.busy() and sample and sample.fresh() and sample.calibration_matches
+                         and len(sample.telemetry)==6 and all(h.get('moving')==0 for h in sample.telemetry.values()))
+            return {'cancelled':had,'stopped':stopped}
+
+    def inspection_call(self,args):
+        from .pc_compute import decode,encode
+        from .shared_inference import FrameInference
+        from .ai_inspection import inspection_settings
+        profile=args['profile'];method=args['method'];payload=decode(args['payload'])
+        if method not in ('inspect','predict_all','prepare_geometry'):raise ValueError('검사 준비 요청 오류')
+        if profile!=self.profile:raise ValueError('준비된 검사 설정과 현재 실행 설정이 다릅니다.')
+        prepared=self.inspector_cache.prepared
+        if prepared is None or prepared.closed.is_set() or prepared.profile!=profile:raise ValueError('현재 작업의 검사 모델 준비가 취소되었습니다.')
+        stop_generation=self.stop_generation;lease=self.lease
+        if method=='inspect':
+            wire=payload.pop('inference',None);frame=payload['frame']
+            inference=FrameInference.from_wire(frame,inspection_settings(profile),wire)
+            if wire is not None and inference is None:raise ValueError('검사 프레임 근거 불일치')
+            detections=[]
+            rows=prepared.borrow().inspect(**payload,inference=inference,
+                evidence=lambda frame,masks,rows:detections.extend(masks))
+            result={'rows':rows,'detections':detections}
+        else:result=getattr(prepared.borrow(),method)(**payload)
+        if stop_generation!=self.stop_generation or lease!=self.lease or self.detached:
+            raise ValueError('정지·연결 변경 이후 검사 응답 폐기')
+        return encode(result)
+
     def call(self,method,args):
+        if method=='standby_begin':
+            from .prepared_standby import health
+            client=args.get('client_id');state=health(self.shared_root())
+            generation=self.standby.begin(client,state)
+            if not self.standby.valid_client(state,time.monotonic()):
+                self.standby.cancel();raise ValueError('준비 대기 관제 연결 확인 실패')
+            self.idle_release.cancel()
+            return {'generation':generation}
+        if method=='standby_refresh':
+            if self.standby.until is None:return {'ready':False}
+            from .prepared_standby import health
+            state=health(self.shared_root())
+            if not self.standby.valid_client(state,time.monotonic()):raise ValueError('관제 연결 종료 · 준비 대기 갱신 취소')
+            generation=self.standby.begin(self.standby.client,state)
+            return self.call('standby_complete',{'generation':generation,**({'completed_at':args['completed_at']} if 'completed_at' in args else {})})
+        if method=='standby_complete':
+            from .prepared_standby import health
+            if not self.standby.valid_client(health(self.shared_root()),time.monotonic()):raise ValueError('관제 연결 종료 · 준비 대기 취소')
+            error=self.standby_resource_error()
+            if error:raise ValueError('준비 대기 전 '+error)
+            from .prepared_standby import configuration_stamp
+            now=time.monotonic();completed_at=args.get('completed_at',now)
+            if type(completed_at) not in (int,float) or not math.isfinite(completed_at) or not 0<=now-completed_at<=5:
+                raise ValueError('양팔 준비 완료 시각이 오래되었거나 잘못되었습니다.')
+            stamp=configuration_stamp(self)
+            with self.control_lock:
+                self.standby.complete(args['generation'],completed_at);self.handoff_ready=True
+                self.standby_files=stamp
+            return {'seconds':180}
+        if method=='standby_cancel':self.cancel_standby();return {}
+        if method=='inspection_prepare':
+            prepared=self.inspector_cache.prepare(args['profile'],self.compute)
+            return {'ready':prepared.ready.is_set(),'error':str(prepared.error) if prepared.error else None}
+        if method=='inspection_status':
+            prepared=self.inspector_cache.prepared
+            return {'ready':bool(prepared and prepared.ready.is_set()),'error':str(prepared.error) if prepared and prepared.error else None}
+        if method=='inspection_call':return self.inspection_call(args)
         if method=='handoff_shutdown':
             job=args.get('job_id')
             if not isinstance(job,str) or len(job)!=32 or any(c not in '0123456789abcdef' for c in job):raise ValueError('종료 작업 ID 오류')
@@ -228,11 +439,17 @@ class Runtime:
         # A borrowed GUI execution lease must be validated on every read too.
         # This RPC never refreshes the UI heartbeat or acquires ownership.
         if method=='claim_episode':
-            self.idle_release.cancel();self.handoff_ready=False;return {}
+            if self.standby.until is not None or self.inspector_cache.prepared is not None:self.cancel_standby()
+            else:self.standby.cancel()
+            preserve=args.get('preserve_idle_release',False)
+            if type(preserve) is not bool:raise ValueError('자동 토크 해제 인계 옵션 오류')
+            if preserve:self.idle_release.defer()
+            else:self.idle_release.cancel()
+            self.handoff_ready=False;return {}
         if method=='schedule_idle_release':
             self.idle_release.schedule(self.session);self.handoff_ready=True;return {'seconds':3}
-        if method=='execution_state':return self.state(self.lease)['follower']
-        if method=='configure':return self.configure(args['bundle'])
+        if method=='execution_state':return self.follower_state()
+        if method=='configure':return self.configure(args['bundle'],**({'compute':args['compute']} if args.get('compute') is not None else {}))
         if not self.profile:raise ValueError('Pi 설정을 먼저 적용하세요.')
         if method=='camera_prepare':return self.start_camera(prepare=True,processing_enabled=True,preview_fps=10)
         if method=='camera_start':return self.start_camera(**args)
@@ -241,14 +458,27 @@ class Runtime:
             if self.camera:
                 self.camera.set_mode(**options)
                 if shared is not None:self.camera.set_shared_inference(shared)
+            if not options.get('processing_enabled',True) and getattr(self.detector,'evidence',None):
+                return self.finish_decision_evidence()
             return {}
         if method=='camera_stop':
             if self.camera:self.camera.close()
+            if getattr(self.detector,'evidence',None):
+                return self.finish_decision_evidence()
             return {}
         if method=='detect_clear':
+            context=args.get('decision_evidence')
+            if context is not None:
+                from .decision_evidence import start
+                if self.detector.evidence:self.detector.evidence.close()
+                self.detector.evidence,self.evidence_error=start(self.data_dir,
+                    {**context,'profile':self.profile,'jigs':self.catalog.items,'runtime':self.runtime_version,
+                     'hold_seconds':self.detector.seconds,'acquisition_seconds':self.detector.acquisition_seconds,'acquisition_attempts':self.detector.attempts_limit},stream='jig')
             if not self.detector.clear(args.get('jig')):raise ValueError('실행 중 지그 기준 고정')
             if self.camera:self.camera.observation=None
-            self.generation+=1;return {'generation':self.generation}
+            self.generation+=1
+            return {'generation':self.generation,**({'decision_evidence':self.detector.evidence.reference()} if getattr(self.detector,'evidence',None) else {}),
+                    **({'evidence_error':self.evidence_error} if getattr(self,'evidence_error',None) else {})}
         if method=='detect_freeze':
             self.detector.freeze(bool(args['enabled']));return {}
         if method=='connect':
@@ -266,17 +496,7 @@ class Runtime:
                 if s:s.close()
             return {}
         if method=='speed':self.session.set_speed(args['rate']);return {}
-        if method=='command':
-            self.idle_release.cancel();self.handoff_ready=False
-            if self.detached:raise ValueError('원격 연결을 다시 열어 주세요.')
-            if args.get('action') not in ('hold','release'):
-                from .arm_workspace import require_calibrated
-                require_calibrated(self.profile)
-            if args.get('action') in ('move','play','follow'):
-                from .assembly_evidence import invalidate_manual_motion
-                shared=self.data_dir.parent if self.data_dir.name=='arm3-runtime' else self.data_dir
-                invalidate_manual_motion(shared)
-            return {'request_id':self.session.request(args['action'],args.get('targets'))}
+        if method=='command':return self.command(args)
         if method=='save_episode':
             return {'id':self.store.load(self.store.save(args['episode']))['id']}
         if method=='delete_episode':
@@ -356,32 +576,30 @@ class Runtime:
                 {s['jig_id']:self.catalog.mesh(s['jig_id'])['sha256'] for s in steps if s.get('jig_id')},
                 self.cal.sha256,self.bundle_hash)
 
-    @staticmethod
-    def calculate_plan(inputs):
-        from .geometry import corrected_plan
-        kin,steps,current,meshes,calibration,bundle=inputs
-        return {'plan':corrected_plan(kin,steps,current,lambda key:meshes[key]),
-                'calibration_sha256':calibration,'bundle_hash':bundle}
+    def calculate_plan(self,inputs):
+        return self.planner.calculate(inputs)
 
     def snapshot_plan_rpc(self,body):
         with self.lock:
             self.require_lease(body.get('lease'))
             key=body.get('id');args=body.get('args',{})
             if not isinstance(key,str) or len(key)>80:raise ValueError('명령 ID 오류')
-            signature=hashlib.sha256(json.dumps(['plan_snapshot',args,self.generation,self.bundle_hash],sort_keys=True).encode()).hexdigest()
+            signature=hashlib.sha256(json.dumps(['plan_snapshot',args,self.generation,self.bundle_hash,self.stop_generation],sort_keys=True).encode()).hexdigest()
             if key in self.requests:
                 old,value=self.requests[key]
                 if old!=signature:raise ValueError('같은 ID의 다른 명령은 허용하지 않습니다.')
                 return value
             try:inputs=self.plan_inputs(args)
             except Exception as exc:return {'ok':False,'error':str(exc)}
-            generation=self.generation
+            generation=self.generation;stop_generation=self.stop_generation
         try:
             result=self.calculate_plan(inputs)
             with self.lock:
                 self.require_lease(body.get('lease'))
                 if generation!=self.generation or inputs[-1]!=self.bundle_hash:
                     raise ValueError('경로 계산 중 설정이 변경되었습니다. 새 기준으로 다시 준비하세요.')
+                if stop_generation!=self.stop_generation:
+                    raise ValueError('경로 계산 중 정지 상태가 변경되었습니다. 새 기준으로 다시 준비하세요.')
                 if key in self.requests and self.requests[key][0]!=signature:
                     raise ValueError('같은 ID의 다른 명령은 허용하지 않습니다.')
                 value={'ok':True,'value':result};self.requests[key]=(signature,value)
@@ -389,13 +607,44 @@ class Runtime:
                 return value
         except Exception as exc:return {'ok':False,'error':str(exc)}
 
+    def command(self,args,expected_stop=None):
+        urgent=args.get('action') in ('hold','release')
+        with self.control_lock:
+            if expected_stop is None:expected_stop=self.stop_generation
+        if not urgent:
+            from .arm_workspace import require_calibrated
+            require_calibrated(self.profile)
+        if args.get('action') in ('move','play','follow'):
+            from .assembly_evidence import invalidate_manual_motion
+            shared=self.data_dir.parent if self.data_dir.name=='arm3-runtime' else self.data_dir
+            invalidate_manual_motion(shared)
+        # Disk/geometry work stays outside this short gate so HOLD never waits
+        # for it. A command prepared before any intervening stop cannot enqueue.
+        with self.control_lock:
+            if self.detached:raise ValueError('원격 연결을 다시 열어 주세요.')
+            if urgent:
+                self.stop_generation+=1
+                self.standby.cancel()
+            elif (expected_stop!=self.stop_generation or
+                  ('stop_generation' in args and (type(args['stop_generation']) is not int or args['stop_generation']!=self.stop_generation))):
+                raise ValueError('정지 이후 이전 이동 요청 취소 · 현재 상태를 확인하고 다시 실행하세요.')
+            self.idle_release.cancel();self.handoff_ready=False
+            return {'request_id':self.session.request(args['action'],args.get('targets'))}
+
     def rpc(self,body):
         if body.get('method')=='plan_snapshot':return self.snapshot_plan_rpc(body)
+        if body.get('method')=='execution_state':
+            # Lease validation must not wait behind planning/configuration; the
+            # emergency path reads this immediately before issuing HOLD.
+            with self.control_lock:
+                self.require_lease(body.get('lease'))
+                return {'ok':True,'value':self.follower_state()}
         if body.get('method')=='command' and body.get('args',{}).get('action') in ('hold','release'):
             with self.control_lock:
                 self.require_lease(body.get('lease'))
                 try:return {'ok':True,'value':self.call('command',body['args'])}
                 except Exception as exc:return {'ok':False,'error':str(exc)}
+        with self.control_lock:expected_stop=self.stop_generation
         with self.lock:
             self.require_lease(body.get('lease'))
             key=body.get('id');method=body.get('method');args=body.get('args',{})
@@ -405,15 +654,17 @@ class Runtime:
                 old,value=self.requests[key]
                 if old!=signature:raise ValueError('같은 ID의 다른 명령은 허용하지 않습니다.')
                 return value
-            try:value={'ok':True,'value':self.call(method,args)}
+            try:value={'ok':True,'value':self.command(args,expected_stop) if method=='command' else self.call(method,args)}
             except Exception as exc:value={'ok':False,'error':str(exc)}
             self.requests[key]=(signature,value)
             while len(self.requests)>256:self.requests.popitem(last=False)
             return value
     def close(self):
         self.stop.set()
+        self.cancel_standby()
         for s in (self.worker,self.camera,self.leader,self.session):
             if s:s.close()
+        self.planner.close()
         for s in (self.camera,self.leader,self.session):
             if s:s.join(3)
 
@@ -433,11 +684,18 @@ class Handler(BaseHTTPRequestHandler):
             body=json.loads(self.rfile.read(size),parse_constant=lambda _:(_ for _ in ()).throw(ValueError('잘못된 숫자')))
             runtime=self.server.runtime
             if self.path=='/health':value={'ok':True,'value':{'protocol':PROTOCOL,'version':runtime.version,'runtime':runtime.runtime_version,'instance':runtime.instance,'devices':inventory()}}
-            elif self.path=='/acquire':value={'ok':True,'value':runtime.acquire()}
-            elif self.path=='/detach':value={'ok':True,'value':runtime.detach(body.get('lease'))}
-            elif self.path=='/state':value={'ok':True,'value':runtime.state(body.get('lease'),body.get('alive'),int(body.get('after',0)))}
+            elif self.path=='/acquire':value={'ok':True,'value':runtime.acquire(preserve_idle_release=body.get('preserve_idle_release',False))}
+            elif self.path=='/detach':value={'ok':True,'value':runtime.detach(body.get('lease'),retain_prepared=body.get('retain_prepared',False))}
+            elif self.path=='/state':
+                if type(body.get('heartbeat_only',False)) is not bool:raise ValueError('생존 확인 옵션 오류')
+                value={'ok':True,'value':runtime.state(body.get('lease'),body.get('alive'),int(body.get('after',0)),heartbeat_only=body.get('heartbeat_only',False))}
             elif self.path=='/leader':value={'ok':True,'value':runtime.leader_sample(body)}
             elif self.path=='/camera':value={'ok':True,'value':runtime.camera_frame(body.get('after_at'),body.get('after_preview_at'))}
+            elif self.path=='/capture':
+                from .shared_capture import capture_frame
+                value={'ok':True,'value':capture_frame(runtime,body)}
+            elif self.path=='/standby':value={'ok':True,'value':runtime.standby_control(body)}
+            elif self.path=='/preview':value={'ok':True,'value':runtime.preview_watch.call(body)}
             elif self.path=='/rpc':value=runtime.rpc(body)
             else:raise ValueError('잘못된 요청')
         except Exception as exc:value={'ok':False,'error':str(exc)}

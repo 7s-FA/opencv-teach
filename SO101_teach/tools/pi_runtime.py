@@ -18,6 +18,7 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('operation',choices=('local','check','sync'))
     parser.add_argument('--apply',action='store_true',help='Apply only after verifying all Pi devices/clients are idle')
+    parser.add_argument('--defer-action-restart',action='store_true',help='Update idle device runtimes; explicitly leave the existing Action service loaded until an administrator restarts it')
     parser.add_argument('--output',type=Path,help='Save a credential-free JSON report')
     args=parser.parse_args(argv)
     validate_boundaries(ROOT);local=manifest(ROOT)
@@ -38,15 +39,18 @@ def main(argv=None):
     if args.operation=='sync' and args.apply:
         names=report['changed_files']
         files={name:base64.b64encode((ROOT/name).read_bytes()).decode() for name in names if name in local['files']}
-        report=remote({'operation':'apply','observed_sha256':report['disk']['sha256'],'files':files})
+        report=remote({'operation':'apply','observed_sha256':report['disk']['sha256'],'files':files,'defer_action_restart':args.defer_action_restart})
     report['local']=local
     ready=not report['changed_files'] and not report['restart_required'] and all(s['running'] for s in report['servers'].values())
+    report['runtime_compatible']=ready
+    ready=ready and not report.get('action_service_restart_pending',False)
     report['compatible']=ready
     if args.output:
         args.output.parent.mkdir(parents=True,exist_ok=True);args.output.write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
     print('PC–Pi 실행 버전: '+('일치' if ready else '갱신 필요'))
     for name in report['changed_files']:print('  변경: '+name)
     for arm in report['restart_required']:print('  실행부 시작·재시작 필요: '+arm)
+    if report.get('action_service_restart_pending'):print('  유휴 장치 실행부는 일치 · 액션 서비스 관리자 재시작 대기: sudo systemctl restart workcell-actions.service')
     if report.get('applied'):print('백업: '+report['backup'])
     if args.operation=='sync' and not args.apply:print('변경하지 않았습니다. 적용하려면 sync --apply를 사용하세요.')
     return 0 if ready else 2

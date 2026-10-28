@@ -73,6 +73,7 @@ class ReceiverTests(unittest.TestCase):
             def __iter__(self):end.wait(5);return iter(())
         class Link(fixture.FakeLink):
             def __init__(self,arm):super().__init__();self.arm=arm;self.stop=threading.Event();links.append(self)
+            def observe_motion_state(self,state):return state
             def heartbeat(self):self.stop.wait(2)
             def close(self):
                 events.append(self.arm+':detach');self.stop.set()

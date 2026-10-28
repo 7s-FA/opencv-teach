@@ -99,7 +99,7 @@ def fit_pose(mask,mesh,profile):
     rms=float(np.sqrt(np.mean(fit.fun**2)))
     return {'pose':{'center_xy_mm':fit.x[:2].tolist(),'yaw_deg':float(np.rad2deg(fit.x[2])%90),'symmetry_deg':90},'seed':{'center_xy_mm':center.tolist(),'yaw_deg':float(np.rad2deg(angle)),'symmetry_deg':90},'rms_px':rms,'rms_limit_px':MAX_CAD_ERROR_PX,'observed_fraction':float(observed.mean()),**(boundary_support(visible_samples,projected(fit.x)) if partial else {'observed_sides':4,'side_cross':1.,'pose_constrained':True}),'partial_silhouette':partial,'converged':bool(fit.success),'at_bound':bool(np.any(abs(fit.x-initial)>np.array([19.9,19.9,.149])))}
 
-def detect(frame,mesh,roi,profile,mask,*,prepared=None):
+def detect(frame,mesh,roi,profile,mask,*,prepared=None,recover_shape=False):
     from .vision import quad_inside_mask,rectangle_quality,projected_jig_axes,project_plane
     def rejected(reason,**extra):return {'selected':None,'candidates':[],'status':'mask_rim_not_found','cad_pallet_reason':reason,'error':'팔레트 CAD 정합 미통과: '+reason,'verified_for_motion':False,**extra}
     if (mesh.get('shape')!='ring' or mesh.get('unit','mm')!='mm' or not np.allclose(mesh.get('size_mm',[0,0,0])[:2],[70,70],atol=.1)):return rejected('unsupported_cad')
@@ -113,6 +113,9 @@ def detect(frame,mesh,roi,profile,mask,*,prepared=None):
                         error=f'팔레트가 지그 검출 ROI 범위를 벗어남 · 범위 안 {coverage*100:.1f}% (필요 98%)')
     fitted=fit_pose(observed,mesh,geometry)
     if fitted is None:return rejected('mask_geometry')
+    if recover_shape and fitted['rms_px']>MAX_CAD_ERROR_PX:
+        from .pallet_shape_roi import recover_fit
+        fitted=recover_fit(observed,mesh,geometry,fitted)
     metadata={'cad_fit':{k:v for k,v in fitted.items() if k not in ('pose','seed')},'mask_seed':fitted['seed'],'pallet_pose_method':'cad_silhouette_fit'}
     if not fitted['pose_constrained']:return rejected('insufficient_visible_sides',**metadata)
     if not fitted['converged'] or fitted['at_bound'] or not np.isfinite(fitted['rms_px']) or fitted['rms_px']>MAX_CAD_ERROR_PX:return rejected('cad_fit',**metadata)

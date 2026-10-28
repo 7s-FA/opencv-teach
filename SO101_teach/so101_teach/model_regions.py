@@ -4,7 +4,7 @@ from pathlib import Path
 import cv2
 import numpy as np
 from .domain import ROOT
-from .inference_protocol import send_packet,receive_packet,decode_mask,MAX_IMAGE_BYTES
+from .inference_protocol import send_packet,receive_packet,decode_mask,MAX_IMAGE_BYTES,DEFAULT_CONFIDENCE,confidence_value
 
 METHODS={'기존 OpenCV':'opencv','AI 마스크 + 지그별 정합':'model_roi'}
 MODELS={'YOLO26n · FP16':'n','YOLO26s · FP16':'s'}
@@ -12,9 +12,10 @@ MODELS={'YOLO26n · FP16':'n','YOLO26s · FP16':'s'}
 def checked_settings(profile):
     value=profile.get('jig_detection',{})
     if not isinstance(value,dict) or set(value)-{'method','model','confidence','model_identity'}:raise ValueError('지그 검출 설정 형식 오류')
-    result={'method':'opencv','model':'n','confidence':.5,'model_identity':None,**value}
+    result={'method':'opencv','model':'n','confidence':DEFAULT_CONFIDENCE,'model_identity':None,**value}
     if result['method'] not in METHODS.values() or result['model'] not in MODELS.values():raise ValueError('지원하지 않는 지그 검출 방식·모델입니다.')
-    if type(result['confidence']) not in (int,float) or result['confidence'] not in (.5,.6,.7,.8,.9):raise ValueError('모델 신뢰도는 0.5~0.9에서 선택하세요.')
+    if type(result['confidence']) not in (int,float):raise ValueError('최소 신뢰도는 50~90 사이의 정수(%)로 입력하세요.')
+    result['confidence']=confidence_value(result['confidence'])
     identity=result['model_identity']
     if result['method']=='model_roi' and (not isinstance(identity,str) or len(identity)!=64 or any(c not in '0123456789abcdef' for c in identity)):
         raise ValueError('지그 영역 모델의 검증 정보가 없습니다. 검출 설정을 다시 적용하세요.')

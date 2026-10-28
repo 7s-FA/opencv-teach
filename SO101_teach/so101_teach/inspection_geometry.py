@@ -94,6 +94,24 @@ def all_anchors(frame,results,adopted,catalog,profile,reference,placement,endpoi
     return anchors,messages
 
 
+def inspection_context(frame,results,adopted,catalog,profile,reference,placement):
+    """Locate all known fixtures, independent of which checks are still pending.
+
+    Neighbours provide object association only. An unknown/moving linear stage
+    supplies no geometry, and a missing jig is never guessed or reacquired here.
+    """
+    from .episode_inspection import STATIONS
+    located={}
+    for station,label in STATIONS.items():
+        if station=='linear':
+            state=(placement or {}).get('linear_stage',{}).get('startup_state',{})
+            if not state.get('known') or state.get('moving') or state.get('pending'):
+                located[station]=([], '리니어 정지·명령 위치 확인 필요');continue
+        located[station]=anchors_for(frame,results,adopted,catalog,profile,reference,label,'전체',placement)
+    surrounding=[a for anchors,_ in located.values() for a in anchors if a['inspection_allowed']]
+    return located,surrounding
+
+
 def draw_linear_centers(image,profile,reference,placement,endpoint='명령 위치'):
     from .inspection_overlay import draw_label
     anchors,_=anchors_for(image,{},{},{},profile,reference,'리니어 조립','전체',placement,endpoint)

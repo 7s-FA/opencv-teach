@@ -63,8 +63,14 @@ class GuiExecutionTests(unittest.TestCase):
 
     def test_full_gui_job_records_pi_events_and_releases_ui_ownership(self):
         app=self.ready();process=SimpleNamespace(stdin=io.StringIO(),stdout=io.StringIO('B_LINEAR_STARTED:target_mm=100\nB_STAGE_DONE:LOWER\nB_DONE\n'),wait=Mock(return_value=0),poll=Mock(return_value=0))
+        def output():
+            yield 'B_LINEAR_STARTED:target_mm=100\n';yield 'B_STAGE_DONE:LOWER\n';yield 'B_DONE\n'
+            request=json.loads(process.stdin.getvalue())
+            yield 'GUI_RESULT:'+json.dumps({'execution_id':request['execution_id'],'exit_code':0})+'\n'
+        process.stdout=output()
         with patch.object(gui.subprocess,'Popen',return_value=process):
             job=gui.PiExecution(app)
+            job.prepare_thread.join(2);job.poll()
             if job.thread:job.thread.join(2)
             job.poll()
         self.assertFalse(job.busy);self.assertIsNone(self.a.remote.execution_owner);self.assertIsNone(self.b.remote.execution_owner)
@@ -145,6 +151,9 @@ class PiRunnerAdapterTests(unittest.TestCase):
                     self.assertEqual(cli.main(['load_b','--no-ros']),0)
                 self.assertIn(('ensure',{'target_mm':1.5}),linear.calls)
                 self.assertEqual(links['arm3'].lease,'gui-arm3')
+                self.assertIn(('claim_episode',{'preserve_idle_release':True}),links['arm2'].device.calls)
+                self.assertIn(('claim_episode',{}),links['arm3'].device.calls)
+                self.assertFalse(any(m.startswith('standby_') for link in links.values() for m,_ in link.device.calls))
                 records=list((cli.ROOT/'data/episode-cli-runs').glob('*.json'));self.assertEqual(len(records),1)
                 events=json.loads(records[0].read_text())['events'];states=[e['status'] for e in events]
                 self.assertIn('B_STAGE_DONE:PLACE',states);self.assertEqual(states[-1],'B_DONE')

@@ -36,6 +36,17 @@ class RemoteTests(unittest.TestCase):
         self.runtime.kin.reference=self.runtime.ref;self.runtime.kin.alignment_error=None
     def tearDown(self):self.runtime.close();self.tmp.cleanup()
     def rpc(self,method,args=None,key=None):return self.runtime.rpc({'lease':self.lease,'id':key or uuid.uuid4().hex,'method':method,'args':args or {}})
+    def test_state_carries_bounded_arrival_evidence_without_device_commands(self):
+        self.rpc('connect',{'speed':400});session=self.runtime.session
+        session.report['step_arrivals']=[{'arrival_seq':i,'target':{'gripper':2000}} for i in range(1,31)]
+        session.arrival_seq=30
+        before=session.commands.qsize()
+        result=self.runtime.state(self.lease)['follower']['arrival_evidence']
+        self.assertEqual(result['controller_session_id'],session.diagnostic_session_id)
+        self.assertEqual([r['arrival_seq'] for r in result['arrivals']],list(range(15,31)))
+        result['arrivals'][0]['target']['gripper']=0
+        self.assertEqual(session.report['step_arrivals'][14]['target']['gripper'],2000)
+        self.assertEqual(session.commands.qsize(),before)
     def test_bundle_preserves_calibration_angles_and_stl_without_local_paths(self):
         self.assertEqual(self.runtime.cal.sha256,self.app.reference.calibration.sha256)
         self.assertEqual(self.runtime.catalog.mesh('pallet')['sha256'],self.app.catalog.mesh('pallet')['sha256'])

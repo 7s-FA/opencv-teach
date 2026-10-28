@@ -88,9 +88,26 @@ class YoloUITests(unittest.TestCase):
             p.model_choice.set('Pi · YOLO26s');p.model_changed()
             self.assertTrue(p.active);self.assertIsNone(p.result)
             self.assertIn('YOLO26s',p.model_title.get());self.assertEqual(p.worker.start.call_count,2)
-            p.confidence.set('0.9');p.threshold_changed()
+            p.confidence.set('90');p.threshold_changed()
             self.assertTrue(p.active);self.assertEqual(p.worker.start.call_count,3)
-        self.assertEqual(tuple(p.threshold['values']),('0.5','0.6','0.7','0.8','0.9'))
+        self.assertEqual(float(p.threshold['from']),50);self.assertEqual(float(p.threshold['to']),90)
+        self.assertFalse(p.threshold.instate(['readonly']))
+
+    def test_percent_keyboard_edit_invalidates_result_and_only_commits_valid_range(self):
+        a,p=self.open_panel();self.camera(a);p.worker=Mock()
+        self.assertEqual(p.confidence.get(),'50');self.assertEqual(p.applied_confidence,.5)
+        with patch.object(p,'runtime_options',return_value=('fixture',{})):
+            p.start();p.result={'frame_at':time.monotonic()}
+            p.threshold.delete(0,'end');p.threshold.insert(0,'91')
+            self.assertFalse(p.active);self.assertIsNone(p.result)
+            self.assertFalse(p.threshold_changed());self.assertEqual(p.applied_confidence,.5)
+            self.assertTrue(p.threshold.instate(['invalid']));self.assertIn('50~90',p.status.get())
+            p.threshold.delete(0,'end');p.threshold.insert(0,'75.5');self.assertEqual(p.confidence.get(),'')
+            p.threshold.insert(0,'abc');self.assertEqual(p.confidence.get(),'')
+            p.threshold.insert(0,'76');p.threshold_changed()
+            self.assertTrue(p.active);self.assertEqual(p.applied_confidence,.76)
+            starts=p.worker.start.call_count;p.threshold_changed()
+            self.assertEqual(p.worker.start.call_count,starts)
 
     def test_fps_measures_completed_results_and_resets_on_stop(self):
         a,p=self.open_panel();frame,at=self.camera(a)

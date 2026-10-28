@@ -1,4 +1,5 @@
 import json,tempfile,unittest,fcntl
+from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch,Mock
@@ -16,6 +17,12 @@ class RecoveryTests(unittest.TestCase):
         recovery.save_ready(self.root,'arm3','A',self.episode,{},'arm3-ready',self.safe)
         self.links=[]
         class Link(FakeLink):
+            preparation_error=None
+            def rpc(this,method,args=None):
+                result=super().rpc(method,args)
+                if method=='standby_begin':return {'generation':1}
+                if method=='inspection_status':return {'ready':not this.preparation_error,'error':this.preparation_error}
+                return result
             def open(this):this.lease='lease'
             def close(this):this.lease=None
         class Linear(FakeLinear):
@@ -24,9 +31,44 @@ class RecoveryTests(unittest.TestCase):
         self.Link=Link;self.linear=Linear()
     def run_reset(self,**changes):
         def link(arm):
-            value=self.Link();self.links.append(value);return value
-        with patch.object(cli,'ROOT',self.root),patch.object(cli,'Link',side_effect=link),patch.object(recovery,'load_profile',side_effect=lambda data:({**self.profile,'robot_id':'arm3' if data.name=='arm3-runtime' else 'arm2'},self.cal,self.ref)),patch.object(recovery.signal,'signal'),patch.object(linear_client,'LinearClient',return_value=self.linear):
-            return recovery.run(cli,changes.get('arm','arm2'))
+            value=self.Link();value.arm=arm;self.links.append(value);return value
+        def load(arm,letter,**kwargs):
+            return self.root/'data',{'steps':[{'safe_boundary':'start','ticks':self.safe}]},{'profile':{'robot_id':arm},'jigs':{'roi':'current'}},100,180
+        with patch.object(cli,'load_job',side_effect=load),patch.object(cli,'ROOT',self.root),patch.object(cli,'Link',side_effect=link),patch.object(recovery,'load_profile',side_effect=lambda data:({**self.profile,'robot_id':'arm3' if data.name=='arm3-runtime' else 'arm2'},self.cal,self.ref)),patch.object(recovery.signal,'signal'),patch.object(linear_client,'LinearClient',return_value=self.linear):
+            return recovery.run(cli,changes.get('arm','arm2'),startup=changes.get('startup',False),supervision_client_id=changes.get('client_id'))
+    def test_home_prepares_current_models_and_retains_both_arms(self):
+        self.assertEqual(self.run_reset(startup=True,client_id='console'),0)
+        self.assertEqual(self.linear.target,1.5)
+        for link in self.links:
+            methods=[method for method,_ in link.calls]
+            self.assertLess(methods.index('standby_begin'),methods.index('command'))
+            self.assertLess(methods.index('camera_prepare'),methods.index('standby_complete'))
+            self.assertNotIn('schedule_idle_release',methods)
+            self.assertTrue(link.keep_prepared)
+            configs=[args['bundle'] for method,args in link.calls if method=='configure']
+            self.assertEqual(configs[-1]['jigs'],{'roi':'current'})
+            self.assertTrue(all(args['client_id']=='console' for method,args in link.calls if method=='standby_begin'))
+        latest=json.loads((self.root/'data/episode-cli-arm2.json').read_text())
+        events=json.loads((self.root/'data/episode-cli-runs'/(latest['run_id']+'.json')).read_text())['events']
+        statuses=[e['status'] for e in events]
+        self.assertLess(statuses.index('HOME_STANDBY_READY:seconds=180'),statuses.index('HOME_RESET_DONE'))
+
+    def test_home_rejects_missing_current_preparation_before_opening_devices(self):
+        with patch('standby_preparation.WorkcellPreparation.records',side_effect=ValueError('current recipe unavailable')):
+            self.assertEqual(self.run_reset(startup=True),1)
+        self.assertFalse(self.links)
+        self.assertFalse(self.linear.calls)
+
+    def test_home_model_failure_cancels_both_standbys_and_never_reports_done(self):
+        self.Link.preparation_error='model unavailable'
+        self.assertEqual(self.run_reset(startup=True),1)
+        for link in self.links:
+            self.assertFalse(link.keep_prepared)
+            self.assertTrue(any(method=='standby_cancel' for method,_ in link.calls))
+            self.assertFalse(any(method=='standby_complete' for method,_ in link.calls))
+        latest=json.loads((self.root/'data/episode-cli-arm2.json').read_text())
+        self.assertIn('FAILED:RESET:',latest['status'])
+
     def test_explicit_reset_after_exit_returns_saved_safe_pose_then_releases(self):
         self.assertEqual(self.run_reset(),0)
         commands=[a for m,a in self.links[0].calls if m=='command']
@@ -35,13 +77,38 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(commands[1]['targets'],[self.safe]);self.assertFalse(any(m=='camera_start' for m,_ in self.links[0].calls))
         self.assertEqual(json.loads(recovery.path(self.root,'arm2').read_text())['state'],'completed')
         self.assertEqual(json.loads((self.root/'data/episode-cli-arm2.json').read_text())['status'],'B_RESET_DONE')
-    def test_both_arms_return_sequentially_and_only_then_report_done(self):
+    def test_recovery_keeps_current_vision_settings_and_saved_motion_basis(self):
+        current={'method':'model_roi','model':'n','confidence':.5,'model_identity':'b'*64}
+        self.profile.update(jig_detection=deepcopy(current),part_inspection=deepcopy(current))
+        saved={'profile':{'tcp':{'saved':'geometry'},'jig_detection':{**current,'model_identity':'a'*64},
+                          'part_inspection':{**current,'model_identity':'a'*64}},
+               'trim_ticks':dict(self.safe),'jigs':{'saved':'jigs'},'files':{'saved':'calibration'}}
+        for arm in ('arm2','arm3'):
+            recovery.save_ready(self.root,arm,'A',self.episode,saved,'old-model-run',self.safe)
+        self.assertEqual(self.run_reset(),0)
+        for link in self.links:
+            bundle=next(args['bundle'] for method,args in link.calls if method=='configure')
+            expected=deepcopy(saved);expected['profile'].update(jig_detection=current,part_inspection=current)
+            self.assertEqual(bundle,expected)
+            move=next(args for method,args in link.calls if method=='command' and args['action']=='move')
+            self.assertEqual(move['targets'],[self.safe])
+        self.assertEqual(saved['profile']['jig_detection']['model_identity'],'a'*64)
+    def test_recovery_does_not_restore_removed_vision_overrides(self):
+        self.profile.pop('jig_detection',None);self.profile.pop('part_inspection',None)
+        saved={'profile':{'jig_detection':{'model_identity':'old'},'part_inspection':{'model_identity':'old'}}}
+        for arm in ('arm2','arm3'):
+            recovery.save_ready(self.root,arm,'A',self.episode,saved,'old-model-run',self.safe)
+        self.assertEqual(self.run_reset(),0)
+        for link in self.links:
+            profile=next(args['bundle']['profile'] for method,args in link.calls if method=='configure')
+            self.assertNotIn('jig_detection',profile);self.assertNotIn('part_inspection',profile)
+    def test_both_arms_start_return_before_either_completion(self):
         order=[];original=self.Link.rpc
         def request(link,method,args=None):
             if method=='command':order.append((self.links.index(link),args['action']))
             return original(link,method,args)
         with patch.object(self.Link,'rpc',request):self.assertEqual(self.run_reset(),0)
-        self.assertEqual(order,[(0,'arm'),(0,'move'),(1,'arm'),(1,'move')])
+        self.assertEqual(order,[(0,'arm'),(1,'arm'),(0,'move'),(1,'move')])
         latest=json.loads((self.root/'data/episode-cli-arm2.json').read_text())
         events=json.loads((self.root/'data/episode-cli-runs'/(latest['run_id']+'.json')).read_text())['events']
         details=[e['status'] for e in events]
@@ -61,7 +128,7 @@ class RecoveryTests(unittest.TestCase):
         with patch.object(self.Link,'rpc',request):self.assertEqual(self.run_reset(),1)
         latest=json.loads((self.root/'data/episode-cli-arm2.json').read_text())
         self.assertIn('FAILED:RESET:arm3 blocked',latest['status'])
-        self.assertEqual(recovery.reset_context(self.root,'arm2')['state'],'completed')
+        self.assertEqual(recovery.reset_context(self.root,'arm2')['state'],'pending')
         self.assertEqual(recovery.reset_context(self.root,'arm3')['state'],'ready')
 
     def test_arm3_endpoint_also_resets_both_arms(self):
@@ -70,17 +137,15 @@ class RecoveryTests(unittest.TestCase):
             self.assertEqual([a['action'] for m,a in link.calls if m=='command'],['arm','move'])
         self.assertEqual(json.loads((self.root/'data/episode-cli-arm3.json').read_text())['status'],'A_RESET_DONE')
 
-    def test_active_arm3_returns_first_and_control_events_remain_observable(self):
+    def test_active_arm3_keeps_session_and_both_moves_start_before_completion(self):
         arm2=self.Link();arm3=self.Link();events=[];control=cli.Control()
         runner=cli.Runner(arm3,events.append,control,120,peer=arm2,linear=self.linear)
         records={arm:recovery.reset_context(self.root,arm) for arm in ('arm2','arm3')}
-        original=runner.reset_to_safe
-        def active_reset():
-            runner.emit('PAUSED');runner.emit('RESUMED');original()
-        with patch.object(cli,'ROOT',self.root),patch.object(runner,'reset_to_safe',side_effect=active_reset),patch.object(runner,'prepare_follower',side_effect=AssertionError('must preserve active session')):
+        with patch.object(cli,'ROOT',self.root),patch.object(runner,'prepare_follower',side_effect=AssertionError('must preserve active session')):
             recovery.reset_workcell(cli,records,{'arm2':arm2,'arm3':arm3},self.linear,control,events.append,active=runner,first='arm3')
-        self.assertLess(events.index('ARM_RESET_DONE:arm3'),events.index('ARM_RESET_STARTED:arm2'))
-        self.assertIn('PAUSED',events);self.assertIn('RESUMED',events);self.assertEqual(events[-1],'RESET_DONE')
+        self.assertLess(events.index('ARM_RESET_STARTED:arm3'),events.index('ARM_RESET_STARTED:arm2'))
+        self.assertLess(events.index('ARM_RESET_STARTED:arm2'),events.index('ARM_RESET_DONE:arm3'))
+        self.assertEqual(events[-1],'RESET_DONE')
         self.assertEqual([a['action'] for m,a in arm2.calls if m=='command'],['arm','move'])
 
     def test_changed_calibration_rejected_before_devices_open(self):

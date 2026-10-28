@@ -1,6 +1,7 @@
 """Episode-owned visual inspection checkpoints; no actuator or camera access."""
 from copy import deepcopy
 import math
+from .episode_faults import InspectionRetry
 
 STATIONS={'carrier':'운반용 지그','linear':'리니어 조립','finished':'완성품 팔레트'}
 TARGETS={'carrier':{'housing':'하단 부품','insert':'중단 부품','cap':'상단 부품'},
@@ -138,19 +139,49 @@ def inspection_reason(row):
     return ' · '.join(parts)
 
 
+def matches_expected(row,check,product):
+    """Match one observation only; temporal acceptance still belongs to the decision."""
+    product=check_product(check,product);expected=check['expected']
+    if expected=='empty':
+        return row.get('state')=='empty' and row.get('quality') not in ('waiting','outside') and row.get('seating') in (None,'missing')
+    if expected=='occupied':
+        return row.get('state') in ('present','housing_seated','insert_added','cap_added','cap_visible','wrong_part') and row.get('quality') not in ('waiting','outside') and row.get('seating') not in ('outside','missing')
+    if product=='B' and check['station']=='linear' and expected=='cap_added' and row.get('state')=='cap_visible':
+        return row.get('quality')=='normal' and row.get('product')=='B' and row.get('product_certain') is True and row.get('seating')=='inside'
+    return row.get('quality')=='normal' and row.get('state')==expected and row.get('product')==product and row.get('product_certain') is True
+
+
 class InspectionDecision:
     """Require fresh decisive observations within a bounded interval after arrival."""
-    def __init__(self,check,product,started,*,frame_gap=1,ignore_missing=False,evidence=None):
+    def __init__(self,check,product,started,*,frame_gap=1,ignore_missing=False,evidence=None,max_frame_age=3,deadline=None):
         self.check=deepcopy(check);self.product=check_product(check,product);self.started=started;self.last_at=None;self.signature=None;self.count=0;self.reason='새 영상 판정 대기'
         self.frame_gap=frame_gap
         self.ignore_missing=ignore_missing;self.evidence=evidence;self.basis=None
         self.last_counted_at=None;self.last_good=False
+        self.max_frame_age=max_frame_age
+        self.deadline=started+check['timeout_seconds'] if deadline is None else deadline
     def observe(self,result,now):
+        passed=False;error=None;previous_at=self.last_at
+        try:
+            passed=self._observe(result,now)
+            return passed
+        except Exception as exc:
+            error=str(exc);raise
+        finally:
+            if result and result.get('decision_evidence'):
+                from .decision_evidence import note_observation
+                note_observation(result,{'kind':'inspection_decision','step_id':result['decision_evidence'].get('step_id'),
+                    'checked_at':now,'started':self.started,'count':self.count,'last_counted_at':self.last_counted_at,
+                    'passed':passed,'error':error,'reason':self.reason,'last_good':self.last_good,
+                    'previous_at':previous_at,'captured_at':result.get('at'),'deadline':self.deadline,
+                    'max_frame_age':self.max_frame_age,'frame_gap':self.frame_gap,
+                    'check':self.check,'product':self.product})
+    def _observe(self,result,now):
         if result and result.get('error'):raise ValueError('안착 검사 오류: '+result['error'])
-        if now-self.started>=self.check['timeout_seconds']:raise ValueError('안착 판정 시간 초과: '+self.reason)
+        if now>=self.deadline:raise InspectionRetry('안착 판정 시간 초과: '+self.reason)
         if result:
             at=result.get('at');row=result.get('row')
-            if type(at) in (int,float) and self.started<=at<=now and now-at<3 and (self.last_at is None or at>self.last_at):
+            if type(at) in (int,float) and self.started<=at<=now and (self.max_frame_age is None or now-at<self.max_frame_age) and (self.last_at is None or at>self.last_at):
                 if self.last_counted_at is not None and at-self.last_counted_at>self.frame_gap:self.count=0;self.signature=None
                 self.last_at=at
                 if row:
@@ -171,19 +202,15 @@ class InspectionDecision:
                     signature=(row.get('quality'),row.get('state'),row.get('product'),row.get('product_certain'))
                     self.count=self.count+1 if signature==self.signature else 1;self.signature=signature
                     ambiguous_top=(self.product=='B' and self.check['station']=='linear' and self.check['expected']=='cap_added' and row.get('state')=='cap_visible')
-                    good=(row.get('quality')=='normal' and row.get('state')==self.check['expected'] and row.get('product')==self.product and row.get('product_certain') is True)
+                    good=matches_expected(row,self.check,self.product)
                     if ambiguous_top:
-                        good=(row.get('quality')=='normal' and row.get('product')=='B'
-                              and row.get('product_certain') is True and row.get('seating')=='inside')
                         self.basis={'basis':'current_visual','state':'cap_visible'} if good else None
                         self.reason='현재 B 형상·안착 위치 확인'+('' if good else ' 실패')
-                    if self.check['expected']=='empty':good=row.get('state')=='empty' and row.get('quality') not in ('waiting','outside') and row.get('seating') in (None,'missing')
-                    if self.check['expected']=='occupied':good=row.get('state') in ('present','housing_seated','insert_added','cap_added','cap_visible','wrong_part') and row.get('quality') not in ('waiting','outside') and row.get('seating') not in ('outside','missing')
                     self.last_counted_at=at;self.last_good=good
                     if self.count>=self.check.get('minimum_observations',2):
                         if good:return True
                         if row.get('quality') in ('abnormal','outside') or not ambiguous_top and row.get('quality')=='normal' and (row.get('product_certain') is True or self.check['expected'] in ('empty','occupied')):
-                            raise ValueError('안착 불합격: '+self.reason+' · 기대 '+self.product+' '+EXPECTED[self.check['expected']])
+                            raise InspectionRetry('안착 불합격: '+self.reason+' · 기대 '+self.product+' '+EXPECTED[self.check['expected']])
         return False
 
 
@@ -200,7 +227,9 @@ class GroupInspectionDecision:
         for key,decision in list(self.pending.items()):
             observation=deepcopy(rows.get(key))
             try:done=decision.observe(observation,now)
-            except ValueError as exc:raise ValueError(self.steps[key]['name']+' · '+str(exc)) from exc
+            except ValueError as exc:
+                kind=InspectionRetry if isinstance(exc,InspectionRetry) else ValueError
+                raise kind(self.steps[key]['name']+' · '+str(exc)) from exc
             if done:
                 step=self.steps[key]
                 if decision.basis:step['inspection_basis']=deepcopy(decision.basis)

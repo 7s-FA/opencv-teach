@@ -68,7 +68,8 @@ def park(cli, request, stream, emit,*,check=False,autonomous=False,lock_fd=None,
                 control.info={'arm':request.get('first','arm2'),'run_id':request['shutdown_id']}
                 control_thread=threading.Thread(target=cli.control_server,args=(control,done),daemon=True);control_thread.start()
             for arm in arms:
-                link=ShutdownLink(arm);links[arm]=link;link.open()
+                links[arm]=ShutdownLink(arm)
+            cli.open_links(*links.values())
             def hold_all():
                 for link in links.values():
                     try:link.rpc('command',{'action':'hold'})

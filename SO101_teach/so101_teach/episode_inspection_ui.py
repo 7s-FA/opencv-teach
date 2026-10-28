@@ -39,7 +39,7 @@ class EpisodeInspectionPanel(ttk.Frame):
         self.remove_button=app.button(actions,'선택 스텝 검사 해제',self.remove_check);self.remove_button.pack(side='left',fill='x',expand=True,padx=(8,0))
         StatusText(self,self.status,height=3).grid(row=7,column=0,columnspan=3,sticky='ew',pady=4)
         self.reset_button=app.button(self,'현재 입력 되돌리기',self.discard);self.reset_button.grid(row=9,column=0,columnspan=3,sticky='w',pady=(8,0))
-        ttk.Label(self,text='팔·집게가 검사 영역을 벗어나는 스텝에 검사를 지정하세요.\n지정한 스텝 완료 후 새 영상으로 검사하며 이후 동작은 계속 진행합니다.\n불합격·판정 시간 초과 시 오류를 기록하고 자세를 유지하며 실행을 중지합니다.\n윗면 형상·위치 검사이며 내부 안착 깊이와 결합 강도는 확인하지 못합니다.',wraplength=610,style='Small.TLabel',justify='left').grid(row=8,column=0,columnspan=3,sticky='w',pady=(8,0))
+        ttk.Label(self,text='팔·집게가 영역을 벗어난 스텝에 지정 · 다음 동작과 검사 병행\n불합격·시간 초과: 실행 중지·자세 유지\n윗면 형상·위치만 검사하며 내부 깊이·결합 강도는 확인하지 않습니다.',wraplength=610,style='Small.TLabel',justify='left').grid(row=8,column=0,columnspan=3,sticky='w',pady=(8,0))
         self.location_changed();self.refresh()
         self.product.trace_add('write',lambda *args:self.changed(product=True))
         for var in (self.station,self.target,self.expected,self.timeout,self.minimum):var.trace_add('write',self.changed)
@@ -52,7 +52,7 @@ class EpisodeInspectionPanel(ttk.Frame):
     def update_status(self):
         a=self.app;step=self.step();check=(step or {}).get('inspection');count=sum('inspection' in s for s in a.episode['steps'])
         pending=[str(i) for i,s in enumerate(a.episode['steps'],1) if (a.episode['id'],s['id']) in self.step_drafts]
-        self.product_status.set('완제품 종류 변경 중 · 저장하면 에피소드 전체에 적용' if a.episode['id'] in self.product_drafts else '모든 스텝과 시작 전 검사에서 공통 사용 · 스텝마다 지정할 필요 없음')
+        self.product_status.set('완제품 종류 변경 중 · 저장 후 공통 적용' if a.episode['id'] in self.product_drafts else '모든 스텝·시작 전 검사에 공통 적용')
         if self.dirty:
             changes=(['완제품 종류'] if a.episode['id'] in self.product_drafts else [])+(['스텝 '+', '.join(pending)] if pending else [])
             self.status.set('미저장: '+' · '.join(changes)+'\n화면을 옮겨도 입력 유지 · 해당 항목을 저장한 뒤 Pi로 내보내세요.')

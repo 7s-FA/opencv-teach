@@ -27,9 +27,12 @@ def row(station='carrier'):
 class Worker:
     instances=[]
     def __init__(self,*args,**kwargs):
-        self.steps=args[4];self.options=kwargs;self.result=None;self.active=set();self.closed=False
-        self.submissions=[];self.instances.append(self)
+        self.steps=args[4];self.placement=args[3];self.options=kwargs;self.result=None;self.active=set();self.closed=False
+        self.submissions=[];self.instances.append(self);self.accepting_frame=True
     def retain(self,ids):self.active=set(ids)
+    def update_context(self,current,placement,ids):
+        self.options['fixed_jigs']=deepcopy(current);self.placement=deepcopy(placement)
+        self.active=set(ids);self.result=None
     def submit(self,frame,at):self.submissions.append(at)
     def close(self):self.closed=True
     def is_alive(self):return False
@@ -57,14 +60,41 @@ class StartupPipelineTests(unittest.TestCase):
         self.poll(1)
         self.assertEqual(set(self.pipeline.decisions),{'carrier'})
         self.assertEqual(self.pipeline.worker.active,{'carrier'})
-        self.assertEqual(self.pipeline.worker.options['geometry_placement']['linear_stage']['startup_state']['commanded_mm'],100.)
+        self.assertNotIn('geometry_steps',self.pipeline.worker.options)
+        self.assertFalse(self.pipeline.worker.placement['linear_stage']['startup_state']['known'])
         self.assertFalse(self.pipeline.complete)
+    def test_adopted_neighbours_survive_even_without_their_own_check(self):
+        pipeline=startup.StartupInspection([step('linear','linear')],{},SimpleNamespace(items={}),
+            {'linear_stage':{}},None,self.events.append,linear_target=100.)
+        self.addCleanup(pipeline.close)
+        current={'carrier_jig':{'pose':[1,2,3]},'pallet':{'pose':[4,5,6]}}
+        pipeline.poll(current,linear_state=self.stopped,now=1)
+        self.assertEqual(pipeline.worker.options['fixed_jigs'],current)
+        self.assertEqual(pipeline.worker.active,{'linear'})
+    def test_neighbour_change_refreshes_geometry_without_resetting_target_pass(self):
+        self.poll(1);self.result(1.1);self.poll(1.2);self.result(1.3);self.poll(1.4)
+        self.assertIn('carrier',self.pipeline.passed);decision=self.pipeline.decisions['carrier']
+        self.current['pallet']={'pose':[4,5,6]};old=self.pipeline.worker
+        self.poll(2)
+        self.assertIs(old,self.pipeline.worker);self.assertFalse(old.closed)
+        self.assertIn('pallet',self.pipeline.worker.options['fixed_jigs'])
+        self.assertIs(self.pipeline.decisions['carrier'],decision);self.assertIn('carrier',self.pipeline.passed)
+        self.assertNotIn('INSPECTION_INVALIDATED:carrier',self.events)
+    def test_fixed_jig_only_check_uses_current_linear_state_for_neighbours(self):
+        pipeline=startup.StartupInspection([step('carrier')],{},SimpleNamespace(items={}),
+            {'linear_stage':{'startup_state':{'known':True,'commanded_mm':1.5}}},None,self.events.append,linear_target=100.)
+        self.addCleanup(pipeline.close)
+        for at,state,known in ((1,self.moving,False),(2,self.stopped,True),(3,None,False)):
+            pipeline.poll(self.current,linear_state=state,now=at)
+            actual=pipeline.worker.placement['linear_stage']['startup_state']
+            self.assertEqual(actual['known'],known)
+            self.assertEqual(actual['commanded_mm'],100. if known else None)
     def test_linear_joins_same_worker_group_without_resetting_fixed_count(self):
         self.poll(1);self.result(1.1);self.poll(1.2)
         self.assertEqual(self.pipeline.decisions['carrier'].count,1)
         previous=self.pipeline.worker
         self.poll(2,state=self.stopped)
-        self.assertTrue(previous.closed)
+        self.assertIs(previous,self.pipeline.worker);self.assertFalse(previous.closed)
         self.assertEqual(self.pipeline.worker.active,{'carrier','linear'})
         self.assertEqual(self.pipeline.decisions['carrier'].count,1)
         self.result(2.1,('carrier','linear'));self.poll(2.2,state=self.stopped)
@@ -83,7 +113,7 @@ class StartupPipelineTests(unittest.TestCase):
         self.poll(2)
         self.assertNotIn('carrier',self.pipeline.passed)
         self.assertEqual(self.pipeline.decisions['carrier'].count,0)
-        old.result={'error':'obsolete'}
+        self.assertIs(old,self.pipeline.worker);self.assertIsNone(old.result)
         self.poll(2.1)
         self.assertIn('INSPECTION_INVALIDATED:carrier',self.events)
     def test_lost_jig_removes_evidence_then_requires_two_new_observations(self):
@@ -116,6 +146,60 @@ class StartupPipelineTests(unittest.TestCase):
         frame={'preview_at':1.1,'preview_image':encoded}
         self.poll(1.2,state=self.stopped,frame=frame);self.poll(1.3,state=self.stopped,frame=frame)
         self.assertEqual(self.pipeline.worker.submissions,[1.1])
+
+    def frame(self,at):
+        return {'preview_at':at,'preview_image':base64.b64encode(
+            cv2.imencode('.jpg',np.zeros((10,10,3),np.uint8))[1]).decode()}
+    def test_no_worker_or_geometry_before_any_target_is_ready(self):
+        for at in (1,2,3):self.poll(at,current={})
+        self.assertIsNone(self.pipeline.worker);self.assertEqual(Worker.instances,[])
+        self.poll(4)
+        self.assertEqual(len(Worker.instances),1)
+    def test_busy_inference_does_not_decode_or_replace_pending_frames(self):
+        self.poll(1)
+        with patch.object(cv2,'imdecode',wraps=cv2.imdecode) as decode:
+            self.poll(1.2,frame=self.frame(1.1))
+            for at in (1.3,1.4,1.5):self.poll(at+.01,frame=self.frame(at))
+            self.assertEqual(decode.call_count,1)
+            self.assertEqual(self.pipeline.worker.submissions,[1.1])
+            self.result(1.1);self.poll(1.7,frame=self.frame(1.6))
+            self.assertEqual(decode.call_count,2)
+            self.assertEqual(self.pipeline.worker.submissions,[1.1,1.6])
+    def test_final_observation_prevents_third_decode_and_inference(self):
+        self.poll(1,state=self.stopped)
+        with patch.object(cv2,'imdecode',wraps=cv2.imdecode) as decode:
+            self.poll(1.2,state=self.stopped,frame=self.frame(1.1))
+            self.result(1.1,('carrier','linear'))
+            self.poll(1.4,state=self.stopped,frame=self.frame(1.3))
+            self.result(1.3,('carrier','linear'))
+            self.poll(1.6,state=self.stopped,frame=self.frame(1.5))
+            self.assertTrue(self.pipeline.complete)
+            self.assertEqual(decode.call_count,2)
+            self.assertEqual(self.pipeline.worker.submissions,[1.1,1.3])
+            self.assertEqual(self.pipeline.worker.active,set())
+    def test_context_change_waits_for_old_native_call_before_decoding(self):
+        self.poll(1);self.poll(1.2,frame=self.frame(1.1))
+        self.pipeline.worker.accepting_frame=False
+        self.current['pallet']={'pose':[4,5,6]}
+        with patch.object(cv2,'imdecode',wraps=cv2.imdecode) as decode:
+            self.poll(1.4,frame=self.frame(1.3));decode.assert_not_called()
+            self.pipeline.worker.accepting_frame=True
+            self.poll(1.6,frame=self.frame(1.5));decode.assert_called_once()
+        self.assertEqual(len(Worker.instances),1)
+        self.assertEqual(self.pipeline.worker.submissions,[1.1,1.5])
+    def test_failed_submission_is_retried_without_marking_frame_consumed(self):
+        self.poll(1)
+        with patch.object(self.pipeline.worker,'submit',return_value=False):
+            self.poll(1.2,frame=self.frame(1.1))
+        self.assertIsNone(self.pipeline.inflight);self.assertIsNone(self.pipeline.submitted)
+        self.poll(1.3,frame=self.frame(1.1))
+        self.assertEqual(self.pipeline.worker.submissions,[1.1])
+    def test_capture_before_target_readiness_is_not_decoded_or_classified(self):
+        with patch.object(cv2,'imdecode',wraps=cv2.imdecode) as decode:
+            self.poll(1,frame=self.frame(.99))
+            decode.assert_not_called();self.assertEqual(self.pipeline.worker.submissions,[])
+            self.poll(1.2,frame=self.frame(1.1))
+            decode.assert_called_once();self.assertEqual(self.pipeline.worker.submissions,[1.1])
 
 
 class ParallelInspectorTests(unittest.TestCase):
@@ -161,7 +245,7 @@ class ParallelInspectorTests(unittest.TestCase):
 
 
 class RunnerPipelineTests(unittest.TestCase):
-    def exercise(self,*,resume=False,fail=False):
+    def exercise(self,*,resume=False,fail=False,camera_delay=0.,state_after_camera=None):
         import tempfile
         from pathlib import Path
         from tests.test_episode_cli import cli,FakeLink
@@ -178,6 +262,9 @@ class RunnerPipelineTests(unittest.TestCase):
         class Link(FakeLink):
             def post(self,path,body=None):
                 if path!='/camera':return super().post(path,body)
+                now[0]+=camera_delay
+                if state_after_camera=='stale':self.stale=True
+                elif state_after_camera:self.mode=state_after_camera
                 found={}
                 for jid,at in ((carrier,101),(finished,104)):
                     if now[0]>=at:found[jid]={'selected':{'metric':{'center_xy_mm':[1,2],'yaw_deg':0}},
@@ -187,7 +274,7 @@ class RunnerPipelineTests(unittest.TestCase):
             def submit(self,frame,at):
                 if fail:
                     self.result={'error':'missing'};return
-                self.result={'results':{s['id']:{'at':at,'row':row(s['inspection']['station'])}
+                self.result={'at':at,'results':{s['id']:{'at':at,'row':row(s['inspection']['station'])}
                     for s in self.steps if s['id'] in self.active}}
         link=Link();link.mode='HOLD'
         run=cli.Runner(link,lambda e:events.append((now[0],e)),cli.Control(),100,linear=Linear())
@@ -196,7 +283,7 @@ class RunnerPipelineTests(unittest.TestCase):
         original_check=run.check;did_resume=[False]
         def check():
             state,_=original_check()
-            if resume and now[0]>104 and not did_resume[0]:
+            if resume and run.adopted_jigs is not None and not did_resume[0]:
                 did_resume[0]=True;run.preparation_epoch+=1
                 return state,True
             return state,False
@@ -219,8 +306,18 @@ class RunnerPipelineTests(unittest.TestCase):
         self.assertGreaterEqual(first('INSPECTION_STARTED:linear'),102.)
         self.assertLess(first('STARTUP_INSPECTION_PASSED'),104.5)
         self.assertEqual(len(records),3);self.assertEqual(len(result),2)
-    def test_resume_reacquires_jigs_and_discards_all_old_provisional_passes(self):
+    def test_slow_camera_rechecks_current_hold_instead_of_expiring_old_snapshot(self):
+        events,result,records=self.exercise(camera_delay=.7)
+        self.assertTrue(any(e=='STARTUP_INSPECTION_PASSED' for _,e in events))
+        self.assertEqual(len(records),3);self.assertEqual(len(result),2)
+    def test_slow_camera_does_not_relax_stale_or_changed_follower_rejection(self):
+        for state in ('stale','MOVING'):
+            with self.subTest(state=state),self.assertRaisesRegex(RuntimeError,'모터 상태 갱신 지연' if state=='stale' else '자세 유지 상태 변경'):
+                self.exercise(camera_delay=.7,state_after_camera=state)
+            self.assertFalse(any(e=='STARTUP_INSPECTION_PASSED' for _,e in self.last_events))
+    def test_resume_retains_jigs_and_discards_all_old_provisional_passes(self):
         events,result,records=self.exercise(resume=True)
-        self.assertTrue(any(e in ('INSPECTION_GROUP_RESTARTED','JIG_RECHECK_AFTER_RESUME') for _,e in events))
+        self.assertTrue(any(e=='JIG_BASIS_REUSED' for _,e in events))
+        self.assertEqual(sum(e=='JIG_DETECTION_STARTED' for _,e in events),1)
         self.assertEqual(len(records),3)
         self.assertEqual(sum(e.startswith('INSPECTION_PASS:') for _,e in events),3)

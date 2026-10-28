@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 from types import SimpleNamespace
 from unittest.mock import Mock,patch
 import unittest
+import numpy as np
 from tests.test_episode_cli import cli,FakeLink,FakeLinear
 
 
@@ -30,9 +31,15 @@ class FinishedReturnTests(unittest.TestCase):
 
     def observe(self,step,*,state=None,quality='normal',count=2):
         if step['inspection']['station'] not in self.workers:self.run.inspection_batch.start(step)
+        item=next(item for item in self.run.inspection_batch.pending if item['step']['id']==step['id'])
+        # Capture at the checkpoint before simulating classifier completion.
+        # Later motion/pause must consume these exact frames, never invented results.
+        while item['frozen_at'] is None:
+            self.now+=.05
+            self.run.inspection_batch.poll((np.zeros((2,2,3),dtype=np.uint8),self.now))
         for _ in range(count):
             self.now+=.1
-            self.workers[step['inspection']['station']].result={'at':self.now,'row':{
+            self.workers[step['inspection']['station']].result={'at':item['inflight'],'completed':self.now,'row':{
                 'quality':quality,'state':state or step['inspection']['expected'],
                 'product':'A','product_certain':True,'seating':'missing' if step==self.pick else 'inside'}}
             self.run.poll_inspections()

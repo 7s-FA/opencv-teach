@@ -6,7 +6,7 @@ Unsupported models, assets and incomplete evidence retain the ordinary window.
 import math
 import numpy as np
 
-MODEL_IDENTITY='805f444ca9bfa4775c966f38556f052a050577d69e3dacfca5a28019c917a2a2'
+MODEL_IDENTITY='134067656737d9882cec3d99a279834d8bb763902b72b034fd6f55d99836d272'
 CARRIER_SHA256='23f8ddb6d925c8c15f5ec543804dc42c2db10bc356cfcdaa45742b1c0e04f4d9'
 
 def pose_delta(a,b):

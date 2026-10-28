@@ -19,6 +19,10 @@ class FailureHistoryUITests(unittest.TestCase):
     def test_record_image_logs_filter_copy_zoom_and_maximized_layout(self):
         key=fixture(self.data,ROOT/'tests/fixtures/carrier-two-poses-20261012/observed-02.jpg');p=self.show();self.wait(lambda:p.payload is not None)
         self.assertEqual(p.payload['key'],key);self.assertIsNotNone(p.photo);self.assertIn('안착 불합격',p.log.get('1.0','end'))
+        self.assertIn('기록 저장보다',p.image_info.get())
+        age=p.payload['images'][0]['age'];p.payload['images'][0]['age']=None;p.select_image()
+        self.assertIn('촬영 미확인',p.image_info.get())
+        p.payload['images'][0]['age']=age;p.select_image()
         p.scale(1.25);self.assertIsNotNone(p.zoom);p.fit();self.assertIsNone(p.zoom)
         p.copy_log();self.assertIn('안착 불합격',self.root.clipboard_get())
         self.assertGreater(p.canvas.winfo_width(),700);self.assertGreater(p.canvas.winfo_height(),300)
@@ -34,6 +38,22 @@ class FailureHistoryUITests(unittest.TestCase):
         with patch.object(self.app,'start_camera') as start:
             p=self.show();self.wait(lambda:p.loaded);self.assertFalse(self.app.camera_needed());start.assert_not_called()
         self.assertIn('저장된 오류 기록이 없습니다',p.status.get());self.assertTrue(p.copy_button.instate(['disabled']))
+
+    def test_inspection_timeline_is_visible_and_included_in_copied_log(self):
+        from tests.test_failure_timeline import fixture as timeline_fixture
+        p=self.show();self.wait(lambda:p.loaded)
+        value={**timeline_fixture(),'key':'run:r','images':[],'warnings':[]}
+        p.rows=[{'key':'run:r','arm':'arm3','at':106.,'command':'load_b'}]
+        p.display_record(value);self.root.update()
+        self.assertTrue(p.timeline_frame.winfo_ismapped())
+        self.assertIn('놓기 위치',p.timeline_vars['검사 지정 스텝'].get())
+        self.assertIn('복귀 위치',p.timeline_vars['중단 시 진행 스텝'].get())
+        self.assertIn('놓고 들기',p.timeline_vars['마지막 완료 스텝'].get())
+        p.copy_log();text=self.root.clipboard_get()
+        for title in ('검사 지정 스텝','중단 시 진행 스텝','마지막 완료 스텝','검사 시작','판정 완료','검사 소요'):
+            self.assertIn(title+':',text)
+        self.assertIn('3.190초',text);self.assertIn('정지 확정 상태 미기록',text)
+        p.clear_detail();self.root.update();self.assertFalse(p.timeline_frame.winfo_ismapped())
     def test_failed_fetch_keeps_ui_responsive_and_refresh_recovers(self):
         from so101_teach import failure_archive_client
         real=failure_archive_client.fetch

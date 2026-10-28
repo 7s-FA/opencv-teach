@@ -1,6 +1,26 @@
 """Bounded image packet codec shared by display and model-guided detection."""
-import json,struct
+import json,struct,math
 MAX_IMAGE_BYTES=32*1024*1024
+DEFAULT_CONFIDENCE=.5
+
+def confidence_value(value):
+    """Wire/profile confidence is a finite fraction; the UI displays percent."""
+    try:
+        if isinstance(value,bool):raise ValueError
+        number=float(value)
+        if not math.isfinite(number) or not .5<=number<=.9:raise ValueError
+        if not math.isclose(number*100,round(number*100),rel_tol=0,abs_tol=1e-9):raise ValueError
+    except (TypeError,ValueError,OverflowError):
+        raise ValueError('최소 신뢰도는 50~90 사이의 정수(%)로 입력하세요.') from None
+    return number
+
+def confidence_percent(value):
+    try:
+        text=str(value).strip()
+        if not text.isascii() or not text.isdecimal():raise ValueError
+        return confidence_value(int(text)/100)
+    except (TypeError,ValueError,OverflowError):
+        raise ValueError('최소 신뢰도는 50~90 사이의 정수(%)로 입력하세요.') from None
 
 def encode_mask(mask):
     """Lossless instance mask; the enclosing packet keeps the same 1 MiB cap."""

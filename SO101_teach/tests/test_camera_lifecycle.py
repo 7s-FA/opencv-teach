@@ -13,11 +13,11 @@ class CameraLifecycleTests(unittest.TestCase):
         self.fake_jig_camera();a=self.app;c=a.camera
         c.close=Mock(side_effect=lambda:setattr(c,'running',False));c.start=Mock(side_effect=lambda:setattr(c,'running',True));c.stop=threading.Event()
         return c
-    def test_startup_never_opens_camera_but_connects_requested_motors(self):
+    def test_startup_never_opens_camera_or_motors(self):
         a=self.app;a.camera_auto_view=True;a.startup_devices_pending=True;a.profile['mode']='follower'
         with patch.object(a,'start_camera') as start,patch.object(a,'connect_startup_devices') as connect:
             a.startup_connections()
-        start.assert_not_called();connect.assert_called_once()
+        start.assert_not_called();connect.assert_not_called();self.assertFalse(a.startup_devices_pending)
     def test_view_enter_and_leave_open_and_close_without_motor_commands(self):
         a=self.app;c=self.camera();c.running=False;a.camera_auto_view=True;a.profile['mode']='follower'
         with patch('so101_teach.ui.CameraSession',return_value=c):
@@ -30,6 +30,17 @@ class CameraLifecycleTests(unittest.TestCase):
         with patch.object(a,'start_camera') as start:
             a.show_page('camera');a.poll_camera_lifecycle();start.assert_not_called()
         self.assertFalse(c.running)
+    def test_local_reconnect_starts_new_measurement_after_expired_window(self):
+        from tests.test_cad_three_frame_gate import cad_observation
+        a=self.app;c=self.camera();a.stop_camera();latch=a.detector.latches[a.active_jig]
+        latch.clear(time.monotonic()-100)
+        self.assertEqual(latch.poll(time.monotonic())['status'],'acquisition_failed')
+        with patch('so101_teach.ui.CameraSession',return_value=c):a.start_camera()
+        at=time.monotonic()+100
+        for i in range(3):
+            out=latch.update(cad_observation(str(i)),at+i*.5)
+            if i<2:self.assertIsNone(out['selected'])
+        self.assertEqual(out['adoption_method'],'cad_three_frame_gate')
     def test_rapid_return_waits_for_previous_camera_owner_to_release(self):
         a=self.app;c=self.camera();a.camera_auto_view=True;a.profile['mode']='follower';c.close=Mock()
         a.show_page('camera');a.show_page('teach');a.show_page('camera')

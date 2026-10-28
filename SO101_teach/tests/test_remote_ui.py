@@ -13,8 +13,8 @@ class RemoteUITests(unittest.TestCase):
     def test_remote_selection_never_falls_back_to_local_camera_or_motors(self):
         a=self.app;a.remote_mode=True
         with patch('so101_teach.ui.CameraSession.start',side_effect=AssertionError('local camera')),patch('so101_teach.ui.MotionSession.start',side_effect=AssertionError('local motor')):
-            with self.assertRaisesRegex(ValueError,'Pi 연결'):a.start_camera()
-            with self.assertRaisesRegex(ValueError,'Pi 연결'):a.toggle_connection()
+            with self.assertRaisesRegex(ValueError,'전체 연결'):a.start_camera()
+            with self.assertRaisesRegex(ValueError,'전체 연결'):a.toggle_connection()
     def test_remote_plan_runs_off_ui_thread_and_dispatches_exact_result(self):
         a=self.app;link=self.link();step=a.store.step(a.target,'following');step['jig_id']='test-jig';step['jig_reference']={'pose':[0,0,0],'symmetry_deg':180};plan=[{'ticks':step['ticks'],'corrected':False}]
         link.rpc.return_value={'plan':plan,'calibration_sha256':a.calibration.sha256,'bundle_hash':'config'}

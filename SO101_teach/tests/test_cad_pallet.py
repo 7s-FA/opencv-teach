@@ -23,8 +23,18 @@ class CadPalletTests(unittest.TestCase):
                 raw=self.call(name);chosen=raw['selected'];self.assertIsNotNone(chosen,raw.get('cad_pallet_reason'));self.assertTrue(chosen['cad_pose_validated']);self.assertFalse(raw['verified_for_motion']);self.assertEqual(chosen['metric']['dimension_source'],'cad_silhouette_fit');self.assertLessEqual(raw['cad_fit']['rms_px'],2.);self.assertGreaterEqual(raw['cad_fit']['observed_sides'],2);self.assertTrue(raw['cad_fit']['pose_constrained'])
                 if not raw['cad_fit']['partial_silhouette']:
                     p=self.data['cases'][name]['cad_reference'];np.testing.assert_allclose(chosen['metric']['center_xy_mm'],p['center_xy_mm'],atol=1e-3);self.assertAlmostEqual(chosen['metric']['yaw_deg'],p['yaw_deg'],delta=.001)
-    def test_carrier_output_is_identical_to_previous_algorithm(self):
-        c,frame,rows=self.inputs('C256');key='b5ebdb54807c441c8267c15d77713b6a';o=c['jigs'][key];raw=detect_mask_seeded(frame,o['mesh'],o['roi'],o['profile'],rows,self.settings);self.assertEqual(raw,self.data['carrier_reference'])
+    def test_carrier_pose_and_evidence_survive_search_roi_improvements(self):
+        c,frame,rows=self.inputs('C256');key='b5ebdb54807c441c8267c15d77713b6a';o=c['jigs'][key]
+        raw=detect_mask_seeded(frame,o['mesh'],o['roi'],o['profile'],rows,self.settings)
+        previous=self.data['carrier_reference']['selected'];current=raw['selected']
+        # Search-region metadata and grid crossing choices legitimately changed
+        # with the smaller ROI; physical pose and required evidence must not.
+        self.assertEqual(current['metric'],previous['metric'])
+        np.testing.assert_allclose(current['quad'],previous['quad'],atol=1e-8)
+        for flag in ('shape_match','observed_boundary_refined','grid_verified','orientation_verified'):
+            self.assertTrue(current[flag])
+        self.assertTrue(current['outer_shape']['valid'])
+        self.assertFalse(raw['verified_for_motion'])
     def test_bad_dimensions_reject_and_nonparallel_sides_constrain_pose(self):
         _,_,rows=self.inputs('C001');d=next(x for x in rows if x['class_id']==1)
         d['mask']=cv2.dilate(d['mask'].astype(np.uint8),np.ones((7,7),np.uint8))>0

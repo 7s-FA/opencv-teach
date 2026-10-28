@@ -16,7 +16,11 @@ LABELS=('베이스 회전','어깨 들기','팔꿈치','손목 굽힘','손목 �
 
 def read_json(path):
     def reject(x):raise ValueError('유효하지 않은 JSON 숫자: '+x)
-    return json.loads(Path(path).read_text(),parse_constant=reject)
+    value=json.loads(Path(path).read_text(),parse_constant=reject)
+    if isinstance(value,dict) and value.get('record_kind')=='execution_journal':
+        from .execution_records import read_run
+        return read_run(path,document=value)
+    return value
 
 def atomic_json(path,value):
     path=Path(path);path.parent.mkdir(parents=True,exist_ok=True)

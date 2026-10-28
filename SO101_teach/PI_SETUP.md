@@ -10,7 +10,7 @@ PC 상단 카메라에는 지그 검출·부품/조립 검사·오류 기록·�
 
 ## 2026-10-02: 8GB Pi로 이전
 
-현재 연결 대상은 `ubuntu@<PI_HOST>`(arm3, Ubuntu 24.04, aarch64, Python 3.12.3)입니다. 프로그램과 Python 경로는 아래 표와 동일합니다. PC의 `data/pi-connection.json`도 113으로 변경했습니다. 기존 112의 프로그램과 데이터는 유지했습니다.
+현재 연결 대상은 `ubuntu@10.10.142.113`(arm3, Ubuntu 24.04, aarch64, Python 3.12.3)입니다. 프로그램과 Python 경로는 아래 표와 동일합니다. PC의 `data/pi-connection.json`도 113으로 변경했습니다. 기존 112의 프로그램과 데이터는 유지했습니다.
 
 PC 최신 코드와 112의 보정·지그·에피소드를 복사했습니다. OS·CPU 구조·Python 버전·설치 경로가 같음을 확인하고 112의 가상환경을 복제했으며, `pip check`, 모터 라이브러리 로드, 보정·역기구학 초기화, 카메라 1280×720 프레임 15장, 지그 영상 처리, PC→113 SSH 통신과 코드 버전 일치를 확인했습니다. 이번 이전에서 모터 연결·토크 켜기·이동은 실행하지 않았습니다.
 
@@ -20,14 +20,14 @@ PC 최신 코드와 112의 보정·지그·에피소드를 복사했습니다. O
 
 이전 검증 자료: PC의 `verification/pi113-migration-20261002`, Pi의 `verification/pi113`. 실행 중이던 PC 앱은 다시 열어 변경된 연결 대상을 적용합니다.
 
-PC에서 현재 SO-101 티칭 앱을 열고 **설정·안내 → 라즈베리파이 연결 → Pi 연결·사용**을 누릅니다. 연결 정보는 입력해 두었습니다. 이후에는 왼쪽 아래에 `장치: Pi`가 표시됩니다. 모터 토크는 자동으로 켜지지 않습니다.
+PC에서 현재 SO-101 티칭 앱을 열고 **설정·안내 → 라즈베리파이 연결 → Pi 대상으로 선택**을 누릅니다. 연결 정보는 입력해 두었습니다. 이후에는 왼쪽 아래에 `장치: Pi`가 표시됩니다. 모터 토크는 자동으로 켜지지 않습니다.
 
 팔로워와 상단 카메라의 Pi 연결을 확인했습니다. 리더암은 PC에 연결해 사용합니다.
 
 1. PC 앱의 로봇 연결을 종료한 뒤 팔로워 USB와 상단 카메라를 Pi에 연결합니다. 리더암 USB는 PC에 유지합니다.
-2. **Pi 연결·사용**을 누릅니다. 같은 화면에서 Pi가 확인한 USB 포트와 카메라 경로를 확인합니다.
+2. **Pi 대상으로 선택**을 누릅니다. 이 버튼은 대상 설정만 저장합니다. 실제 제어 연결은 상단 **전체 연결**을 눌러 요청하며, 연결 후 설정 화면에서 Pi USB 포트와 카메라 경로를 확인합니다.
 3. 기존 USB 장치를 그대로 옮기면 `/dev/serial/by-id`, `/dev/v4l/by-id` 경로를 그대로 사용할 수 있습니다. 다른 장치는 **설정·안내 → 로봇 / 카메라 보정**에서 경로를 변경합니다. 리더를 사용할 때는 PC 리더 포트와 리더 보정 JSON을 등록하고 **리더 + 팔로워**를 선택합니다. 리더를 연결하지 않을 때는 **팔로워 단독**을 선택합니다.
-4. 앱 시작 시 Pi 연결 후 팔로워를 자동 연결해 현재 모터 틱을 읽습니다. 리더+팔로워 모드에서는 PC의 리더도 자동 연결합니다. 토크 켜기와 리더 따라가기는 버튼을 눌러 시작합니다. 상단 카메라에서 영상·지그 위치를 확인합니다. 자동 연결이 실패하면 **팔로워 연결**로 다시 시도합니다.
+4. 앱은 조회 전용으로 시작합니다. **전체 연결**을 누르면 팔로워의 제어권을 요청하고 현재 모터 틱을 읽습니다. 리더+팔로워 모드에서는 PC 리더도 연결합니다. 토크 켜기와 리더 따라가기는 별도 조작입니다. Pi 공정이 사용 중이면 한 번 거절되고 자동 재시도하지 않습니다. 연결이 끊긴 경우도 **전체 연결**을 다시 눌러야 합니다.
 5. 현재 자세 유지, 리더 따라가기, 스텝 저장, 경로 미리보기, 에피소드 실행은 기존 버튼을 그대로 사용합니다.
 
 **이 PC 사용**을 누르면 장치 연결 대상이 PC로 돌아옵니다. 로봇 연결을 종료한 상태에서 전환합니다. 선택한 연결 대상은 다음 실행에도 유지되며, Pi 연결 실패 시 PC USB로 자동 전환하지 않습니다.
@@ -38,7 +38,7 @@ PC에서 현재 SO-101 티칭 앱을 열고 **설정·안내 → 라즈베리파
 |---|---|
 | Pi 프로그램 | `/home/ubuntu/OpenCV_teach` |
 | Pi Python | `/home/ubuntu/so101-player/.venv/bin/python` — 기존 가상환경 재사용 |
-| PC 프로그램 | `/path/to/Final_Arm/SO101_teach` |
+| PC 프로그램 | `/home/fresh/Documents/Final_Arm/SO101_teach` |
 | PC 연결 설정 | `data/pi-connection.json` |
 | Pi 설정·영점·지그·에피소드 | `/home/ubuntu/OpenCV_teach/data` |
 | Pi 모터 진단 기록 | `/home/ubuntu/OpenCV_teach/data/diagnostics` |
@@ -52,7 +52,7 @@ PC의 현재 영점 JSON·3점 각도 파일·TCP·카메라 보정·지그 STL�
 
 ## 실행 방식
 
-**Pi 연결·사용**이 SSH 키 인증으로 Pi 실행부를 시작하고 전용 통신 통로를 엽니다. 비밀번호는 저장하지 않습니다. Pi 실행부는 팔2 `127.0.0.1:8765`, 팔3 `127.0.0.1:8766`에서 대기하며 외부 네트워크에 직접 공개되지 않습니다. 부팅 자동 실행 서비스는 설치하지 않았습니다.
+**전체 연결**이 SSH 키 인증으로 Pi 실행부를 시작하고 전용 통신 통로를 엽니다. 비밀번호는 저장하지 않습니다. Pi 실행부는 팔2 `127.0.0.1:8765`, 팔3 `127.0.0.1:8766`에서 대기하며 외부 네트워크에 직접 공개되지 않습니다. 부팅 자동 실행 서비스는 설치하지 않았습니다.
 
 Pi에서 직접 실행부를 확인할 때:
 
@@ -65,7 +65,7 @@ cd /home/ubuntu/OpenCV_teach
 
 리더 값 전송이 일시적으로 지연되면 최신 표본으로 다시 전송하고 팔로워 연결은 유지합니다. 에피소드가 Pi에서 실행되는 동안에는 리더 표본 전송을 쉬고, 끝난 뒤 다시 최신 표본을 보냅니다. Pi 상태 조회도 짧은 지연은 재시도합니다. 이동·토크 명령은 처리 여부를 모르는 상태에서 자동 재전송하지 않습니다.
 
-PC 응답이 2초 이상 끊기면 Pi가 이동을 멈추고 자세를 유지합니다. 재연결만으로 이동을 다시 시작하지 않습니다. 통신 실패 명령을 자동 재전송하지 않아 토크 켜기나 이동이 중복 실행되지 않습니다. 다시 연결하면 Pi가 유지 중인 로봇 상태를 화면에 복원합니다.
+PC 응답이 2초 이상 끊기면 Pi가 이동을 멈추고 자세를 유지합니다. 자동 재연결하지 않으며, **전체 연결**을 다시 눌러야 합니다. 재연결만으로 이동을 다시 시작하지 않습니다. 통신 실패 명령을 자동 재전송하지 않아 토크 켜기나 이동이 중복 실행되지 않습니다. 다시 연결하면 Pi가 유지 중인 로봇 상태를 화면에 복원합니다.
 
 현재 `/home/ubuntu/so101-player`는 활성 가상환경을 보관하는 경로입니다. 실행 소스는 `/home/ubuntu/OpenCV_teach`이며 별도의 `/home/ubuntu/SO101_teach` 경로를 전제로 실행하지 않습니다. 기존 가상환경에 추가한 계산·영상 패키지는 `requirements-pi.txt`에 기록했으며, 설치 전·후 목록은 Pi 폴더의 `environment-before.txt`, `environment-after.txt`에 있습니다.
 
@@ -90,7 +90,7 @@ PC와 Pi 실행부에 같은 버전의 팔 구분 기능을 적용합니다. 상
 
 팔별 프로필 목록은 PC에 있고 Pi는 마지막으로 구성한 팔의 활성 프로필을 가집니다. 두 호스트의 `profile.json` 경로 문자열과 선택 상태가 다르다는 사실만으로 오류로 판정하지 않습니다. 보정 원본 해시·모델 기준·팔 ID와 등록 STL의 내용을 대조합니다.
 
-실물 읽기 검사는 `ReadOnlySession`의 전송 게이트로 PING·READ·SYNC_READ만 허용하고 종료 시 포트만 닫습니다. 토크 OFF·이동·EEPROM 명령을 보내는 보정/구동 세션과 구분합니다. 사용자 운영 중인 포트를 빼앗거나 기존 세션을 종료하지 않습니다. 2026-10-20 전체 점검 자료는 [전체 정합성 검사](../docs/progress-2026-10-20.md), 후속 UI 검증은 [디자인 개선](../docs/progress-2026-10-20.md)에 있습니다. 최신 기록의 목차와 검증 제한은 [검증 기록](../docs/progress-2026-10-20.md)을 따릅니다. 기존 `verification/latest-consistency-audit`는 과거 시점의 자료입니다.
+실물 읽기 검사는 `ReadOnlySession`의 전송 게이트로 PING·READ·SYNC_READ만 허용하고 종료 시 포트만 닫습니다. 토크 OFF·이동·EEPROM 명령을 보내는 보정/구동 세션과 구분합니다. 사용자 운영 중인 포트를 빼앗거나 기존 세션을 종료하지 않습니다. 2026-10-20 전체 점검 자료는 [전체 정합성 검사](verification/concurrent-full-audit-20261020/summary.json), 후속 UI 검증은 [디자인 개선](verification/design-polish-20261020/summary.json)에 있습니다. 최신 기록의 목차와 검증 제한은 [검증 기록](verification/RESULTS.md)을 따릅니다. 기존 `verification/latest-consistency-audit`는 과거 시점의 자료입니다.
 
 ## 팔별 연결 유지
 
@@ -124,16 +124,16 @@ Pi의 저장된 코드를 SSH로 읽어 PC와 해시를 비교했다. 모터·�
 
 ```bash
 # 로컬 코드 경계·필수 자산 검사 (Pi 연결 없음, run_tests.sh에도 포함)
-/path/to/venv/bin/python SO101_teach/tools/pi_runtime.py local
+/home/fresh/venv/il/bin/python SO101_teach/tools/pi_runtime.py local
 
 # Pi 디스크와 실제 실행 중인 두 실행부를 읽기 전용으로 비교
-/path/to/venv/bin/python SO101_teach/tools/pi_runtime.py check
+/home/fresh/venv/il/bin/python SO101_teach/tools/pi_runtime.py check
 
 # 변경 목록만 확인 — 파일 변경·장치 연결·재시작 없음
-/path/to/venv/bin/python SO101_teach/tools/pi_runtime.py sync
+/home/fresh/venv/il/bin/python SO101_teach/tools/pi_runtime.py sync
 
 # 앱과 장치 연결을 정상 종료한 유휴 상태에서 명시적으로 적용
-/path/to/venv/bin/python SO101_teach/tools/pi_runtime.py sync --apply
+/home/fresh/venv/il/bin/python SO101_teach/tools/pi_runtime.py sync --apply
 ```
 
 공통 코드 변경은 관련 회귀 검사를 통과한 뒤 `check → sync --apply → check` 순서로 적용합니다. UI만 바꾸면 로컬 검사와 관련 UI 검증으로 확인하며 Pi 동기화는 필요하지 않습니다. `--output <파일.json>`으로 토큰을 제외한 비교·배포 결과를 저장할 수 있습니다. 검사 결과 불일치는 종료 코드 2, 실행 오류는 1, 일치는 0입니다.
@@ -160,3 +160,9 @@ Pi의 저장된 코드를 SSH로 읽어 PC와 해시를 비교했다. 모터·�
 ### 2026-10-13 실물 시험 종료 · 기존 실행 식 복구
 
 A 하단과 B 실물 동작 문제로 사용자 요청에 따라 두 팔의 앱·Pi 실행을 원래 `Kinematics(ModelReference)`로 복구했다. 앞의 실행 보정 시험과 TCP 목표 고정 후 새 IK 적용은 더 이상 활성 경로가 아니다. BUILD_LOAD_A/B와 독립 실행 모두 기존 FK·IK·틱 변환을 사용한다. 새 보정은 시뮬 표시 및 과거 시험 재현용으로만 보존한다. 오류 이미지 원본·표시본 저장과 한글 글꼴은 유지한다. 백업·계산 비교·배포 결과는 PC의 `verification/restore_original_ik_20261013/`에 기록한다. 앱은 다시 시작해야 하며, 모터를 구동하는 검증은 하지 않는다.
+
+## PC 협력 연산과 액션 서비스 갱신
+
+`PC_BUILD_LOAD_A/B`의 무손실 GPU 연산은 작업별 SSH 터널로 연결한다. Pi에는 CUDA나 TensorRT를 설치하지 않는다. `tools/pi_runtime.py sync --apply`는 기본적으로 액션 서비스 변경 시 재시작 권한까지 확인한다. 관리자 재시작을 나중에 해야 하는 경우 `--defer-action-restart`를 명시하면 유휴 장치 실행부만 반영하고 액션 서비스의 현재 프로세스를 유지한다. 이 경우 결과는 `runtime_compatible=true`, `compatible=false`, `action_service_restart_pending=true`로 구분한다.
+
+2026-10-25에는 SSH 계정의 비밀번호 없는 sudo 권한이 없어 위 보류 방식으로 반영했다. 실물 비교 전에 Pi에서 `sudo systemctl restart workcell-actions.service`를 실행한 뒤 버전 확인을 다시 한다. 현재 PC 설정은 `physical_execution_enabled=false`다. [저장 영상 검증](verification/pc-cooperation-20261025/summary.json)과 [PC 협력 사용법](README.md#pc-협력-조립적재--2026-10-25)을 참고한다.

@@ -6,6 +6,7 @@ import sys
 import tempfile
 import threading
 import unittest
+import uuid
 from types import ModuleType, SimpleNamespace
 from unittest.mock import Mock, patch
 
@@ -17,6 +18,7 @@ import action_protocol as protocol
 class FakeNode:
     def __init__(self, *args, **kwargs): self.logger = Mock()
     def get_logger(self): return self.logger
+    def create_publisher(self,*args,**kwargs):return Mock()
 
 
 class FakeArm:
@@ -26,7 +28,7 @@ class FakeArm:
 
 class Goal:
     def __init__(self, command):
-        self.request = SimpleNamespace(command=command); self.messages = []; self.is_active = True
+        self.meta=dict(version=2, command=command, client_id='c'*32, request_id=uuid.uuid4().hex, attempt_id=uuid.uuid4().hex, epoch='test', nonce='test'); self.request = SimpleNamespace(command=json.dumps(self.meta)); self.messages = []; self.is_active = True
         self.succeeded = self.aborted = False
     def publish_feedback(self, feedback): self.messages.append(feedback.message)
     def succeed(self): self.succeeded = True; self.is_active = False
@@ -47,13 +49,18 @@ class ActionContractTests(unittest.TestCase):
         action.ActionServer = Mock(); action.GoalResponse = SimpleNamespace(ACCEPT=True, REJECT=False)
         action.CancelResponse = SimpleNamespace(REJECT=False); callbacks.ReentrantCallbackGroup = Mock()
         executor.ExternalShutdownException = type('ExternalShutdownException', (Exception,), {}); executor.MultiThreadedExecutor = Mock(); node.Node = FakeNode; host.Arm = FakeArm
-        with patch.dict(sys.modules, {'rclpy':ros,'rclpy.action':action,'rclpy.callback_groups':callbacks,'rclpy.executors':executor,'rclpy.node':node,'host_pkg':ModuleType('host_pkg'),'host_pkg.action':host}):
+        duration=ModuleType('rclpy.duration');duration.Duration=SimpleNamespace
+        messages=ModuleType('std_msgs.msg');messages.String=SimpleNamespace
+        with patch.dict(sys.modules, {'rclpy':ros,'rclpy.action':action,'rclpy.callback_groups':callbacks,'rclpy.executors':executor,'rclpy.node':node,'rclpy.duration':duration,'std_msgs':ModuleType('std_msgs'),'std_msgs.msg':messages,'host_pkg':ModuleType('host_pkg'),'host_pkg.action':host}):
             spec=importlib.util.spec_from_file_location('action_contract_server',DIR/'action_server.py')
             cls.module=importlib.util.module_from_spec(spec); spec.loader.exec_module(cls.module)
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup)
         p=patch.object(self.module,'ROOT',Path(self.temp.name));p.start();self.addCleanup(p.stop)
+        h=patch.object(self.module,'SupervisionHealth',return_value=SimpleNamespace(epoch='test',accepts=lambda meta:True,fresh=lambda client:True,control_fence=lambda meta,state:True));h.start();self.addCleanup(h.stop)
         self.server = self.module.ArmActionServer('arm2', threading.Lock(), protocol)
+        self.server.gate.status_ready_at=0. # Fake DDS is already discovered.
+        self.addCleanup(lambda:self.server.gate.retire(self.server.gate.active))
 
     def execute(self, arm, goal):
         self.server.arm = arm
@@ -121,42 +128,42 @@ class ActionContractTests(unittest.TestCase):
         info={'run_id':'a'*32}
         with patch.object(protocol,'job_events',return_value=[{'status':'A_RESUMED'}]):
             self.assertFalse(protocol.wait_control('/unused','restart',info,1,timeout=.001))
-    def test_paused_job_confirms_repeated_estop_without_duplicate_event(self):
-        info={'run_id':'a'*32}
-        with patch.object(protocol,'control_state',return_value={'info':info,'paused':True}):
-            self.assertTrue(protocol.wait_control('/unused','estop',info,1,timeout=.1))
+    def test_paused_job_confirms_only_its_estop_receipt(self):
+        receipt={'job_id':'a'*32,'request_id':'b'*32,'command':'estop','state':'completed'}
+        with patch.object(protocol,'control_state',return_value={'job_id':receipt['job_id'],'receipts':{receipt['request_id']:receipt}}):
+            self.assertTrue(protocol.wait_control('/unused','estop',receipt,timeout=.1))
     def test_first_arm_completion_cannot_complete_whole_reset(self):
         info={'run_id':'a'*32}
         with patch.object(protocol,'job_events',return_value=[{'status':'B_ARM_RESET:arm2:RESET_DONE'},{'status':'B_ARM_RESET_DONE:arm2'}]):
             self.assertFalse(protocol.wait_control('/unused','reset',info,0,timeout=.01))
 
-    def test_reset_requires_actual_reset_done_and_rejects_failure(self):
-        info={'run_id':'a'*32}
-        for event,expected in [('A_RESET_DONE',True),('A_FAILED:RESET:readback',False)]:
-            with patch.object(protocol,'job_events',return_value=[{'status':event}]):
-                self.assertEqual(protocol.wait_control('/unused','reset',info,0,timeout=.1),expected)
+    def test_reset_requires_matching_completion_receipt_and_rejects_failure(self):
+        receipt={'job_id':'a'*32,'request_id':'b'*32,'command':'reset'}
+        for state,expected in [('completed',True),('failed',False)]:
+            with patch.object(protocol,'control_state',return_value={'job_id':receipt['job_id'],'receipts':{receipt['request_id']:{**receipt,'state':state}}}):
+                self.assertEqual(protocol.wait_control('/unused','reset',receipt,timeout=.1),expected)
 
-    def test_estop_during_startup_is_sent_before_job_metadata_exists(self):
-        info={'run_id':'a'*32,'arm':'arm2'}
-        with patch.object(protocol,'control_state',side_effect=[{'info':None},{'info':info}]), patch.object(self.module.subprocess,'run',return_value=SimpleNamespace(returncode=0,stdout='ESTOP_REQUESTED',stderr='')) as command, patch.object(protocol,'wait_control',return_value=True) as wait:
+    def test_estop_during_startup_is_sent_before_phase_metadata_exists(self):
+        receipt={'job_id':'a'*32,'request_id':'b'*32,'command':'estop'}
+        with patch.object(protocol,'control_state',return_value={'info':None,'job_id':'a'*32}),patch.object(protocol,'control_request',return_value=receipt) as command,patch.object(protocol,'wait_control',return_value=True) as wait:
             self.assertTrue(self.server.invoke_control('estop'))
-            command.assert_called_once()
-            self.assertEqual(wait.call_args.args[2],info)
+            command.assert_called_once();self.assertEqual(wait.call_args.args[2],receipt)
 
     def test_both_arms_share_job_lock_but_controls_remain_available(self):
-        other = self.module.ArmActionServer('arm3', self.server.job_lock, protocol)
-        self.assertTrue(self.server.goal_callback(SimpleNamespace(command='BUILD_A')))
-        self.assertFalse(other.goal_callback(SimpleNamespace(command='LOAD_A')))
-        self.assertTrue(other.goal_callback(SimpleNamespace(command='EMER_STOP')))
+        other = self.module.ArmActionServer('arm3', self.server.job_lock, protocol,gate=self.server.gate)
+        self.assertTrue(self.server.goal_callback(Goal('BUILD_A').request))
+        self.assertFalse(other.goal_callback(Goal('LOAD_A').request))
+        self.assertTrue(other.goal_callback(Goal('EMER_STOP').request))
         self.server.job_lock.release()
         self.server.dispatch_lock.close();self.server.dispatch_lock=None
-        self.assertTrue(other.goal_callback(SimpleNamespace(command='LOAD_A')))
+        self.server.gate.retire(self.server.ticket);self.server.gate.release_control('EMER_STOP')
+        self.assertTrue(other.goal_callback(Goal('LOAD_A').request))
         other.job_lock.release()
         other.dispatch_lock.close();other.dispatch_lock=None
 
     def test_wrong_arm_and_unknown_commands_rejected(self):
         for command in ('LOAD_A', 'invalid'):
-            self.assertFalse(self.server.goal_callback(SimpleNamespace(command=command)))
+            self.assertFalse(self.server.goal_callback(Goal(command).request))
 
     def test_launch_failure_releases_job_lock(self):
         goal = Goal('BUILD_A')
@@ -169,9 +176,9 @@ class ActionContractTests(unittest.TestCase):
     def notices(self):
         return [event['status'] for path in (self.module.ROOT/'data/episode-cli-runs').glob('*.json') for event in json.loads(path.read_text())['events']]
     def test_rejected_goals_record_reason_without_executor(self):
-        self.assertFalse(self.server.goal_callback(SimpleNamespace(command='LOAD_A')))
+        self.assertFalse(self.server.goal_callback(Goal('LOAD_A').request))
         self.server.job_lock.acquire()
-        self.assertFalse(self.server.goal_callback(SimpleNamespace(command='BUILD_B')))
+        self.assertFalse(self.server.goal_callback(Goal('BUILD_B').request))
         self.server.job_lock.release()
         messages=self.notices()
         self.assertTrue(any('GOAL_REJECTED:LOAD_A:' in m for m in messages))
@@ -219,6 +226,18 @@ class ActionContractTests(unittest.TestCase):
                     result=self.execute('arm2',goal)
                 self.assertEqual(goal.messages,['RUNNING','BUILD_DONE','IDLE'])
                 self.assertTrue(result.success)
+
+    def test_pc_chain_preserves_command_identity_and_requires_final_load_result(self):
+        for product in ('A','B'):
+            goal=Goal('PC_BUILD_LOAD_'+product)
+            lines=[product+'_BUILD_DONE',product+'_DONE',product+'_CHAIN_DONE']
+            with patch.object(self.module.subprocess,'Popen',return_value=Process(lines)) as launch:
+                result=self.execute('arm2',goal)
+            self.assertTrue(result.success);self.assertIn('pc_build_load_'+product.lower(),launch.call_args.args[0])
+            self.assertEqual(goal.messages,['RUNNING','BUILD_DONE','IDLE'])
+            with patch.object(self.module.subprocess,'Popen',return_value=Process([product+'_BUILD_DONE'])):
+                result=self.execute('arm2',Goal('PC_BUILD_LOAD_'+product))
+            self.assertFalse(result.success)
 
     def test_build_milestone_does_not_complete_the_combined_job(self):
         goal=Goal('BUILD_LOAD_A')

@@ -8,6 +8,7 @@ def main():
     p.add_argument('--demo-scene',choices=('complete','faults'),default='complete',help='Recorded demo scene')
     p.add_argument('--demo',action='store_true',help='Offline simulated servos; no USB')
     p.add_argument('--camera-only',action='store_true',help='Connect the Pi camera only; disable motor connection and motion')
+    p.add_argument('--work-monitor',action='store_true',help='Read Pi work records and existing camera only; no device ownership')
     p.add_argument('--integration',metavar='RECIPES_JSON',help='Explicitly enable ROS 2 episode commands with this recipe map')
     p.add_argument('--integration-domain',type=int,default=40,help='ROS domain for the opt-in receiver (default 40)')
     p.add_argument('--minimized',action='store_true',help='Start minimized without raising the workspace window')
@@ -19,6 +20,12 @@ def main():
     p.add_argument('--no-camera',action='store_true');p.add_argument('--seconds',type=float,default=3.)
     p.add_argument('--save-pose',help='Save an actual fresh measured pose during a read-only probe')
     args=p.parse_args()
+    if args.work_monitor:
+        if args.demo or args.camera_only or args.integration or args.probe or args.check or args.setup or args.ai or args.jig_detection:
+            p.error('작업 조회 전용은 다른 실행 모드와 함께 사용할 수 없습니다.')
+        from desktop_monitor.ui import launch
+        launch(ROOT/'data',minimized=args.minimized)
+        return
     if args.demo and args.probe:p.error('데모에서는 실제 장치 진단을 실행할 수 없습니다.')
     if args.demo and args.integration:p.error('데모는 통합 실물 명령 수신과 함께 실행할 수 없습니다.')
     if args.camera_only and (args.demo or args.integration or args.probe):p.error('카메라 전용은 데모·통합 실행·모터 진단과 함께 사용할 수 없습니다.')

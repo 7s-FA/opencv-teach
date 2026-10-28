@@ -19,21 +19,28 @@ class BatchTests(unittest.TestCase):
         steps=[self.step,{'id':'b'},dict(self.step,id='c'),{'id':'d'}];before=deepcopy(steps)
         self.assertEqual([n for n,s in inspection_schedule(steps)],[1,3]);self.assertEqual(steps,before)
         self.assertEqual(inspection_schedule([self.step])[0][0],1)
+    def capture_pair(self):
+        import numpy as np
+        for at in (10.1,10.2):
+            self.now=at;self.batch.poll((np.zeros((2,2,3)),at))
     def test_pre_retreat_images_and_duplicate_frames_never_pass(self):
-        self.batch.start(self.step);w=self.workers[0];w.result=result(9.9);self.now=10.2;self.batch.poll();self.passed.assert_not_called()
-        w.result=result(10.1);self.batch.poll();self.batch.poll();self.passed.assert_not_called()
-        self.now=10.5;w.result=result(10.4);self.batch.poll();self.passed.assert_called_once_with(self.step)
+        self.batch.start(self.step);w=self.workers[0];w.result=result(9.9)
+        self.capture_pair();self.passed.assert_not_called()
+        self.now=11.;w.result=result(10.1);self.batch.poll();self.batch.poll();self.passed.assert_not_called()
+        self.now=12.;w.result=result(10.2);self.batch.poll()
+        self.assertEqual(self.passed.call_args.args[0]['id'],self.step['id'])
     def test_two_overlapping_checks_complete_independently(self):
-        self.batch.start(self.step);self.batch.start(dict(self.step,id='b'))
-        for at in (10.1,10.3):
-            self.now=at+.01;self.workers[1].result=result(at);self.batch.poll()
+        self.batch.start(self.step);self.batch.start(dict(self.step,id='b'));self.capture_pair()
+        for at in (10.1,10.2):
+            self.now+=1.;self.workers[1].result=result(at);self.batch.poll()
         self.assertEqual(len(self.batch.pending),1);self.assertEqual(self.passed.call_args.args[0]['id'],'b')
     def test_failure_in_any_pending_check_propagates(self):
         self.batch.start(self.step);self.batch.start(dict(self.step,id='b'));self.workers[1].result={'error':'vision failed'}
         with self.assertRaisesRegex(ValueError,'vision failed'):self.batch.poll()
-    def test_pause_discards_worker_and_restarts_fresh_frame_budget(self):
-        self.batch.start(self.step);self.workers[0].result=result(10.1);self.now=10.2;self.batch.poll()
-        self.now=20.;self.batch.restart();self.workers[0].close.assert_called_once();self.workers[1].result=result(10.3);self.batch.poll();self.passed.assert_not_called()
+    def test_pause_during_capture_does_not_use_new_position_frames(self):
+        self.batch.start(self.step)
+        with self.assertRaisesRegex(ValueError,'영상 확보 중 중단'):self.batch.restart()
+        self.assertEqual(len(self.workers),1)
     def test_pi_failure_during_motion_sends_hold_before_cleanup(self):
         import tempfile
         from pathlib import Path
@@ -62,3 +69,26 @@ class PreparationTests(unittest.TestCase):
         fixture=RunnerPipelineTests()
         with self.assertRaisesRegex(RuntimeError,'missing'):fixture.exercise(fail=True)
         self.assertFalse(any(s.startswith(('WORK_READY','INSPECTION_STARTED:linear')) for _,s in fixture.last_events))
+
+class CheckpointFrameQueueTests(unittest.TestCase):
+    def worker(self,**options):
+        from so101_teach.episode_inspection_runtime import FrameInspection
+        with patch('threading.Thread.start'):
+            return FrameInspection('.',{},SimpleNamespace(items={}),{},CHECK,'A',fixed_jigs={},**options)
+    def test_next_motion_frame_cannot_replace_pending_checkpoint_image(self):
+        import numpy as np
+        worker=self.worker(preserve_pending_frames=True)
+        original=np.full((2,2,3),20,dtype=np.uint8)
+        self.assertTrue(worker.submit(original,10.1));original[:]=99
+        # The arm has re-entered the ROI while the first image is waiting.
+        self.assertFalse(worker.submit(np.full_like(original,200),11.4))
+        frame,at,_=worker.jobs.get_nowait()
+        self.assertEqual(at,10.1);self.assertTrue((frame==20).all())
+        self.assertTrue(worker.submit(original,11.5))
+    def test_preview_and_startup_workers_still_replace_pending_image(self):
+        import numpy as np
+        worker=self.worker()
+        worker.submit(np.zeros((2,2,3),dtype=np.uint8),10.1)
+        worker.submit(np.ones((2,2,3),dtype=np.uint8),11.4)
+        frame,at,_=worker.jobs.get_nowait()
+        self.assertEqual(at,11.4);self.assertTrue((frame==1).all())

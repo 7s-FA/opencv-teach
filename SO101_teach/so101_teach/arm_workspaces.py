@@ -25,7 +25,7 @@ class ArmWorkspaces:
             app=App(window,self.data_dir,render=render,auto_camera=auto_camera,auto_devices=False,
                     mode_override=mode_override,profile_override=profiles[key],camera_only=camera_only)
             app.workspace_manager=self;app.workspace_visible=key==self.active
-            app.startup_devices_pending=auto_devices and not camera_only;self.apps[key]=app
+            app.startup_devices_pending=False;self.apps[key]=app
             window.title(ARM_NAMES[key]+' · SO-101 Teach')
             app.arm_selector.grid_remove()
             controls=ttk.Frame(app.arm_selector.master);controls.grid(row=0,column=1,padx=(8,4))
@@ -97,6 +97,7 @@ class ArmWorkspaces:
         zoomed=False
         try:zoomed=bool(previous.root.attributes('-zoomed'))
         except tk.TclError:pass
+        if self.camera_only:previous.camera_work_monitor.deactivate()
         previous.root.withdraw();self.active=key
         target.view=deepcopy(previous.view);target.set_mode(previous.mode)
         target.last_render=None
@@ -111,14 +112,16 @@ class ArmWorkspaces:
             except tk.TclError:pass
         atomic_json(self.data_dir/'profile.json',self.persisted_profile(target))
         target.preferences['last_episode_id']=target.episode['id'];atomic_json(self.data_dir/'preferences.json',target.preferences)
-        if target.camera_needed():
-            if self.camera_only and (not target.remote or target.remote.error):target.startup_camera_only()
-            else:target.guard(target.start_camera)
+        if self.camera_only and target.page=='camera':target.startup_camera_only()
+        elif target.camera_needed():target.guard(target.start_camera)
         target.notice(ARM_NAMES[key]+' 선택 · 다른 팔의 연결·토크·실행은 유지됩니다.')
         self.update_buttons()
 
     def connect_all(self):
         if self.closing:return
+        visible=self.apps[self.active]
+        if getattr(visible,'work_observation_mode',False) and visible.page=='camera' and visible.work_monitor_selected():
+            raise ValueError('실시간 작업은 조회 전용입니다. 티칭 화면에서 제어 연결을 다시 여세요.')
         if self.camera_only:raise ValueError('카메라 전용 실행에서는 모터를 연결하지 않습니다.')
         errors=[]
         for key,app in self.apps.items():
@@ -128,9 +131,11 @@ class ArmWorkspaces:
             if app.settings.pi_panel.job:continue
             try:
                 if app.remote_mode:
-                    app.startup_devices_pending=True;app.settings.pi_panel.connect()
-                else:app.connect_devices()
-            except Exception as exc:errors.append(ARM_NAMES[key]+': '+str(exc))
+                    app.startup_devices_pending=True;app.settings.pi_panel.connect(control_requested=True)
+                else:app.connect_devices(control_requested=True)
+            except Exception as exc:
+                app.startup_devices_pending=False
+                errors.append(ARM_NAMES[key]+': '+str(exc))
         self.apps[self.active].notice(' · '.join(errors) if errors else '전체 로봇팔 연결 중 · 기존 연결과 실행은 유지됩니다.',bool(errors))
         self.update_buttons()
 
@@ -192,11 +197,12 @@ class ArmWorkspaces:
         pending=any(app.settings.pi_panel.job for app in self.apps.values())
         for app in self.apps.values():
             app.connect_all_btn.configure(text='모두 연결됨' if connected else '연결 중' if pending else '전체 연결')
-            app.connect_all_btn.state(['disabled'] if self.camera_only or connected or pending else ['!disabled'])
+            observing=getattr(app,'work_observation_mode',False) and app.page=='camera' and app.work_monitor_selected()
+            app.connect_all_btn.state(['disabled'] if self.camera_only or connected or pending or observing else ['!disabled'])
             for key,button in app.arm_quick_buttons.items():
                 target=self.apps[key];session=target.session
                 state=getattr(session,'state',None) if session and session.running else None
-                label={'READ_ONLY':'연결','HOLD':'유지','MOVING':'실행 중','ACTIVATING':'시작 중','FOLLOW':'따라가기','FAULT':'오류'}.get(state,'미연결')
+                label={'READ_ONLY':'연결','HOLD':'유지','MOVING':'실행 중','ACTIVATING':'시작 중','FOLLOW':'따라가기','FAULT':'오류'}.get(state,'조회 전용')
                 if target.pending_execution or target.safe_entry or target.remote_plan_job:label='실행 준비'
                 text=f'{ARM_NAMES[key]} · {label}';style='Shell.Primary.TButton' if self.active==key else 'Shell.TButton'
                 if button.cget('text')!=text:button.configure(text=text)

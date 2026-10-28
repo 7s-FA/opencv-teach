@@ -7,6 +7,34 @@ from so101_teach.workcell_preview import teaching_placement
 from so101_teach.inspection import project_markers
 
 class StepInspectionTimingTests(unittest.TestCase):
+    def test_pi_starts_check_only_when_completed_count_reaches_selected_step(self):
+        from tests.test_episode_cli import cli,FakeLink,FakeLinear
+        from unittest.mock import patch
+        link=FakeLink();link.auto_finish=False
+        events=[];started=[];observed=[]
+        run=cli.Runner(link,events.append,cli.Control(),20,linear=FakeLinear())
+        steps=[{'id':'a','name':'검사 지정','ticks':{},'inspection':{'station':'linear','target':'1','expected':'housing_seated','timeout_seconds':10}},{'id':'b','name':'다음 이동','ticks':{}}]
+        run.inspection_due=inspection_schedule(steps);run.inspection_started=set()
+        run.inspection_batch=SimpleNamespace(capturing=False,pending=[])
+        def start(step):
+            started.append(link.index);run.inspection_batch.capturing=True;run.inspection_batch.pending.append(step)
+        run.inspection_batch.start=start
+        def poll():
+            observed.append((link.index,list(started)))
+            if run.inspection_batch.capturing:run.inspection_batch.capturing=False;return
+            if run.inspection_batch.pending:
+                self.assertEqual(link.mode,'MOVING');run.inspection_batch.pending.clear();events.append('CHECK_PASSED');return
+            target_count=len(next(a['targets'] for m,a in reversed(link.calls) if m=='command' and a.get('action')=='play'))
+            if link.index<target_count:link.index+=1
+            if link.index==target_count:link.completed=link.request;link.mode='HOLD';link.pending=False
+        with patch.object(run,'poll_inspections',side_effect=poll),patch.object(cli.time,'sleep'):
+            run.move('play',[{},{}],steps,{})
+        self.assertEqual(observed[0],(0,[]))
+        self.assertEqual(started,[1])
+        self.assertIn((1,[1]),observed)
+        self.assertIn('STEP_DONE:1/2:검사 지정',events)
+        self.assertLess(events.index('CHECK_PASSED'),events.index('STEP_DONE:2/2:다음 이동'))
+
     def test_legacy_checks_and_deferred_events_move_once_without_changing_trigger(self):
         check={'station':'linear','target':'2','expected':'housing_seated','timeout_seconds':10}
         old={'steps':[{'id':'a','name':'하단 : 조정 완료','inspection':check},{'id':'b','name':'중단 : 잡기 위치'}],'completion_events':{'LOWER':'a'}}

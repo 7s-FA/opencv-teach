@@ -53,31 +53,42 @@ class PCExecutionTests(unittest.TestCase):
         p=patch('so101_teach.episode_execution.time.monotonic',lambda:self.clock);p.start();self.addCleanup(p.stop)
         self.s=SimpleNamespace(running=True,error=None,state='HOLD',completed_request_id=None,active_request_id=None,command_pending=Event(),program_active=Event(),request=Mock())
         self.a=SimpleNamespace(data_dir=Path(self.temp.name),episode={'id':'e','product_type':'A'},session=self.s,latest=SimpleNamespace(fresh=lambda:True,calibration_matches=True),profile={},catalog={},workcell_preview={},camera=SimpleNamespace(error=None),camera_view_observation=lambda:None,start_camera=Mock(),camera_needed=lambda:False,suspend_camera=Mock(),notice=Mock())
-        def dispatch(action,targets):self.s.active_request_id=len(self.a.motion_request.call_args_list);self.s.completed_request_id=None;return self.s.active_request_id
+        def dispatch(action,targets):self.s.active_request_id=len(self.a.motion_request.call_args_list);self.s.completed_request_id=None;self.s.state='MOVING';return self.s.active_request_id
         self.a.motion_request=Mock(side_effect=dispatch)
         self.worker=SimpleNamespace(result=None,submit=Mock(),close=Mock())
         p=patch('so101_teach.episode_execution.FrameInspection',return_value=self.worker);p.start();self.addCleanup(p.stop)
         self.steps=[{'id':'gate','name':'검사','inspection':CHECK},{'id':'next','name':'다음'}]
         self.run=InspectedExecution(self.a,self.steps,[{'q':1},{'q':2}]);self.run.dispatch()
-    def arrive(self):self.s.completed_request_id=self.run.request_id;self.run.poll()
-    def test_selected_step_completes_before_check_and_motion_keeps_running(self):
-        self.s.state='MOVING';self.s.index=0;self.run.poll();self.assertFalse(self.run.batch.pending)
-        self.s.index=1;self.run.poll();self.assertTrue(self.run.batch.pending)
-        self.assertEqual(self.a.motion_request.call_args.args[1],[{'q':1},{'q':2}])
-        self.clock=10.2;self.worker.result=result();self.run.poll()
-        self.clock=10.5;self.worker.result=result(10.4);self.run.poll();self.assertFalse(self.run.batch.pending)
-        self.s.state='HOLD';self.arrive();self.assertEqual(self.run.phase,'done')
-    def test_failure_during_motion_sends_hold(self):
-        self.s.state='MOVING';self.s.index=2;self.run.poll()
-        self.clock=10.2;self.worker.result=result(quality='abnormal');self.run.poll()
-        self.clock=10.5;self.worker.result=result(10.4,quality='abnormal');self.run.poll()
+    def arrive(self):self.s.state='HOLD';self.s.completed_request_id=self.run.request_id;self.run.poll()
+    def freeze(self):
+        import numpy as np
+        self.arrive()
+        for at in (10.1,10.2):
+            self.clock=at;self.a.camera_view_observation=lambda at=at:(np.zeros((2,2,3)),{},at);self.run.poll()
+    def test_selected_step_holds_for_capture_then_motion_overlaps_processing(self):
+        self.s.index=0;self.run.poll();self.assertFalse(self.run.batch.pending)
+        self.s.index=1;self.run.poll();self.assertFalse(self.run.batch.pending)
+        self.assertEqual(self.a.motion_request.call_args.args[1],[{'q':1}])
+        self.freeze();self.assertEqual(self.a.motion_request.call_args.args[1],[{'q':2}])
+        self.assertEqual(self.run.phase,'moving');self.assertTrue(self.run.batch.pending)
+        self.clock=11.;self.worker.result=result(10.1);self.run.poll()
+        self.clock=14.;self.worker.result=result(10.2);self.run.poll();self.assertFalse(self.run.batch.pending)
+        self.arrive();self.assertEqual(self.run.phase,'done')
+    def test_failure_during_next_motion_sends_hold(self):
+        self.freeze()
+        self.clock=11.;self.worker.result=result(10.1,quality='abnormal');self.run.poll()
+        self.clock=14.;self.worker.result=result(10.2,quality='abnormal');self.run.poll()
         self.assertEqual(self.run.phase,'failed');self.s.request.assert_called_once_with('hold')
     def test_operator_cancel_discards_late_pass_and_never_resumes(self):
         self.arrive();self.run.cancel();self.worker.result=result();self.run.poll();self.a.motion_request.assert_called_once();self.worker.close.assert_called_once()
     def test_lost_hold_or_camera_error_stops(self):
         self.arrive();self.s.state='READ_ONLY';self.run.poll();self.assertEqual(self.run.phase,'failed');self.s.request.assert_called_once_with('hold')
     def test_final_completion_waits_for_check_and_timeout_holds(self):
-        self.arrive();self.assertEqual(self.run.phase,'inspection');self.clock=16.;self.run.poll();self.assertEqual(self.run.phase,'failed');self.assertIn('시간 초과',self.run.error)
+        self.freeze();self.arrive();self.assertEqual(self.run.phase,'inspection');self.clock=16.;self.run.poll()
+        self.assertEqual(self.run.phase,'failed');self.assertIn('시간 초과',self.run.error)
+    def test_capture_loses_hold_before_second_frame_stops_without_dispatch(self):
+        self.arrive();self.s.state='MOVING';self.run.poll()
+        self.assertEqual(self.run.phase,'failed');self.a.motion_request.assert_called_once()
 
 class PiExecutionTests(unittest.TestCase):
     def test_pi_continuous_path_checks_after_selected_step_and_defers_done(self):
@@ -88,14 +99,17 @@ class PiExecutionTests(unittest.TestCase):
         pending=[]
         def begin(*args):
             runner.inspection_due=inspection_schedule(episode['steps'])
-            runner.inspection_batch=SimpleNamespace(pending=pending,start=lambda step:pending.append(step),close=lambda:pending.clear())
+            class Batch:
+                capturing=property(lambda self:bool(pending))
+            runner.inspection_batch=Batch()
+            runner.inspection_batch.pending=pending;runner.inspection_batch.start=lambda step:pending.append(step);runner.inspection_batch.close=lambda:pending.clear()
         def poll():
             if not pending:return
             self.assertIn('STEP_DONE:1/3:하단 놓고 들기',events);self.assertNotIn('STAGE_DONE:LOWER',events)
             events.extend(['INSPECTION_PASS:a','STAGE_DONE:LOWER']);pending.clear()
         with tempfile.TemporaryDirectory() as folder,patch.object(cli,'ROOT',Path(folder)),patch.object(runner,'begin_inspections',side_effect=begin),patch.object(runner,'poll_inspections',side_effect=poll):
             runner.execute(episode,{'profile':{}},400,100.)
-        plays=[a for m,a in link.calls if m=='command' and a['action']=='play'];self.assertEqual(len(plays),1);self.assertEqual(len(plays[0]['targets']),3)
+        plays=[a for m,a in link.calls if m=='command' and a['action']=='play'];self.assertEqual([len(play['targets']) for play in plays],[1,2])
         self.assertLess(events.index('INSPECTION_PASS:a'),events.index('EPISODE_DONE'));self.assertEqual(events[-1],'DONE')
 
 class InspectionUITests(unittest.TestCase):
@@ -187,11 +201,12 @@ class AppIntegrationTests(unittest.TestCase):
     def test_real_app_dispatches_only_first_checkpoint_and_rejects_overlapping_move(self):
         from so101_teach.motion import MotionSession
         a=self.app;a.step_name.set('검사');a.commit_target();a.episode['product_type']='A';a.episode['steps'][0]['inspection']=deepcopy(CHECK)
-        a.step_name.set('다음');a.target['shoulder_pan']+=3;a.commit_target()
+        a.step_name.set('다음');a.commit_target();a.episode['steps'][1]['ticks']['shoulder_pan']+=3
         s=MotionSession('fake',a.calibration);s.running=True;s.state='HOLD';s.request=Mock(return_value=7);a.session=s
         try:
             a.begin_execution('play',deepcopy(a.episode['steps']),{})
-            self.assertEqual(s.request.call_args.args,('play',[step['ticks'] for step in a.episode['steps']]))
+            self.assertEqual(s.request.call_args.args,('play',[a.episode['steps'][0]['ticks']]))
+            self.assertNotEqual(a.episode['steps'][0]['ticks'],a.episode['steps'][1]['ticks'])
             with self.assertRaisesRegex(ValueError,'실행 중'):a.motion_request('move',[a.target])
             a.motion_request('hold');self.assertEqual(a.inspection_run.phase,'failed');self.assertEqual(s.request.call_args.args,('hold',None))
         finally:a.inspection_run=None;a.session=None

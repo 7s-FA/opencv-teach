@@ -258,7 +258,22 @@ class LinearController(Node):
 
 
 def main(args=None):
-    rclpy.init(args=args)
+    import argparse,sys
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--network-interface',default=os.environ.get('WORKCELL_NETWORK_INTERFACE','wlan0'))
+    parser.add_argument('--network-timeout',type=float,default=60.)
+    parser.add_argument('--network-check-only',action='store_true')
+    options,ros_args=parser.parse_known_args(args)
+    # DDS fixes its interface locators at participant creation. network-online
+    # alone does not guarantee that Wi-Fi has acquired its address and route.
+    local=Path(__file__).resolve().parents[1]/'integration'
+    network_dir=Path(os.environ.get('SO101_APP_DIR','/home/ubuntu/OpenCV_teach'))/'integration'
+    if local.is_dir():network_dir=local
+    sys.path.insert(0,str(network_dir))
+    from network_ready import wait_for_network
+    wait_for_network(options.network_interface,options.network_timeout)
+    if options.network_check_only:return
+    rclpy.init(args=ros_args)
     signal.signal(signal.SIGTERM, lambda *_: rclpy.try_shutdown())
     node = None
     try:

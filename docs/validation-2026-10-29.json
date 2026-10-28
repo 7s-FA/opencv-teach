@@ -1,0 +1,51 @@
+{
+  "date": "2026-10-29",
+  "scope": "Public source and offline demo validation; production verification is summarized separately.",
+  "related_tests_passed": 135,
+  "offline_demo_data_tests_passed": 2,
+  "portable_model_asset_tests_passed": 2,
+  "native_demo": {
+    "passed": true,
+    "checks": {
+      "first_arm_3d": true,
+      "save_reload_preserved": true,
+      "second_arm_3d": true,
+      "both_jigs_detected": {
+        "pallet": "shape_match",
+        "b5ebdb54807c441c8267c15d77713b6a": "shape_match"
+      },
+      "both_jigs_adopted": true,
+      "korean_capture_path": true,
+      "camera_switch_at": 490151.496899318,
+      "fault_photo_processed": true,
+      "motors": [
+        "DemoSession",
+        "DemoSession"
+      ],
+      "network_blocked": true,
+      "serial_blocked": true,
+      "final_message": "오안착 사진 · 저장된 사진으로 위치를 다시 측정합니다."
+    },
+    "errors": []
+  },
+  "preserved": [
+    "Windows lazy Linux-only imports and directory fsync guard",
+    "MuJoCo virtual assets for Unicode paths",
+    "Existing example configuration and recipes",
+    "Offline serial/network/process boundaries"
+  ],
+  "source_changes": [
+    "inspection/motion overlap and checkpoint resume",
+    "preserve adopted coordinates for same-job retry",
+    "prepared standby and request/storage boundaries",
+    "PC compute cooperation interfaces",
+    "work monitor and original/inspection recording continuity"
+  ],
+  "excluded": [
+    "device credentials and runtime configuration",
+    "model weights",
+    "raw datasets, recordings and logs"
+  ],
+  "new_release_created": false,
+  "windows_current_build": "GitHub Actions after source push; not claimed as locally tested"
+}

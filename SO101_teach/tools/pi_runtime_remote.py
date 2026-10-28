@@ -44,10 +44,20 @@ def run(request):
                 'devices_running':{k:bool((state.get(k) or {}).get('running')) for k in ('follower','leader','calibration')}}
             private[arm]=(info,call)
         return result,private
+    action_pending=root/'data/action-service-restart-pending.json'
+    def process_stamp(pid):
+        path=Path('/proc')/str(pid)/'stat'
+        try:return path.read_text().rsplit(')',1)[1].split()[19]
+        except FileNotFoundError:return None
+    def pending_action_restart():
+        if not action_pending.exists():return False
+        value=json.loads(action_pending.read_text())
+        return value['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip() and process_stamp(value['pid'])==value['process_start']
     def inspect():
         servers,_=peers();disk=manifest(root,allow_missing=True)
         return {'disk':disk,'servers':servers,'changed_files':difference(request['expected'],disk),
-            'restart_required':[a for a,s in servers.items() if not s['running'] or difference(disk,s.get('runtime'))]}
+            'restart_required':[a for a,s in servers.items() if not s['running'] or difference(disk,s.get('runtime'))],
+            'action_service_restart_pending':pending_action_restart()}
     if request['operation']=='check':return inspect()
     (root/'data').mkdir(exist_ok=True)
     with (root/'data/runtime-update.lock').open('a') as update,(root/'data/episode-cli.lock').open('a') as work:
@@ -76,15 +86,23 @@ def run(request):
         if not changed and not stale:return {**inspect(),'applied':False,'reason':'이미 동기화되어 있습니다.'}
         service='workcell-actions.service'
         service_active=subprocess.run(['systemctl','is-active','--quiet',service]).returncode==0
-        # ActionServer only keeps these two project modules loaded. Episode and
+        # ActionServer keeps protocol, admission and lease modules loaded. Episode and
         # device code is launched in fresh child processes for each command.
-        restart_service=service_active and bool(set(changed)&{'integration/action_server.py','integration/action_protocol.py'})
-        if restart_service:
+        restart_service=service_active and bool(set(changed)&{'integration/action_server.py','integration/action_protocol.py','integration/supervision_gate.py','integration/supervision_session.py'})
+        deferred=restart_service and request.get('defer_action_restart') is True
+        pending_value=None
+        if deferred:
+            result=subprocess.run(['systemctl','show','--property=MainPID','--value',service],capture_output=True,text=True,check=True)
+            pid=int(result.stdout.strip());stamp=process_stamp(pid)
+            if not pid or stamp is None:raise RuntimeError('액션 서비스 프로세스 확인 실패')
+            pending_value={'pid':pid,'process_start':stamp,'boot_id':Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'expected_runtime':expected['sha256']}
+        if restart_service and not deferred:
             allowed=subprocess.run(['sudo','-n','-l','/usr/bin/systemctl','restart',service],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
             if allowed.returncode:raise RuntimeError('기존 액션 서비스 재시작 권한이 없어 변경 전에 중단했습니다.')
         backup=root/'verification'/('runtime-sync-'+time.strftime('%Y%m%d-%H%M%S')+'-'+str(os.getpid()))
         backup.mkdir(parents=True)
         absent=[];stopped=[];reserved={}
+        previous_pending=action_pending.read_bytes() if action_pending.exists() else None
         def stop_peer(arm,info):
             proc=Path('/proc/'+str(info['pid']))
             if not proc.exists():return
@@ -122,13 +140,17 @@ def run(request):
             namespace['validate_boundaries'](root)
             if difference(expected,manifest(root)):raise RuntimeError('적용 후 실행부 해시 불일치')
             start_peers()
-            if restart_service:subprocess.run(['sudo','-n','systemctl','restart',service],check=True,timeout=20)
+            if restart_service and not deferred:subprocess.run(['sudo','-n','systemctl','restart',service],check=True,timeout=20)
+            if pending_value is not None:action_pending.write_text(json.dumps(pending_value)+'\n')
+            elif restart_service:action_pending.unlink(missing_ok=True)
             result=inspect()
             if result['changed_files'] or result['restart_required']:raise RuntimeError('실행 중인 버전 확인 실패')
-            result.update(applied=True,backup=str(backup),updated_files=sorted(files),action_service_restarted=restart_service)
+            result.update(applied=True,backup=str(backup),updated_files=sorted(files),action_service_restarted=restart_service and not deferred)
             (backup/'result.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
             return result
         except BaseException:
+            if previous_pending is None:action_pending.unlink(missing_ok=True)
+            else:action_pending.write_bytes(previous_pending)
             # Prevent another app from acquiring half-updated controllers; restore
             # original files before releasing either deployment lock.
             live,details=peers()

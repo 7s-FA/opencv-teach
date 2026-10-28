@@ -18,8 +18,10 @@ class ModelRegionTests(unittest.TestCase):
   self.assertNotEqual(identity(first),identity({'files':first['files']}))
  def test_settings_are_explicit_and_model_identity_is_required(self):
   self.assertEqual(checked_settings({})['method'],'opencv')
+  self.assertEqual(checked_settings({})['confidence'],.5)
   self.assertEqual(checked_settings({'jig_detection':SETTINGS}),SETTINGS)
-  for bad in ({**SETTINGS,'model_identity':None},{**SETTINGS,'confidence':.55},{**SETTINGS,'model':'sam3'}):
+  self.assertEqual(checked_settings({'jig_detection':{**SETTINGS,'confidence':.75}})['confidence'],.75)
+  for bad in ({**SETTINGS,'model_identity':None},{**SETTINGS,'confidence':.49},{**SETTINGS,'confidence':.755},{**SETTINGS,'confidence':float('nan')},{**SETTINGS,'model':'sam3'}):
    with self.assertRaises(ValueError):checked_settings({'jig_detection':bad})
  def test_regions_use_class_and_margin_not_segmentation_center(self):
   frame=np.zeros((100,200,3),np.uint8)

@@ -71,7 +71,7 @@ class RuntimePreparationTests(unittest.TestCase):
     def test_real_camera_lifecycle_keeps_worker_and_discards_preparation_frame(self):
         r=self.runtime;r.camera_factory=CameraSession;r.profile['jig_detection']=deepcopy(SETTINGS)
         provider=PreparedProvider();r.detector.region_model=provider
-        cap=Mock();cap.isOpened.return_value=True;cap.read.return_value=(True,np.zeros((48,64,3),np.uint8))
+        cap=Mock();cap.isOpened.return_value=True;cap.read.return_value=(True,np.zeros((720,1280,3),np.uint8))
         with patch('cv2.VideoCapture',return_value=cap):
             r.call('camera_prepare',{})
             camera=r.camera

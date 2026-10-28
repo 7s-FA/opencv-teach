@@ -12,16 +12,10 @@ import threading
 import time
 
 ROOT=Path(__file__).resolve().parents[1]
-CONFIDENCES=(.5,.6,.7,.8,.9)
 MAX_IMAGE_BYTES=32*1024*1024
 PC_MAX_FPS=10.  # Match the shared camera's active preview rate.
 
-def confidence_value(value):
-    number=float(value)
-    if number not in CONFIDENCES:raise ValueError('최소 신뢰도는 0.5~0.9에서 0.1 단위로 선택하세요.')
-    return number
-
-from .inference_protocol import read_exact,send_packet,receive_packet
+from .inference_protocol import read_exact,send_packet,receive_packet,confidence_value
 
 def worker_command(model_path,*,backend,python,remote=None,remote_dir=None):
     if backend not in ('ncnn','tensorrt','sam3'):raise ValueError('지원하지 않는 인식 모델입니다.')

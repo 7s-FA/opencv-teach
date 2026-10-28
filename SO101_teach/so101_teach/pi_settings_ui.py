@@ -21,13 +21,13 @@ class PiSettingsPanel:
         actions=ttk.Frame(p,style='Card.TFrame');actions.grid(row=8,column=0,columnspan=3,sticky='w',pady=8)
         self.save_btn=self.app.button(actions,'설정 저장',self.save)
         self.probe_btn=self.app.button(actions,'SSH 연결 확인',self.probe)
-        self.connect_btn=self.app.button(actions,'Pi 연결·사용',self.connect,True)
+        self.connect_btn=self.app.button(actions,'Pi 대상으로 선택',self.use_pi,True)
         self.local_btn=self.app.button(actions,'이 PC 사용',self.use_local)
         for button in (self.save_btn,self.probe_btn,self.connect_btn,self.local_btn):button.pack(side='left',padx=(0,8))
-        self.status=tk.StringVar(value='저장 설정 읽기 실패: '+error if error else 'Pi 연결·사용을 누르면 장치 연결 대상이 Pi로 바뀝니다.')
+        self.status=tk.StringVar(value='저장 설정 읽기 실패: '+error if error else '시작은 조회 전용입니다. 제어권은 상단 전체 연결로 요청합니다.')
         StatusText(p,self.status,height=4,font=('Noto Sans CJK KR',11)).grid(row=10,column=0,columnspan=3,sticky='ew',pady=10)
-        settings.label(p,11,'시작·저장\n저장된 모드로 자동 연결합니다. 연결만으로 토크나 리더 따라가기를 켜지 않습니다.\n장치 설정·영점·지그는 연결 시 동기화합니다. 에피소드는 시작 시 Pi에서 불러오고, 편집본은 내보내기를 눌러야 Pi에 저장됩니다.')
-        settings.label(p,12,'통신·복구\n통신이 끊기면 이동을 멈추고 자세를 유지합니다. 1·2·5·최대 10초 간격으로 재연결하되, 중단된 동작은 자동 재개하지 않습니다.\n카메라는 확인·측정할 때 연결합니다. 촬영·검출·전송은 10 FPS(지연 시 감소), 3D는 최대 30 FPS입니다.\n영상과 제어는 별도로 전송합니다. 리더 값은 최대 초당 50회 보내며, Pi가 팔로워 기준으로 변환합니다.')
+        settings.label(p,11,'시작 시 조회 전용 · 전체 연결을 누를 때만 제어권 요청\nPi 에피소드는 시작 시 불러오며, 편집본은 에피소드 전송으로 반영합니다.')
+        settings.label(p,12,'통신 끊김: 이동 정지·자세 유지 · 자동 재연결 없음 · 전체 연결로 다시 요청하며 중단된 동작은 자동 재개하지 않습니다.')
     def values(self):return {key:self.s.value('pi_'+key) for key in pi_connection.DEFAULTS}
     def save(self):
         pi_connection.save(self.app.data_dir,self.values());self.status.set('연결 설정 저장됨');self.app.notice('라즈베리파이 연결 설정 저장')
@@ -36,37 +36,51 @@ class PiSettingsPanel:
         if self.job:return
         values=pi_connection.validate(self.values(),True);self.job_kind='probe';self.job=self.s.pool.submit(pi_connection.probe,values)
         self.probe_btn.state(['disabled']);self.status.set(f"SSH 확인 중 · {values['user']}@{values['host']}:{values['port']}")
+    def use_pi(self):
+        if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 대상을 변경하지 않습니다.')
+        if self.job:raise ValueError('연결 확인을 마친 뒤 대상을 변경하세요.')
+        self.s.require_idle()
+        a=self.app
+        self.save()
+        a.remote_mode=True;a.preferences['device_host']='pi';a.save_preferences()
+        a.start_linear_state_query()
+        self.status.set('Pi 대상으로 선택됨 · 제어 연결은 상단 전체 연결을 누르세요.')
+        a.device_target.set('장치: Pi · 조회 전용')
     def schedule_recovery(self):
+        # A lost or rejected lease requires another explicit click. Never retry
+        # across an external job boundary or replay unfinished UI continuations.
         a=self.app
         if a.closed or not a.remote_mode:return
         if not self.recovery_pending:
-            old=a.remote;state=getattr(old,'latest_state',None) or {}
-            intent=getattr(old,'follower_requested',None)
-            self.restore_devices=bool(a.startup_devices_pending or (intent if intent is not None else (state.get('follower') or {}).get('running') or a.session and a.session.running))
-            # Drop all unfinished UI continuations, never replay a command whose
-            # result was lost. The Pi watchdog owns stopping the actual arm.
-            a.live_adjust.stop(halt=False)
-            a.stop_preview(quiet=True)
-            self.recovery_pending=True;self.retry_count=0;self.retry_at=time.monotonic()+1.
-        self.auto_enabled=True
-        a.device_target.set('장치: Pi · 자동 재연결 대기')
-    def connect(self,automatic=False):
+            a.live_adjust.stop(halt=False);a.stop_preview(quiet=True)
+        self.recovery_pending=True;self.auto_enabled=False;self.restore_devices=False
+        self.retry_count=0;self.retry_at=0.;a.startup_devices_pending=False
+        self.status.set('제어 연결이 끊겼습니다. 자동 재연결 없이 조회 전용으로 대기합니다. 전체 연결을 눌러 다시 요청하세요.')
+        a.device_target.set('장치: Pi · 조회 전용 · 전체 연결 필요')
+    def connect(self,automatic=False,*,control_requested=False):
         if getattr(self.app,'demo_mode',False):raise ValueError('데모에서는 실제 장치 연결·보정·Pi 전송을 실행하지 않습니다.')
+        # Even a stale timer callback must never reacquire a controller.
+        if automatic:return
+        if not control_requested:raise ValueError('조회 전용입니다. 상단 전체 연결을 눌러 제어권을 요청하세요.')
         if self.job:return
         a=self.app
-        if not automatic:self.s.require_idle()
-        self.auto_enabled=True
-        if a.closed or automatic and not a.remote_mode:return
+        if a.camera_only:raise ValueError('카메라 전용 실행에서는 제어권을 요청하지 않습니다.')
+        if getattr(a,'work_observation_mode',False):
+            if a.page=='camera' and a.work_monitor_selected():
+                raise ValueError('실시간 작업은 조회 전용입니다. 티칭 화면에서 전체 연결을 누르세요.')
+            a.work_observation_mode=False;a._work_monitor_passive=False
+        self.s.require_idle()
+        self.auto_enabled=False
+        if a.closed:return
         from .remote_config import configuration_bundle
         from .remote_client import RemoteLink,RemoteLeaderSession,RemoteCameraSession
         from .motion import SPEED_PRESETS
-        values=pi_connection.validate(pi_connection.load(a.data_dir),True) if automatic else pi_connection.save(a.data_dir,self.values());bundle=configuration_bundle(a)
+        values=pi_connection.save(a.data_dir,self.values());bundle=configuration_bundle(a)
         a.remote_mode=True;a.preferences['device_host']='pi'
-        if not automatic:a.save_preferences()
+        a.save_preferences()
         a.start_linear_state_query()
-        a.device_target.set('장치: Pi · 자동 재연결 중' if automatic else '장치: Pi · 연결 중')
-        restore=bool(a.startup_devices_pending or automatic and self.restore_devices)
-        if a.camera_only:restore=False
+        a.device_target.set('장치: Pi · 연결 중')
+        restore=True
         from .arm_workspace import calibration_pending
         if calibration_pending(a.profile):restore=False
         profile=deepcopy(a.profile);rate=SPEED_PRESETS[a.motion_speed_choice.get()];want_camera=a.camera_needed()
@@ -82,9 +96,9 @@ class PiSettingsPanel:
             link.audit_path=a.data_dir/'diagnostics'/f'pi-link-{time.time_ns()}.json'
             try:
                 link.open();link.sync_bundle(bundle)
-                link.restored_leader=None;link.restored_camera=None;link.devices_prepared=restore;link.automatic_recovery=automatic
+                link.restored_leader=None;link.restored_camera=None;link.devices_prepared=restore
                 # Connecting reuses a held Pi session or starts read-only. No arm,
-                # follow, move or play request is made during recovery.
+                # follow, move or play request is made during connection.
                 if restore:
                     link.rpc('connect',{'speed':rate})
                     leader=profile.get('leader') or {}
@@ -92,7 +106,6 @@ class PiSettingsPanel:
                         cal=Calibration(a.data_dir/leader['calibration_file'])
                         worker=RemoteLeaderSession(link,leader['port'],cal,role='leader',audit_path=a.data_dir/'diagnostics'/f'leader-session-{time.time_ns()}.json')
                         worker.poll_seconds=.02;worker.start();link.restored_leader=worker
-                if automatic:link.rpc('detect_freeze',{'enabled':False})
                 if want_camera:
                     # The workspace camera coordinator opens the shared device
                     # after installation; another arm may still be measuring.
@@ -104,13 +117,13 @@ class PiSettingsPanel:
                 if a.closed:raise ValueError('화면이 닫혀 Pi 연결을 취소했습니다.')
                 return link
             except Exception:link.close(disconnect=False);raise
-        self.job_kind='reconnect' if automatic else 'connect';self.job=self.s.pool.submit(work)
+        self.job_kind='connect';self.job=self.s.pool.submit(work)
         def cleanup(job):
             if a.closed and not job.cancelled():
                 try:job.result().close(disconnect=False)
                 except Exception:pass
         self.job.add_done_callback(cleanup)
-        self.status.set(('Pi 자동 재연결 '+str(self.retry_count+1)+'회 시도 · ' if automatic else '')+'실행부 연결·장치 설정 확인 중');self.connect_btn.state(['disabled'])
+        self.status.set('제어권 요청·장치 설정 확인 중');self.connect_btn.state(['disabled'])
     def install(self,link):
         from .remote_client import RemoteDetector,RemoteMotionSession,RemoteLeaderSession
         a=self.app
@@ -129,10 +142,8 @@ class PiSettingsPanel:
         elif getattr(a,'workspace_manager',None) and a.camera_needed():a.guard(a.start_camera)
         devices=link.health['devices'];ports=devices['serial'];cameras=devices['cameras']
         self.status.set('Pi 연결됨 · '+link.config['host']+'\n로봇 포트: '+(', '.join(ports) or '아직 없음')+'\n카메라: '+(', '.join(cameras) or '아직 없음'))
-        recovered=bool(getattr(link,'automatic_recovery',False))
-        a.notice('Pi 자동 재연결 완료 · 현재 상태 복원 · 중단된 동작은 다시 실행하세요.' if recovered else 'Pi 연결 완료 · 팔로워·카메라: Pi / 리더: PC')
-        if getattr(link,'devices_prepared',False):a.startup_devices_pending=False
-        else:a.connect_startup_devices()
+        a.notice('Pi 제어 연결 완료 · 중단된 동작은 자동 재개하지 않습니다.')
+        a.startup_devices_pending=False
         self.recovery_pending=False;self.retry_count=0;self.retry_at=0.
 
     def use_local(self):
@@ -157,19 +168,14 @@ class PiSettingsPanel:
             try:
                 result=job.result()
                 if kind in ('connect','reconnect'):self.install(result)
-                else:self.status.set(f"SSH 접속 확인됨 · {result['target']} · {result['system']}\nPi 실행부·장치는 Pi 연결·사용으로 별도 확인합니다.")
+                else:self.status.set(f"SSH 접속 확인됨 · {result['target']} · {result['system']}\n로봇팔 제어는 상단 전체 연결로 별도 요청합니다.")
             except Exception as exc:
                 if kind in ('connect','reconnect'):
                     if result:result.close(disconnect=False)
-                    self.recovery_pending=True;self.auto_enabled=True;self.retry_count+=1
-                    delay=(1.,2.,5.,10.)[min(self.retry_count-1,3)];self.retry_at=time.monotonic()+delay
-                    self.status.set(f'Pi 자동 재연결 대기 · {delay:g}초 후 다시 시도\n{exc}')
-                    a.device_target.set('장치: Pi · 자동 재연결 대기');a.notice('Pi 연결 복구 대기 · 자동으로 다시 연결합니다.')
+                    self.auto_enabled=False;self.recovery_pending=True;self.restore_devices=False
+                    self.retry_count=0;self.retry_at=0.;a.startup_devices_pending=False
+                    self.status.set(f'제어 연결 실패 · 자동 재시도 없음\n{exc}\n필요할 때 전체 연결을 다시 누르세요.')
+                    a.device_target.set('장치: Pi · 조회 전용');a.notice('제어 연결 실패 · 조회 전용 유지 · '+str(exc),True)
                 else:self.status.set(str(exc));a.notice(str(exc),True)
-        if self.job or not a.remote_mode:return
+        if self.job or not a.remote_mode or getattr(a,'work_observation_mode',False):return
         if a.remote and a.remote.error and not self.recovery_pending:self.schedule_recovery()
-        if self.auto_enabled and self.recovery_pending and time.monotonic()>=self.retry_at:
-            try:self.connect(automatic=True)
-            except Exception as exc:
-                self.retry_count+=1;self.retry_at=time.monotonic()+10.
-                self.status.set('Pi 자동 재연결 대기 · 10초 후 다시 시도\n'+str(exc))

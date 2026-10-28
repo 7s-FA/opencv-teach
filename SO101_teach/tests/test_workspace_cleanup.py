@@ -30,8 +30,10 @@ class WorkspaceCleanupTests(unittest.TestCase):
     def test_drag_reorder_and_lower_delete_still_work(self):
         a=self.app
         for name in ('A','B','C'):a.step_name.set(name);a.commit_target()
-        original=[s['id'] for s in a.episode['steps']];a.drag_step=original[0]
-        with patch.object(a.steps,'identify_row',return_value=original[2]):a.drop_step(SimpleNamespace(y=1))
+        original=[s['id'] for s in a.episode['steps']];self.root.update()
+        x,y,w,h=a.steps.bbox(original[0]);a.left_step_press(SimpleNamespace(x=x+20,y=y+h//2))
+        x,y,w,h=a.steps.bbox(original[2]);event=SimpleNamespace(x=x+20,y=y+h-2)
+        a.drag_step_motion(event);a.drop_step(event)
         self.assertEqual([s['name'] for s in a.episode['steps']],['B','C','A'])
         a.delete_step_btn.invoke();self.assertEqual([s['name'] for s in a.episode['steps']],['B','C'])
 

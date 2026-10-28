@@ -3,6 +3,7 @@ import base64
 from datetime import datetime
 import io
 import json
+import math
 from pathlib import Path
 import queue
 import threading
@@ -13,6 +14,7 @@ from .ui_theme import COLORS
 from .ui_status import StatusText
 from .ui_scroll import AutoScrollbar
 from . import failure_archive_client
+from desktop_monitor.failure_timeline import summarize,display_fields,timestamp
 
 ROLES={'inspection':'검사 원본','inspection-annotated':'검사 판정 표시',
        'detection':'지그 검출 원본','detection-annotated':'지그 검출 표시',
@@ -29,7 +31,7 @@ def date_text(value):
 def work_text(row):
     command=row.get('command','')
     if command in ('A','B'):return command+(' 조립' if row.get('arm')=='arm2' else ' 운송' if row.get('arm')=='arm3' else '')
-    return {'build_a':'A 조립','build_b':'B 조립','load_a':'A 운송','load_b':'B 운송','build_load_a':'A 연속','build_load_b':'B 연속','slide_build':'조립 위치 이동','slide_load':'하차 위치 이동'}.get(command,command or '실행')
+    return {'pc_build_load_a':'PC 협력 A 연속','pc_build_load_b':'PC 협력 B 연속','build_a':'A 조립','build_b':'B 조립','load_a':'A 운송','load_b':'B 운송','build_load_a':'A 연속','build_load_b':'B 연속','slide_build':'조립 위치 이동','slide_load':'하차 위치 이동'}.get(command,command or '실행')
 
 
 class FailureHistoryPanel(ttk.Frame):
@@ -53,17 +55,28 @@ class FailureHistoryPanel(ttk.Frame):
         entry=ttk.Entry(filters,textvariable=self.search,width=16);entry.grid(row=0,column=2,sticky='ew',padx=(8,0));entry.bind('<Return>',lambda e:self.filter_rows());self.search.trace_add('write',lambda *_:self.filter_rows())
         self.count=tk.StringVar(value='날짜·작업·오류 내용 검색');ttk.Label(left,textvariable=self.count,style='Small.TLabel').grid(row=1,column=0,sticky='w',pady=8)
         self.table=ttk.Treeview(left,columns=('at','arm','work','image'),show='headings',selectmode='browse',style='Inspection.Treeview')
-        for key,label,width in [('at','오류 시각',124),('arm','팔',42),('work','작업',103),('image','영상',52)]:self.table.heading(key,text=label);self.table.column(key,width=width,minwidth=35,stretch=key=='work')
+        for key,label,width in [('at','기록 시각',124),('arm','팔',42),('work','작업',103),('image','영상',52)]:self.table.heading(key,text=label);self.table.column(key,width=width,minwidth=35,stretch=key=='work')
         self.table.grid(row=2,column=0,sticky='nsew');scroll=AutoScrollbar(left,orient='vertical',command=self.table.yview);scroll.grid(row=2,column=1,sticky='ns');self.table.configure(yscrollcommand=scroll.set);self.table.bind('<<TreeviewSelect>>',self.select_record)
-        right=ttk.Frame(self,style='Card.TFrame');right.grid(row=2,column=1,sticky='nsew');right.columnconfigure(0,weight=1);right.rowconfigure(2,weight=4);right.rowconfigure(4,weight=1)
+        right=ttk.Frame(self,style='Card.TFrame');right.grid(row=2,column=1,sticky='nsew');right.columnconfigure(0,weight=1);right.rowconfigure(3,weight=4,minsize=312);right.rowconfigure(5,weight=1)
         self.title=tk.StringVar(value='오류 기록을 선택하세요');ttk.Label(right,textvariable=self.title,style='Section.TLabel').grid(row=0,column=0,sticky='w',pady=(0,6))
-        image_bar=ttk.Frame(right,style='Card.TFrame');image_bar.grid(row=1,column=0,sticky='ew',pady=(0,6));image_bar.columnconfigure(1,weight=1)
+        self.timeline_frame=ttk.Frame(right,style='Card.TFrame');self.timeline_frame.grid(row=1,column=0,sticky='ew',pady=(0,8))
+        self.timeline_frame.columnconfigure(1,weight=3);self.timeline_frame.columnconfigure(3,weight=2)
+        self.timeline_vars={}
+        for i,title in enumerate(('검사 지정 스텝','중단 시 진행 스텝','마지막 완료 스텝','검사 시작','판정 완료','검사 소요')):
+            row=i%3;column=0 if i<3 else 2
+            ttk.Label(self.timeline_frame,text=title,style='Small.TLabel',width=16 if column==0 else 10).grid(row=row,column=column,sticky='w',padx=(0,8),pady=2)
+            value=tk.StringVar(value='미확인');self.timeline_vars[title]=value
+            StatusText(self.timeline_frame,value,height=1,font=('Noto Sans CJK KR',10)).grid(row=row,column=column+1,sticky='ew',padx=(0,12),pady=2)
+        self.timeline_note=tk.StringVar()
+        StatusText(self.timeline_frame,self.timeline_note,height=1).grid(row=3,column=0,columnspan=4,sticky='ew',pady=(3,0))
+        self.timeline_frame.grid_remove()
+        image_bar=ttk.Frame(right,style='Card.TFrame');image_bar.grid(row=2,column=0,sticky='ew',pady=(0,6));image_bar.columnconfigure(1,weight=1)
         self.image_name=tk.StringVar();self.image_choice=ttk.Combobox(image_bar,textvariable=self.image_name,state='disabled',width=25);self.image_choice.grid(row=0,column=0,sticky='ns');self.image_choice.bind('<<ComboboxSelected>>',lambda e:self.select_image())
         ttk.Label(image_bar,text='확대 후 드래그로 이동',style='Small.TLabel').grid(row=0,column=1,sticky='e',padx=10)
         for i,(text,command) in enumerate([('−',lambda:self.scale(.8)),('+',lambda:self.scale(1.25)),('맞춤',self.fit)]):app.button(image_bar,text,command).grid(row=0,column=i+2,sticky='ns',padx=(4,0))
-        self.canvas=tk.Canvas(right,bg=COLORS['nav'],highlightthickness=0,width=1,height=350);self.canvas.grid(row=2,column=0,sticky='nsew');self.canvas.bind('<Configure>',lambda e:self.draw_image());self.canvas.bind('<ButtonPress-1>',lambda e:self.canvas.scan_mark(e.x,e.y));self.canvas.bind('<B1-Motion>',lambda e:self.canvas.scan_dragto(e.x,e.y,gain=1))
-        self.image_info=tk.StringVar(value='저장된 오류 이미지를 표시합니다.');StatusText(right,self.image_info,height=2).grid(row=3,column=0,sticky='ew',pady=(6,8))
-        logs=ttk.Frame(right,style='Card.TFrame');logs.grid(row=4,column=0,sticky='nsew');logs.columnconfigure(0,weight=1);logs.rowconfigure(1,weight=1)
+        self.canvas=tk.Canvas(right,bg=COLORS['viewport'],highlightthickness=0,width=1,height=350);self.canvas.grid(row=3,column=0,sticky='nsew');self.canvas.bind('<Configure>',lambda e:self.draw_image());self.canvas.bind('<ButtonPress-1>',lambda e:self.canvas.scan_mark(e.x,e.y));self.canvas.bind('<B1-Motion>',lambda e:self.canvas.scan_dragto(e.x,e.y,gain=1))
+        self.image_info=tk.StringVar(value='저장된 오류 이미지를 표시합니다.');StatusText(right,self.image_info,height=2).grid(row=4,column=0,sticky='ew',pady=(6,8))
+        logs=ttk.Frame(right,style='Card.TFrame');logs.grid(row=5,column=0,sticky='nsew');logs.columnconfigure(0,weight=1);logs.rowconfigure(1,weight=1)
         log_bar=ttk.Frame(logs,style='Card.TFrame');log_bar.grid(row=0,column=0,sticky='ew',pady=(0,6));ttk.Label(log_bar,text='오류 · 실행 로그',style='Section.TLabel').pack(side='left')
         self.log_mode=tk.StringVar(value='요약과 실행 흐름');modes=ttk.Combobox(log_bar,textvariable=self.log_mode,values=('요약과 실행 흐름','전체 기록 JSON'),state='readonly',width=19);modes.pack(side='right');modes.bind('<<ComboboxSelected>>',lambda e:self.show_log())
         self.log=tk.Text(logs,width=1,height=6,wrap='word',font=('Noto Sans CJK KR',10),bg=COLORS['field'],fg=COLORS['ink'],relief='flat',padx=10,pady=8,state='disabled');self.log.grid(row=1,column=0,sticky='nsew');scroll=AutoScrollbar(logs,orient='vertical',command=self.log.yview);scroll.grid(row=1,column=1,sticky='ns');self.log.configure(yscrollcommand=scroll.set)
@@ -125,10 +138,16 @@ class FailureHistoryPanel(ttk.Frame):
         if self.payload and self.payload['key']==key:return
         self.clear_detail();self.title.set('오류 기록 불러오는 중…');self.status.set('이미지와 로그를 불러오는 중…');self.enqueue('read',key)
     def clear_detail(self):
+        self.timeline_frame.grid_remove()
+        for value in self.timeline_vars.values():value.set('미확인')
+        self.timeline_note.set('')
         self.title.set('오류 기록을 선택하세요');self.payload=None;self.image=None;self.photo=None;self.image_choice.configure(values=(),state='disabled');self.image_name.set('');self.copy_button.state(['disabled']);self.image_info.set('');self.log.configure(state='normal');self.log.delete('1.0','end');self.log.configure(state='disabled');self.draw_image()
     def display_record(self,value):
         self.payload=value;self.copy_button.state(['!disabled']);row=next((r for r in self.rows if r['key']==value['key']),{})
         self.title.set(date_text(row.get('at'))+' · '+{'arm2':'팔2','arm3':'팔3'}.get(row.get('arm'),'팔 미상')+' · '+work_text(row))
+        self.timeline=summarize(value)
+        for title,text in display_fields(self.timeline):self.timeline_vars[title].set(text)
+        self.timeline_note.set(self.timeline['stop_note']);self.timeline_frame.grid()
         self.image_labels=[ROLES.get(i.get('role'),i['name']) for i in value['images']]
         self.image_choice.configure(values=self.image_labels,state='readonly' if self.image_labels else 'disabled')
         self.image_name.set(self.image_labels[0] if self.image_labels else '저장된 이미지 없음');self.select_image();self.show_log()
@@ -141,10 +160,11 @@ class FailureHistoryPanel(ttk.Frame):
                 image=Image.open(io.BytesIO(base64.b64decode(item['data'],validate=True)))
                 if image.width*image.height>16000000:raise ValueError('이미지 크기 제한 초과')
                 self.image=image.convert('RGB');age=item.get('age')
-                stamp=(self.payload['record'].get('failed_at') or 0)-(age or 0)
+                saved=self.payload['record'].get('failed_at')
+                stamp=saved-age if type(saved) in (int,float) and type(age) in (int,float) and math.isfinite(saved) and math.isfinite(age) and age>=0 else None
                 detail='동일 원본 프레임에 저장된 확정 위치·판정 결과를 표시' if item.get('variant')=='annotated' else '수신 JPEG 원본 · 재인코딩 없음'
                 if str(item.get('role')).startswith('last-received'):detail+=' · 오류 판정 프레임과 다를 수 있음'
-                self.image_info.set(f"{ROLES.get(item.get('role'),item['name'])} · 촬영 {date_text(stamp)}"+(f" · 오류보다 {age:.2f}초 전" if isinstance(age,(int,float)) else '')+'\n'+detail)
+                self.image_info.set(f"{ROLES.get(item.get('role'),item['name'])} · 촬영 {timestamp(stamp)}"+(f" · 기록 저장보다 {age:.2f}초 전" if stamp is not None else '')+'\n'+detail)
             except Exception as exc:self.image_info.set('이미지를 표시하지 못했습니다: '+str(exc))
         elif self.payload:self.image_info.set(self.payload['record'].get('image_missing_reason') or '이 실행에 저장된 이미지가 없습니다. 아래 로그에서 오류 내용을 확인하세요.')
         self.draw_image()
@@ -155,7 +175,7 @@ class FailureHistoryPanel(ttk.Frame):
     def draw_image(self):
         self.canvas.delete('all');width=max(1,self.canvas.winfo_width());height=max(1,self.canvas.winfo_height())
         if self.image is None:
-            self.canvas.create_text(width/2,height/2,text='저장된 이미지 없음' if self.payload else '오류 기록을 선택하면 이미지가 표시됩니다',fill='#dbe3e8',font=('Noto Sans CJK KR',12),width=max(100,width-40));return
+            self.canvas.create_text(width/2,height/2,text='저장된 이미지 없음' if self.payload else '오류 기록을 선택하세요',fill=COLORS['muted'],font=('Noto Sans CJK KR',12),width=max(100,width-40));return
         scale=self.zoom or self.fit_scale();w,h=max(1,int(self.image.width*scale)),max(1,int(self.image.height*scale))
         self.photo=ImageTk.PhotoImage(self.image.resize((w,h),Image.Resampling.LANCZOS),master=self)
         self.canvas.create_image(max(width,w)/2,max(height,h)/2,image=self.photo);self.canvas.configure(scrollregion=(0,0,max(width,w),max(height,h)))
@@ -166,12 +186,14 @@ class FailureHistoryPanel(ttk.Frame):
         if self.log_mode.get()=='전체 기록 JSON':text=json.dumps({k:v for k,v in p.items() if k not in ('images','key')},ensure_ascii=False,indent=2)
         else:
             lines=['오류: '+str(doc.get('error') or row.get('error') or '오류 내용 없음'),'단계: '+PHASES.get(context.get('phase'),context.get('phase') or '기록 없음')]
-            if context.get('completed_step_name'):lines.append('마지막 완료 스텝: '+context['completed_step_name'])
+            lines.extend(title+': '+value for title,value in display_fields(self.timeline))
+            lines.append(self.timeline['stop_note'])
+            lines.append('기록 저장 시각: '+timestamp(doc.get('failed_at')))
             lines.append('실행 ID: '+str(context.get('run_id',row.get('run_id',''))))
             if doc.get('image_missing_reason'):lines.append('영상: '+doc['image_missing_reason'])
             lines+=['','실행 흐름']
             from .pi_execution import status_text
-            for event in (p.get('run') or {}).get('events',[]):lines.append(date_text(event.get('at'))+'  '+status_text(str(event.get('status',''))))
+            for event in (p.get('run') or {}).get('events',[]):lines.append(timestamp(event.get('at'))+'  '+status_text(str(event.get('status',''))))
             inspection=doc.get('inspection')
             if inspection:lines+=['','검사 판정',json.dumps(inspection,ensure_ascii=False,indent=2)]
             if p.get('inspection_log'):lines+=['','검사 로그',json.dumps(p['inspection_log'],ensure_ascii=False,indent=2)]

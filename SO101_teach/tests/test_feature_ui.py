@@ -73,7 +73,7 @@ class FeatureUITests(unittest.TestCase):
             self.assertTrue(condition(),a.message.get())
         pump_until(lambda:bool(a.current_jig_reference()));a.follow_jig.set(True);target=a.reference.middle.copy();target['shoulder_pan']+=4;a.apply_target(target);a.commit_target();a.apply_target(a.reference.middle);a.add_safe_steps()
         with patch('so101_teach.devices.new_bus',side_effect=AssertionError('No physical USB')):
-            a.toggle_connection()
+            a.connect_devices(control_requested=True)
             try:
                 pump_until(lambda:a.latest is not None);a.motion_request('arm');pump_until(lambda:a.session.state=='HOLD')
                 a.execute_episode();pump_until(lambda:a.safe_entry is None and a.pending_execution is None and not a.session.program_active.is_set() and a.session.state=='HOLD')

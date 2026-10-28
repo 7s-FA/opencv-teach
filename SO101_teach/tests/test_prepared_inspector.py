@@ -73,3 +73,12 @@ class PreparedInspectorTests(unittest.TestCase):
             with patch.object(run,'prepare_follower',side_effect=failed_connection):
                 with self.assertRaisesRegex(RuntimeError,'connection failed'):run.execute(episode,{'profile':{}},400,100.)
         session.close.assert_called_once();self.assertIsNone(run.prepared_inspector)
+
+    def test_runner_uses_prewarmed_load_inspector_and_closes_it_on_failure(self):
+        from tests.test_episode_cli import cli,FakeLink
+        run=cli.Runner(FakeLink(),lambda message:None,cli.Control(),20)
+        session=Mock();run.prepared_inspector=session
+        episode={'id':'load','product_type':'A','steps':[{'safe_boundary':'end','ticks':{}}]}
+        with patch('so101_teach.episode_inspection.validate_inspection'),patch('so101_teach.episode_inspection.inspection_schedule'),patch('so101_teach.episode_inspection.has_inspections',return_value=True),patch('so101_teach.episode_inspection.startup_steps',return_value=[]),patch('so101_teach.episode_inspection_runtime.PreparedInspector') as create,patch.object(cli,'atomic_json'),patch.object(run,'prepare_follower',side_effect=RuntimeError('stop')):
+            with self.assertRaisesRegex(RuntimeError,'stop'):run.execute(episode,{'profile':{}},400,1.5)
+        create.assert_not_called();session.close.assert_called_once()

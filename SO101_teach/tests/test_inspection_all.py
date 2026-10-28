@@ -53,6 +53,16 @@ class AllInspectionTests(unittest.TestCase):
         self.assertEqual(by_id['b_housing']['quality'],'abnormal')
         self.assertEqual(by_id['a_cap']['quality'],'abnormal')
         self.assertEqual(by_id['linear_1.5_0']['quality'],'abnormal')
+    def test_single_target_with_neighbours_still_rejects_actual_faults(self):
+        adopted=deepcopy(self.normal[3]['live_by_jig'])
+        anchors,rows=self.inspect(self.fault,adopted)
+        frame,cfg,_,_=self.fault;original={r['id']:r for r in rows}
+        for key in ('b_housing','a_cap','linear_1.5_0','finished'):
+            target=next(a for a in anchors if a['id']==key)
+            row=self.inspector.inspect(frame,[target],cfg['profile'],context_anchors=anchors)[0]
+            self.assertEqual(row['state'],original[key]['state'])
+            self.assertEqual(row['quality'],original[key]['quality'])
+            self.assertNotEqual(row['quality'],'normal')
     def test_boundary_and_outside_are_different(self):
         roi=np.zeros((100,100),np.uint8);roi[30:70,30:70]=255
         for bounds,expected in [((40,40,60,60),'inside'),((20,40,40,60),'boundary'),((2,2,20,20),'outside')]:

@@ -30,7 +30,7 @@ class EpisodeAdjustPanel:
         StatusText(left,self.selected,height=2,font=('Noto Sans CJK KR',11)).grid(row=1,column=0,sticky='ew',pady=12)
         self.choice=ttk.Combobox(left,textvariable=app.completion_event,values=['없음',*EVENT_LABELS.values()],state='readonly',width=15);self.choice.grid(row=2,column=0,sticky='ew')
         self.marker_button=app.button(left,'선택 스텝에 알림 저장',self.save_marker,True);self.marker_button.grid(row=3,column=0,sticky='ew',pady=8)
-        ttk.Label(left,text='스텝의 실제 도착 확인 후 발생합니다.\n스텝 이름·순서가 바뀌어도 지정은 유지됩니다.',style='Small.TLabel',wraplength=280).grid(row=4,column=0,sticky='w',pady=(0,12))
+        ttk.Label(left,text='스텝 도착 후 전송',style='Small.TLabel',wraplength=280).grid(row=4,column=0,sticky='w',pady=(0,12))
         StatusText(left,app.episode_policy,height=10).grid(row=5,column=0,sticky='new')
         ttk.Label(right,text='Pi 실행 설정',style='Section.TLabel').grid(row=0,column=0,columnspan=2,sticky='w')
         self.values={}
@@ -40,9 +40,9 @@ class EpisodeAdjustPanel:
             var=tk.StringVar(value=str(default));self.values[key]=var
             control=ttk.Combobox(right,textvariable=var,values=(300,350,400),state='readonly',width=7) if key=='speed' else ttk.Spinbox(right,textvariable=var,from_=low,to=high,width=8)
             control.grid(row=row,column=1,sticky='ew',padx=(8,0),pady=5);var.trace_add('write',self.changed)
-        ttk.Label(right,text='속도·측정 설정은 선택한 팔의 A/B 작업에 공통 적용됩니다. 작업 제한시간은 내보낼 A/B 항목에 적용됩니다.\n확정한 지그 위치는 작업 종료까지 고정합니다.',style='Small.TLabel',wraplength=280).grid(row=5,column=0,columnspan=2,sticky='w',pady=10)
+        ttk.Label(right,text='속도·측정: 선택 팔의 A/B 공통\n제한시간: 전송할 A/B 항목',style='Small.TLabel',wraplength=280).grid(row=5,column=0,columnspan=2,sticky='w',pady=10)
         self.save_button=app.button(right,'실행 설정 초안 저장',self.save_settings,True);self.save_button.grid(row=7,column=0,columnspan=2,sticky='ew')
-        ttk.Label(right,text='초안 저장 후 에피소드 전송 탭에서 실행 설정 적용을 선택하세요.\n정상 종료: 안전 자세 → 5초 유지 → 토크 해제.\n리니어 목표·종료 순서는 Pi 기존 방식을 유지합니다.',style='Small.TLabel',wraplength=280).grid(row=8,column=0,columnspan=2,sticky='w',pady=12)
+        ttk.Label(right,text='초안 저장 → 에피소드 전송에서 적용\n정상 종료: 안전 자세 → 5초 유지 → 토크 해제',style='Small.TLabel',wraplength=280).grid(row=8,column=0,columnspan=2,sticky='w',pady=12)
         self.draft_status=tk.StringVar(value='실행 설정 변경 없음')
         StatusText(right,self.draft_status,height=2).grid(row=9,column=0,columnspan=2,sticky='ew')
         self.reset_button=app.button(right,'실행 설정 입력 되돌리기',self.discard);self.reset_button.grid(row=10,column=0,columnspan=2,sticky='w',pady=6)

@@ -209,13 +209,15 @@ class DirectEpisodeTests(unittest.TestCase):
         self.assertEqual([e for e in self.events if e.startswith('STAGE_DONE')], ['STAGE_DONE:LOWER','STAGE_DONE:MIDDLE','STAGE_DONE:UPPER'])
 
     def test_check_never_connects_hardware(self):
-        job = (None, {'name': 'test', 'steps': [{}]}, {}, 400, 900)
+        job = (None, {'name': 'test', 'steps': [{'safe_boundary':'start','ticks':{str(i):2048 for i in range(6)}}]}, {}, 400, 900)
         with patch.object(cli, 'load_job', return_value=job), patch.object(cli, 'Link') as link:
             self.assertEqual(cli.main(['build_a', '--check']), 0); link.assert_not_called()
 
     def test_standalone_linear_check_never_connects(self):
-        with patch.object(cli, 'Link') as link:
+        job=(None,{'steps':[{'safe_boundary':'start','ticks':dict.fromkeys('abcdef',2048)}]},{},100,120)
+        with patch.object(cli, 'Link') as link,patch.object(cli,'load_job',return_value=job) as load:
             self.assertEqual(cli.main(['slide_load', '--check']), 0); link.assert_not_called()
+            self.assertEqual(load.call_count,4)
 
     def test_repeat_estop_clears_queued_restart(self):
         control = cli.Control(); control.paused = True
@@ -373,7 +375,11 @@ class ParallelPreparationTests(unittest.TestCase):
 
     def test_detection_failure_allows_safe_move_but_never_work(self):
         self.setup_job(detect_after=100.)
-        with self.assertRaisesRegex(RuntimeError,'지그 측정 실패'): self.execute()
+        def reset_when_paused():
+            if self.control.paused:self.control.command('reset')
+        with patch.object(self.runner,'save_failure_images'),self.assertRaises(cli.ResetRequested):self.execute(reset_when_paused)
+        self.assertIn('PAUSED',self.events)
+        self.assertTrue(any(e.startswith('RECOVERY_REQUIRED:지그 측정 실패') for e in self.events))
         self.assertIn('SAFE_POSE_REACHED',self.events)
         self.assertEqual(self.link.play_times,[])
 
@@ -383,7 +389,7 @@ class ParallelPreparationTests(unittest.TestCase):
         self.assertIn('SAFE_POSE_REACHED',self.events)
         self.assertEqual(self.link.play_times,[])
 
-    def test_estop_leaves_linear_running_and_rechecks_pre_detected_jig(self):
+    def test_estop_leaves_linear_running_and_retains_adopted_jig(self):
         self.setup_job(); sent=False; restarted=False
         def controls():
             nonlocal sent,restarted
@@ -393,12 +399,13 @@ class ParallelPreparationTests(unittest.TestCase):
                 restarted=True;self.control.command('restart')
         self.execute(controls)
         self.assertIn('PAUSED',self.events);self.assertIn('RESUMED',self.events)
-        self.assertIn('JIG_RECHECK_AFTER_RESUME',self.events)
+        self.assertIn('JIG_BASIS_REUSED',self.events)
+        self.assertEqual(sum(method=='detect_clear' for method,_ in self.link.calls),1)
         self.assertEqual(self.linear.end,108.)
         self.assertEqual(self.linear.calls.count('ensure'),1)
-        self.assertGreaterEqual(min(self.link.play_times),114.)
+        self.assertGreaterEqual(min(self.link.play_times),112.)
         plan=[args for method,args in self.link.calls if method=='plan_snapshot'][-1]
-        self.assertEqual(plan['current']['j']['pose'][0],2)
+        self.assertEqual(plan['current']['j']['pose'][0],1)
 
     def test_reset_waits_for_linear_before_safe_return(self):
         self.setup_job();sent=False

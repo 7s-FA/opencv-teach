@@ -2,15 +2,20 @@
 from copy import deepcopy
 import base64
 import json
+import math
 import time
 
 from .domain import ROOT
 from .episode_inspection import InspectionDecision
+from .episode_faults import InspectionRetry
 from .episode_inspection_runtime import FrameInspections
+from .preparation_profile import timed
 
 
 class StartupInspection:
-    def __init__(self,steps,profile,catalog,placement,prepared_inspector,emit,*,linear_target=None):
+    def __init__(self,steps,profile,catalog,placement,prepared_inspector,emit,*,linear_target=None,timing=None,timing_prefix='inspection'):
+        self.timing=timing;self.timing_prefix=timing_prefix
+        if timing:timing.mark(timing_prefix+'.started')
         self.steps={s['id']:deepcopy(s) for s in steps}
         self.profile=deepcopy(profile);self.catalog=catalog;self.placement=deepcopy(placement)
         self.prepared_inspector=prepared_inspector;self.emit=emit;self.linear_target=linear_target
@@ -19,35 +24,38 @@ class StartupInspection:
             reference['stations']['carrier' if s['inspection']['station']=='carrier' else 'finished_pallet']['jig_id'])
             for key,s in self.steps.items()}
         self.signatures={};self.decisions={};self.passed={};self.counts={}
-        self.worker=None;self.retired=[];self.submitted=None;self.observed=None
+        self.worker=None;self.submitted=None;self.inflight=None;self.observed=None
         self.linear_ready=False;self.context=None
 
-    def _replace_worker(self,current,placement):
-        if self.worker:
-            self.worker.close();self.retired.append(self.worker)
-        self.retired=[w for w in self.retired if w.is_alive()]
+    def _update_worker(self,current,placement):
         active=[s for k,s in self.steps.items() if k in self.decisions and k not in self.passed]
-        warm_placement=deepcopy(placement)
-        if warm_placement and self.linear_target is not None:
-            # Prediction of target geometry only, never evidence of arrival.
-            warm_placement['linear_stage']['startup_state']={
-                'known':True,'commanded_mm':self.linear_target,'moving':False}
-        self.worker=FrameInspections(ROOT/'data',self.profile,self.catalog,placement,
-            active or list(self.steps.values()),fixed_jigs=current,prepared_inspector=self.prepared_inspector,
-            geometry_steps=list(self.steps.values()),geometry_placement=warm_placement)
-        self.worker.retain([s['id'] for s in active])
-        self.observed=None
+        if self.worker:
+            # Keep the model/geometry cache, but never publish a result computed
+            # against an earlier association context, including neighbouring jigs.
+            self.worker.update_context(current,placement,[s['id'] for s in active])
+        elif active:
+            self.worker=timed(self.timing,self.timing_prefix+'.worker_create',FrameInspections,ROOT/'data',self.profile,self.catalog,placement,
+                list(self.steps.values()),fixed_jigs=current,prepared_inspector=self.prepared_inspector,
+                timing=self.timing,timing_prefix=self.timing_prefix)
+            self.worker.retain([s['id'] for s in active])
+        # Geometry is projected/cache-filled only for actual inspection anchors.
+        # No speculative worker or projection is needed before a target is ready.
+        self.observed=None;self.inflight=None
 
     def poll(self,current,frame=None,*,linear_state=None,now=None):
         now=time.monotonic() if now is None else now
         placement=deepcopy(self.placement)
         has_linear=any(s['inspection']['station']=='linear' for s in self.steps.values())
-        ready=False
+        state=linear_state or {};target=state.get('target_mm')
+        known=(state.get('phase')=='TIMED_COMPLETE' and type(target) in (int,float) and math.isfinite(target))
+        ready=known and target==self.linear_target
+        if placement and 'linear_stage' in placement:
+            # Association geometry must come from current controller evidence,
+            # including when only carrier/finished checks are requested.
+            placement['linear_stage']['startup_state']={
+                'known':known,'commanded_mm':target if known else None,
+                'moving':state.get('phase')=='MOVING','pending':not known}
         if has_linear:
-            state=linear_state or {}
-            ready=(state.get('phase')=='TIMED_COMPLETE'
-                   and type(state.get('target_mm')) in (int,float)
-                   and state['target_mm']==self.linear_target)
             if self.linear_ready and not ready:
                 raise RuntimeError('시작 전 검사 중 리니어 상태 변경')
             self.linear_ready=ready
@@ -70,49 +78,61 @@ class StartupInspection:
                     self.decisions[key]=InspectionDecision(check,step['inspection_product'],now,
                         frame_gap=check['timeout_seconds'],ignore_missing=True)
                     self.emit('INSPECTION_STARTED:'+key+':'+step['name'])
+                    if self.timing:self.timing.mark(self.timing_prefix+'.dependency_ready.'+key)
         self.signatures=signatures
-        # Only relevant jig changes replace the worker. Completed unrelated
-        # motion-target jigs do not invalidate an inspection.
-        relevant={jid:deepcopy(current[jid]) for jid in set(self.dependencies.values()) if jid in current}
-        context=(relevant,deepcopy(placement),deepcopy(signatures))
+        # Every adopted jig supplies association geometry. Only each target's
+        # own dependency above invalidates its count or provisional pass.
+        surrounding=deepcopy(current)
+        context=(surrounding,deepcopy(placement),deepcopy(signatures))
         if context!=self.context:
             self.context=context
-            self._replace_worker(relevant,placement)
+            self._update_worker(surrounding,placement)
         active=set(self.decisions)-set(self.passed)
-        if frame and active:
-            if frame.get('error'):raise RuntimeError('안착 검사 카메라 오류: '+frame['error'])
-            image=frame.get('preview_image') or frame.get('image')
-            at=frame.get('preview_at') if frame.get('preview_image') else frame.get('at')
-            if image and type(at) in (int,float) and 0<=now-at<1 and (self.submitted is None or at>self.submitted):
-                import cv2
-                import numpy as np
-                decoded=cv2.imdecode(np.frombuffer(base64.b64decode(image,validate=True),np.uint8),cv2.IMREAD_COLOR)
-                if decoded is None:raise RuntimeError('안착 검사 영상 해독 실패')
-                self.worker.submit(decoded,at);self.submitted=at
+        if not self.worker:return
+        if frame and active and frame.get('error'):
+            raise RuntimeError('안착 검사 카메라 오류: '+frame['error'])
+        # Consume before submitting: the last required observation must prevent
+        # another inference, rather than racing a frame already in the queue.
         self.observed=self.worker.result
         if self.observed and self.observed.get('error'):
             raise RuntimeError('안착 검사 오류: '+self.observed['error'])
+        if self.observed and self.observed.get('at')==self.inflight:self.inflight=None
         rows=(self.observed or {}).get('results',{})
         for key in active:
             decision=self.decisions[key]
             try:passed=decision.observe(rows.get(key),now)
-            except ValueError as exc:raise ValueError(self.steps[key]['name']+' · '+str(exc)) from exc
+            except ValueError as exc:
+                kind=InspectionRetry if isinstance(exc,InspectionRetry) else ValueError
+                raise kind(self.steps[key]['name']+' · '+str(exc)) from exc
             if passed:
                 step=deepcopy(self.steps[key])
                 if decision.basis:step['inspection_basis']=deepcopy(decision.basis)
                 self.passed[key]=step
                 self.emit('INSPECTION_PROVISIONAL_PASS:'+key)
+                if self.timing:self.timing.mark(self.timing_prefix+'.passed.'+key)
             if self.counts.get(key)!=decision.count:
                 self.counts[key]=decision.count
                 self.emit('INSPECTION_COUNT:'+key+f":{decision.count}/{decision.check.get('minimum_observations',2)}")
-        self.worker.retain(set(self.decisions)-set(self.passed))
+                if self.timing:self.timing.mark(self.timing_prefix+'.observation_'+str(decision.count)+'.'+key)
+        active=set(self.decisions)-set(self.passed)
+        self.worker.retain(active)
+        if frame and active and self.inflight is None and self.worker.accepting_frame:
+            image=frame.get('preview_image') or frame.get('image')
+            at=frame.get('preview_at') if frame.get('preview_image') else frame.get('at')
+            if (image and type(at) in (int,float) and 0<=now-at<1
+                    and (self.submitted is None or at>self.submitted)
+                    and any(self.decisions[key].started<=at for key in active)):
+                import cv2
+                import numpy as np
+                decoded=timed(self.timing,self.timing_prefix+'.frame_decode',lambda:cv2.imdecode(np.frombuffer(base64.b64decode(image,validate=True),np.uint8),cv2.IMREAD_COLOR))
+                if decoded is None:raise RuntimeError('안착 검사 영상 해독 실패')
+                if self.worker.submit(decoded,at) is not False:
+                    self.submitted=at;self.inflight=at
 
     @property
     def complete(self):
         return self.passed.keys()==self.steps.keys()
 
     def close(self):
-        workers=self.retired+([self.worker] if self.worker else [])
-        for worker in workers:worker.close()
-        for worker in workers:worker.join()
-        self.retired=[];self.worker=None
+        if self.worker:
+            self.worker.close();self.worker.join();self.worker=None

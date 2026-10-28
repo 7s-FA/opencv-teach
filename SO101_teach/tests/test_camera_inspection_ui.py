@@ -178,7 +178,7 @@ class CameraInspectionUITests(unittest.TestCase):
 
     def test_tabs_overlay_stale_and_cad_switch(self):
         frame,data=self.camera();a=self.app;p=a.camera_inspection
-        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사','오류 기록','영상 저장','AI 인식'])
+        self.assertEqual([a.camera_tabs.tab(t,'text') for t in a.camera_tabs.tabs()],['지그 검출','부품·조립 검사','오류 기록','영상 저장','AI 인식','실시간 작업'])
         self.assertNotIn('inspection',a.pages)
         a.camera_tabs.select(p);p.station.set('완성품 팔레트');p.change();a.root.update()
         self.assertIn('전체 영역 자동 비교',p.status.get());self.assertTrue(p.canvas.find_withtag('image'))

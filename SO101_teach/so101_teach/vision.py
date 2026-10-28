@@ -153,7 +153,7 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None,search_mask=None,pos
         hints=grid_hypotheses(prepared.frame,mesh,allowed,geometry,evidence=evidence,visible=prepared.mask(None),observations=grid_observations,line_observations=grid_lines)
     def finish(result):
         from .pose_refinement import refine
-        result=refine(prepared.frame,mesh,geometry,allowed,prepared.mask(None),result,evidence=evidence)
+        result=refine(prepared.frame,mesh,geometry,allowed,prepared.mask(None),result,evidence=evidence,recover_carrier=pose_seed is not None)
         if use_grid:
             from .grid_model import attach_grid,matching_grid,verify_grid_fragments
             # Seed deduplication favours image support before the rim is known.
@@ -187,7 +187,7 @@ def detect(frame,mesh,roi=None,profile=None,*,prepared=None,search_mask=None,pos
             result['grid_direction_period_deg']=180
         if mesh.get('assembly',{}).get('orientation_hole'):
             from .orientation_model import orient_carrier
-            result=orient_carrier(prepared.frame,mesh,allowed,geometry,result,evidence=evidence,junction_source=(frame,roi,profile))
+            result=orient_carrier(prepared.frame,mesh,allowed,geometry,result,evidence=evidence,junction_source=(frame,roi,profile),recover_carrier=pose_seed is not None)
         if mesh.get('shape','ring')=='ring':
             from .raised_model import attach_raised
             result=attach_raised(prepared.frame,mesh,allowed,geometry,result,evidence=evidence)

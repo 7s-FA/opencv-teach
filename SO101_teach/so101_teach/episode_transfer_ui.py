@@ -16,7 +16,7 @@ class EpisodeTransferPanel:
         ttk.Label(page,text='선택 에피소드를 Pi에 저장',style='Section.TLabel').grid(row=0,column=0,sticky='w')
         self.source=tk.StringVar()
         ttk.Label(page,textvariable=self.source,justify='left').grid(row=1,column=0,sticky='ew',pady=(12,8))
-        ttk.Label(page,text='왼쪽에서 전송할 에피소드를 선택하세요.\n같은 에피소드는 갱신하고, 새 에피소드는 목록에 추가합니다.',style='Small.TLabel',justify='left').grid(row=2,column=0,sticky='ew',pady=6)
+        ttk.Label(page,text='같은 에피소드는 갱신 · 새 에피소드는 추가',style='Small.TLabel',justify='left').grid(row=2,column=0,sticky='ew',pady=6)
         self.destination=tk.StringVar(value='설정·안내의 Pi 연결 주소를 사용합니다.')
         ttk.Label(page,textvariable=self.destination,style='Small.TLabel',justify='left').grid(row=3,column=0,sticky='ew',pady=6)
         actions=ttk.Frame(page,style='Card.TFrame');actions.grid(row=4,column=0,sticky='w',pady=8)
@@ -28,7 +28,7 @@ class EpisodeTransferPanel:
         self.settings_check.grid(row=5,column=0,sticky='w')
         self.current=tk.StringVar(value='조회하면 선택 에피소드의 Pi 저장 상태를 표시합니다.')
         self.current_label=StatusText(page,self.current,height=3,font=('Noto Sans CJK KR',11));self.current_label.grid(row=6,column=0,sticky='ew',pady=8)
-        ttk.Label(page,text='저장된 스텝·완료 알림·완제품 종류·안착 검사를 전송합니다.\n기존 A/B 실행 연결은 유지합니다. 실행 설정은 위 항목을 선택해야 적용합니다.\n속도·측정값은 이 팔의 공통 설정, 제한시간은 연결된 실행에 적용됩니다.\n전송 전에 Pi의 이전 파일을 백업하며, 전송만으로 로봇이 움직이지 않습니다.',style='Small.TLabel',justify='left').grid(row=7,column=0,sticky='ew',pady=8)
+        ttk.Label(page,text='스텝·알림·검사 전송 · 기존 A/B 연결 유지 · 이전 파일 백업\n실행 설정은 선택 시 적용하며, 전송만으로 로봇이 움직이지 않습니다.',style='Small.TLabel',justify='left').grid(row=7,column=0,sticky='ew',pady=8)
         self.status=tk.StringVar(value='Pi 저장 상태를 조회한 뒤 전송할 수 있습니다.')
         self.status_label=StatusText(page,self.status,height=3,font=('Noto Sans CJK KR',11));self.status_label.grid(row=8,column=0,sticky='ew',pady=8)
         def fit_text(event):

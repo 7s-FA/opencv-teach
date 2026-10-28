@@ -6,6 +6,7 @@ from pathlib import Path
 import math,time
 import cv2
 import numpy as np
+from .inference_protocol import DEFAULT_CONFIDENCE
 
 CLASS_LABELS=('운반 지그','완제품 팔레트','리니어 지그','A 하단','A 중단','A 상단',
               'B 하단','B 중단','B 상단','A 하단+중단','B 하단+중단','A 완제품','B 완제품')
@@ -45,7 +46,7 @@ def deduplicate_classes(result,confidence):
  return {**result,**{k:result[k][keep] for k in ('boxes','scores','classes','masks')}}
 
 class Segmenter:
- def __init__(self,path,threads=4,conf=.5,iou=.7):
+ def __init__(self,path,threads=4,conf=DEFAULT_CONFIDENCE,iou=.7):
   self.path=Path(path);self.conf=conf;self.iou=iou;cv2.setNumThreads(1)
   import ncnn,yaml
   self.manifest=checked_manifest(self.path)
@@ -113,7 +114,7 @@ class Segmenter:
 
 class TensorRTSegmenter(Segmenter):
  """The selected, pre-built FP16 engine; never export or fall back to CPU."""
- def __init__(self,path,threads=4,conf=.5,iou=.7):
+ def __init__(self,path,threads=4,conf=DEFAULT_CONFIDENCE,iou=.7):
   import torch
   from ultralytics import YOLO
   self.path=Path(path);self.manifest=checked_manifest(path)
@@ -146,7 +147,7 @@ class TensorRTSegmenter(Segmenter):
 
 class Sam3Segmenter(Segmenter):
  """Selected mixed adapter, original base and 13 evaluated text prompts."""
- def __init__(self,path,threads=4,conf=.5,iou=.7):
+ def __init__(self,path,threads=4,conf=DEFAULT_CONFIDENCE,iou=.7):
   import json,torch
   from sam3.model_builder import build_sam3_image_model
   from sam3.model.sam3_image_processor import Sam3Processor

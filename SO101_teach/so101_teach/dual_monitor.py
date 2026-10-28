@@ -41,16 +41,24 @@ class DualMonitor(ttk.Frame):
             connection_label=StatusText(card,connection,height=2);connection_label.grid(row=5,column=0,sticky='ew',pady=4)
             message=tk.StringVar(value='장비 알림 없음')
             message_label=StatusText(card,message,height=3,font=('Noto Sans CJK KR',11));message_label.grid(row=6,column=0,sticky='ew',pady=4)
-            app.button(card,'이 팔의 진단 기록 보기',lambda key=key:self.open_diagnostics(key)).grid(row=7,column=0,sticky='w',pady=8)
+            app.button(card,'진단 기록',lambda key=key:self.open_diagnostics(key)).grid(row=7,column=0,sticky='w',pady=8)
             self.cards[key]={'title':title,'status':status,'tree':tree,'detail':detail,'connection':connection,'message':message}
             tree.bind('<<TreeviewSelect>>',lambda e:self.update(force=True))
-        guides=ttk.Frame(self);guides.grid(row=1,column=0,columnspan=2,sticky='ew',pady=(12,0));guides.columnconfigure((0,1),weight=1,uniform='guide')
+        guide_bar=ttk.Frame(self);guide_bar.grid(row=1,column=0,columnspan=2,sticky='ew',pady=(12,0))
+        self.guide_open=False
+        self.guide_toggle=app.button(guide_bar,'▸ 값·판정 기준',self.toggle_guide);self.guide_toggle.configure(style='Shell.TButton');self.guide_toggle.pack(side='left')
+        self.guides=guides=ttk.Frame(self);guides.grid(row=2,column=0,columnspan=2,sticky='new',pady=(8,0));guides.columnconfigure((0,1),weight=1,uniform='guide')
         lines=MONITOR_GUIDE.splitlines()
         for column,title,text in ((0,'값·수신 기준','\n'.join([lines[0],lines[1],lines[5]])),(1,'동작 중단·도착 기준','\n'.join(lines[2:5]))):
             panel=app.card(guides);panel.grid(row=0,column=column,sticky='nsew',padx=(0,8) if column==0 else (8,0));panel.columnconfigure(0,weight=1)
             ttk.Label(panel,text=title,style='Section.TLabel').grid(row=0,column=0,sticky='w')
             guide=ttk.Label(panel,text=text,style='Small.TLabel',wraplength=750,justify='left');guide.grid(row=1,column=0,sticky='ew',pady=(6,0))
             panel.bind('<Configure>',lambda e,label=guide:label.configure(wraplength=max(200,e.width-32)))
+        guides.grid_remove()
+    def toggle_guide(self):
+        self.guide_open=not self.guide_open
+        self.guides.grid() if self.guide_open else self.guides.grid_remove()
+        self.guide_toggle.configure(text=('▾ ' if self.guide_open else '▸ ')+'값·판정 기준')
     def open_diagnostics(self,key):
         manager=self.app.workspace_manager
         if manager:

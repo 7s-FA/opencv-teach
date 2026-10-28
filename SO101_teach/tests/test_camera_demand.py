@@ -73,6 +73,23 @@ class CameraDemandTests(unittest.TestCase):
             return {'generation':0,'running':True,'server_now':10.,'at':10.,'image':encoded,'detection':{'selected':'old'},'error':None}
         c.transport=SimpleNamespace(request=request,close=Mock());c.run();self.assertIsNone(c.observation)
 
+    def test_response_clock_covers_preview_captured_during_encoding(self):
+        frame=np.zeros((20,30,3),np.uint8);new_frame=np.full_like(frame,120)
+        camera=SimpleNamespace(running=True,error=None,processing_enabled=True,
+            observation=(frame,{'selected':'measured'},100.),preview_frame=(frame,100.))
+        runtime=SimpleNamespace(camera=camera,generation=1,camera_encode_lock=threading.Lock(),camera_encoded=OrderedDict())
+        clock=[100.01];original=cv2.imencode;count=[0]
+        def encode(*args,**kwargs):
+            count[0]+=1
+            if count[0]==1:camera.preview_frame=(new_frame,100.02);clock[0]=100.03
+            return original(*args,**kwargs)
+        with patch.object(cv2,'imencode',side_effect=encode),patch('so101_teach.remote_server.time.monotonic',side_effect=lambda:clock[0]):
+            value=Runtime.camera_frame(runtime)
+        self.assertGreaterEqual(value['server_now'],value['preview_at'])
+        self.assertEqual(value['at'],100.);self.assertEqual(value['detection'],{'selected':'measured'})
+        decoded=cv2.imdecode(np.frombuffer(base64.b64decode(value['preview_image']),np.uint8),cv2.IMREAD_COLOR)
+        np.testing.assert_array_equal(decoded,new_frame)
+
 class PausedTeachingDemandTests(unittest.TestCase):
     setUp=fixtures.UITests.setUp
     tearDown=fixtures.UITests.tearDown

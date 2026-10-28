@@ -99,3 +99,31 @@ class AppRefreshTests(unittest.TestCase):
             view.caption.set(text);view.details.set(text);self.root.update_idletasks()
             sizes.append(view.canvas.winfo_height())
         self.assertEqual(len(set(sizes)),1)
+
+    def test_button_disable_survives_later_status_widget_failure(self):
+        a=self.app
+        for button in (a.arm_btn,a.move_btn,a.execute_btn):button.state(['!disabled'])
+        self.assertIsNone(a.session)
+        with patch.object(a.motion_speed_choice,'configure',side_effect=RuntimeError('status widget failed')):
+            self.root.after_cancel(a.job);a.poll()
+        for button in (a.arm_btn,a.move_btn,a.execute_btn):self.assertTrue(button.instate(['disabled']))
+        self.assertIn('status widget failed',a.message.get())
+
+    def test_observation_mode_overrides_pi_hold_permission(self):
+        a=self.app;a.camera_only=True
+        with patch('so101_teach.pi_execution.active_execution',return_value=True):
+            a.apply_command_permissions({})
+        for button in (a.arm_btn,a.hold_btn,a.release_btn,a.execute_btn):self.assertTrue(button.instate(['disabled']))
+        a.camera_only=False
+        with patch('so101_teach.pi_execution.active_execution',return_value=True):
+            a.apply_command_permissions({})
+        self.assertTrue(a.hold_btn.instate(['!disabled']))
+        self.assertTrue(a.execute_btn.instate(['disabled']))
+
+    def test_adjustment_off_toggle_precedes_final_pi_restrictions(self):
+        a=self.app
+        for pi_active in (False,True):
+            with patch.object(a.live_adjust,'poll',side_effect=lambda:a.move_btn.state(['!disabled'])), \
+                 patch('so101_teach.pi_execution.active_execution',return_value=pi_active):
+                self.root.after_cancel(a.job);a.poll()
+            self.assertEqual(a.move_btn.instate(['disabled']),pi_active)

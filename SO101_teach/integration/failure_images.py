@@ -43,13 +43,24 @@ class FailureImages:
         if self.saved:return self.saved
         now=time.monotonic();wall=time.time()
         run_id=context.get('run_id');safe_id=run_id if isinstance(run_id,str) and len(run_id)==32 and all(c in '0123456789abcdef' for c in run_id) else uuid.uuid4().hex
-        folder=self.directory/(time.strftime('%Y%m%d-%H%M%S',time.localtime(wall))+'-'+safe_id)
+        attempt=context.get('recovery_id')
+        suffix=('-retry-'+attempt) if isinstance(attempt,str) and len(attempt)==32 and all(c in '0123456789abcdef' for c in attempt) else ''
+        folder=self.directory/(time.strftime('%Y%m%d-%H%M%S',time.localtime(wall))+'-'+safe_id+suffix)
         folder.mkdir(parents=True,exist_ok=False)
         record={'error':str(error),'failed_at':wall,'failed_monotonic':now,'context':deepcopy(context),
                 'inspection':deepcopy(inspection),'images':[],'camera_error':self.camera_error,
                 'capture_error':self.capture_error,'image_encoding':'Raw received JPEG preserved; paired annotated JPEG rendered from the same frame and saved metadata; no new capture or detection',
                 'image_missing_reason':None}
         observation=(inspection or {}).get('result') or {}
+        references=[]
+        for value in [observation,*((observation.get('results') or {}).values())]:
+            if isinstance(value,dict) and isinstance(value.get('decision_evidence'),dict):
+                reference=deepcopy(value['decision_evidence'])
+                if reference not in references:references.append(reference)
+        record['decision_evidence']={'inspection_frames':references,
+            'inspection_session':deepcopy(context.get('decision_evidence')),
+            'jig_sessions':deepcopy(context.get('jig_decision_evidence',[])),
+            'note':'Exact algorithm-input PNG/masks and per-frame decisions are in the referenced manifests; check their errors/gaps before replay.'}
         at=observation.get('at')
         requests=[]
         if inspection:

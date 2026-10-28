@@ -2,11 +2,11 @@
 from tkinter import ttk
 from PIL import Image, ImageDraw, ImageTk
 
-COLORS = {'bg': '#dbe3e8', 'panel': '#edf2f4', 'ink': '#20323e',
-          'muted': '#465c69', 'border': '#6d8795', 'nav': '#142d38',
-          'accent': '#087c86', 'selected': '#c9e2e5', 'danger': '#ad333d',
-          'viewport': '#d4dfe5', 'field': '#f7fafb', 'button': '#dbe7ec',
-          'heading': '#cbd9e1', 'panel_border': '#a6bac5'}
+COLORS = {'bg': '#e5edf2', 'panel': '#f4f8fa', 'ink': '#193547',
+          'muted': '#4c6676', 'border': '#718b9b', 'nav': '#122e3d',
+          'accent': '#087f8c', 'selected': '#d4eaed', 'danger': '#ad333d',
+          'viewport': '#dce6ec', 'field': '#fcfdfe', 'button': '#e8f0f4',
+          'heading': '#dfebf1', 'panel_border': '#b8ccd7'}
 
 
 def install(root):
@@ -40,20 +40,20 @@ def install(root):
                              width=size[0], height=size[1], sticky='nsew')
 
     # Bounded nine-slice tiles; no per-frame image allocation or Canvas widgets.
-    surface('Soft.Surface', COLORS['panel'], COLORS['panel_border'], radius=6, size=(36, 36), border=16)
+    surface('Soft.Surface', COLORS['panel'], COLORS['panel_border'], radius=8, size=(36, 36), border=16)
     style.layout('Surface.TFrame', [('Soft.Surface', {'sticky': 'nsew'})])
     style.configure('Surface.TFrame', background=COLORS['bg'])
     for prefix, normal, edge, hover, pressed, disabled, ink in (
-        ('', COLORS['button'], COLORS['border'], '#d5e2e8', '#cddde4', '#e0e7eb', COLORS['ink']),
-        ('Primary.', COLORS['accent'], COLORS['accent'], '#087781', '#086f78', '#d5e0e5', 'white'),
+        ('', COLORS['button'], COLORS['border'], '#deebf0', '#d4e4eb', '#e8eef2', COLORS['ink']),
+        ('Primary.', COLORS['accent'], COLORS['accent'], '#087580', '#096b75', '#dce6eb', 'white'),
         ('Stop.', '#ad333d', '#ad333d', '#a5323c', '#9d303a', '#e0e7eb', 'white'),
         ('Nav.', COLORS['nav'], COLORS['nav'], '#1b3a46', '#1d3f4b', COLORS['nav'], '#d0e1e8'),
     ):
         element = 'Soft.' + prefix + 'button'
         surface(element, normal, edge, states=(
             ('disabled', disabled, '#bacbd3' if prefix != 'Nav.' else disabled), ('pressed', pressed, edge),
-            ('selected', '#24515f', '#24515f'), ('focus', normal, '#52a5ad'),
-            ('active', hover, edge)))
+            ('selected', '#245363', '#245363'), ('focus', normal, '#153f53'),
+            ('active', hover, edge)), radius=6)
         name = prefix + 'TButton'
         style.layout(name, [(element, {'sticky': 'nsew', 'children': [
             ('Button.padding', {'sticky': 'nsew', 'children': [('Button.label', {'sticky': 'nsew'})]})]})])
@@ -71,8 +71,8 @@ def install(root):
     style.configure('Compact.Primary.TButton', padding=(8, 3))
 
     surface('Soft.field', COLORS['field'], COLORS['border'], states=(
-        ('disabled', '#e0e7eb', '#bacbd3'), ('focus', COLORS['field'], COLORS['accent']),
-        ('readonly', '#e1e9ed', COLORS['border'])), radius=3)
+        ('disabled', '#e8eef2', '#c4d3dc'), ('focus', COLORS['field'], COLORS['accent']),
+        ('readonly', '#edf4f7', COLORS['border'])), radius=4)
     for control in ('Entry', 'Spinbox', 'Combobox'):
         def replace(items):
             return [('Soft.field' if name == control+'.field' else name,
@@ -84,7 +84,7 @@ def install(root):
                         arrowcolor=COLORS['muted'], arrowsize=13, relief='flat')
         style.map('T'+control, bordercolor=[('focus', COLORS['accent'])],
                   background=[('disabled', COLORS['panel']), ('!disabled', COLORS['panel'])],
-                  fieldbackground=[('disabled','#e0e7eb'),('readonly','#e1e9ed')])
+                  fieldbackground=[('disabled','#e8eef2'),('readonly','#edf4f7')])
 
     def arrow(direction, color, size):
         im=Image.new('RGBA',(size[0]*3,size[1]*3));draw=ImageDraw.Draw(im)
@@ -104,14 +104,15 @@ def install(root):
             ('Soft.Spinbox.downarrow',{'side':'bottom','sticky':'e'})]}),
         ('Spinbox.padding',{'sticky':'nsew','children':[('Spinbox.textarea',{'sticky':'nsew'})]})]})])
 
-    surface('Soft.tab', '#cbd9e1', '#9eb3bf', states=(
-        ('disabled', '#dce5ea', '#bacbd3'), ('focus', COLORS['panel'], COLORS['accent']),
-        ('selected', COLORS['panel'], COLORS['accent']), ('active', '#d8e5e9', COLORS['border'])), radius=4)
+    surface('Soft.tab', COLORS['button'], '#a4bac7', states=(
+        ('disabled', '#e8eef2', '#c4d3dc'), (('selected','focus'), COLORS['accent'], '#153f53'),
+        ('selected', COLORS['accent'], COLORS['accent']), ('focus', COLORS['button'], '#153f53'),
+        ('active', '#deebf0', COLORS['border'])), radius=6)
     style.layout('TNotebook', [('Notebook.padding', {'sticky': 'nsew'})])
     style.layout('TNotebook.Tab', [('Soft.tab', {'sticky': 'nsew', 'children': [
         ('Notebook.padding', {'sticky': 'nsew', 'children': [
             ('Notebook.label', {'sticky': 'nsew'})]})]})])
-    style.configure('TNotebook', borderwidth=0, tabmargins=(0, 0, 0, 3))
+    style.configure('TNotebook', borderwidth=0, tabmargins=(0, 0, 0, 10))
     style.configure('TNotebook.Tab', padding=(14, 7),font=('Noto Sans CJK KR',11),background=COLORS['bg'])
     # Clam maps selected tabs to {6 4 6 2}, shrinking them on every click.
     style.map('TNotebook.Tab',padding=[],font=[])
@@ -119,7 +120,7 @@ def install(root):
     style.configure('Card.TNotebook',background=COLORS['panel'])
     style.configure('Card.TNotebook.Tab',background=COLORS['panel'])
     style.map('Card.TNotebook.Tab',background=[('selected',COLORS['panel']),('!selected',COLORS['panel'])])
-    style.map('TNotebook.Tab', foreground=[('disabled', '#73838c'), ('selected', COLORS['accent'])])
+    style.map('TNotebook.Tab', foreground=[('disabled', '#73838c'), ('selected', 'white'),('!selected',COLORS['ink'])])
 
     # Twelve-pixel hit area around a six-pixel thumb; native wheel/drag/page bindings.
     for orient in ('Vertical', 'Horizontal'):
@@ -157,7 +158,7 @@ def install(root):
     style.configure('Treeview', background=COLORS['field'],fieldbackground=COLORS['field'],borderwidth=0, relief='flat', bordercolor=COLORS['panel_border'])
     style.configure('Treeview.Heading', relief='flat', borderwidth=0, background=COLORS['heading'],
                     bordercolor=COLORS['heading'], lightcolor=COLORS['heading'], darkcolor=COLORS['heading'], foreground=COLORS['ink'])
-    style.map('Treeview.Heading', background=[('active', '#bdcfd8')])
+    style.map('Treeview.Heading', background=[('active', '#d2e3eb')])
     style.configure('TCheckbutton', background=COLORS['panel'], indicatorbackground=COLORS['field'],
                     indicatorforeground=COLORS['accent'])
     style.configure('Jig.TCheckbutton',background=COLORS['panel'])

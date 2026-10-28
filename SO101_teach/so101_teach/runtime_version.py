@@ -17,7 +17,7 @@ inspection_ui leader_assist_ui pi_settings_ui roi_reference_ui startup_inspectio
 arm_selection_ui ui_scroll ui_status ui_theme step_editor dual_monitor camera_display
 help_content demo_workspace preview preview_materials mujoco_finish full_map
 jig_comparison gripper_pads workcell_preview workcell_scene inspection
-yolo_ui yolo_worker yolo_inference
+yolo_ui yolo_worker yolo_inference pc_compute_backend pc_compute_service pc_compute_broker pc_chain_ui pc_chain_execution
 '''.split())
 REQUIRED_ASSETS=(
     'requirements-pi.txt',

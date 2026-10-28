@@ -14,6 +14,10 @@ from .remote_config import PROTOCOL,code_version,configuration_bundle,bundle_dig
 STATE_POLL_SECONDS=1/30  # Match the display budget; serial/control timing is unchanged.
 _MISSING_RUNTIME=object()
 
+class RemoteProtocolError(ValueError):
+    """A reply cannot establish whether the remote request completed."""
+
+
 def server_version_supported(version,protocol,*,runtime=_MISSING_RUNTIME,current=None,compatibility=None):
     """Use shared runtime identity; legacy peers retain the strict old gate."""
     if protocol!=PROTOCOL:return False
@@ -83,17 +87,28 @@ class RemoteLink:
         except BaseException:self.close(disconnect=False);raise
     def http(self,path,payload,timeout=1.5,*,base=None):
         req=Request((base or self.base)+path,data=json.dumps(payload,allow_nan=False).encode(),headers={'Authorization':'Bearer '+self.token,'Content-Type':'application/json'})
-        with urlopen(req,timeout=timeout) as response:data=json.load(response)
-        if not data.get('ok'):raise ValueError(data.get('error','Pi 요청 실패'))
+        def reject_constant(value):raise ValueError('Nonfinite response number')
+        try:
+            with urlopen(req,timeout=timeout) as response:data=json.load(response,parse_constant=reject_constant)
+        except (ValueError,RecursionError) as exc:
+            raise RemoteProtocolError('Pi 응답 JSON 형식 오류 · 처리 여부 미확인') from exc
+        if not isinstance(data,dict) or type(data.get('ok')) is not bool or data['ok'] and 'value' not in data:
+            raise RemoteProtocolError('Pi 응답 규약 오류 · 처리 여부 미확인')
+        if not data['ok']:raise ValueError(data.get('error','Pi 요청 실패'))
         return data['value']
     def rpc(self,method,args=None,timeout=3.):
         owner=getattr(self,'execution_owner',None)
-        if owner and owner.busy and not (method=='command' and (args or {}).get('action') in ('hold','release') or method=='disconnect'):
+        if owner and owner.busy and not (method=='command' and (args or {}).get('action') in ('hold','release') or method=='disconnect'
+                                         or method=='claim_episode' and owner.thread is None):
             raise ValueError('Pi 에피소드 실행 중에는 설정·다른 동작을 변경할 수 없습니다.')
         if self.error:raise ConnectionError(self.error)
-        body={'lease':self.lease,'id':uuid.uuid4().hex,'method':method,'args':args or {}}
+        args=dict(args or {})
+        if method=='command' and args.get('action') not in ('hold','release'):
+            generation=(getattr(self,'latest_state',None) or {}).get('stop_generation')
+            if generation is not None:args['stop_generation']=generation
+        body={'lease':self.lease,'id':uuid.uuid4().hex,'method':method,'args':args}
         try:return self.http('/rpc',body,timeout)
-        except OSError as exc:
+        except (OSError,RemoteProtocolError) as exc:
             self.fail('Pi 통신 중단 · 명령 처리 여부 확인 필요: '+str(exc));raise ConnectionError(self.error) from exc
     def camera_rpc(self,method,args=None):
         owner=getattr(self,'execution_owner',None)

@@ -6,6 +6,7 @@ from pathlib import Path
 import queue
 import time
 import tkinter as tk
+import json
 from tkinter import ttk
 from .ui_scroll import AutoScrollbar
 from PIL import Image,ImageTk
@@ -112,7 +113,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.workcell_preview=load_placement(self.data_dir)
         self.workcell_tcp=placed_tcp_pose(self.workcell_preview) if self.workcell_preview else None
         self.linear_state_query=None
-        self.startup_devices_pending=auto_devices;self.camera_auto_view=auto_camera
+        self.startup_devices_pending=False;self.camera_auto_view=auto_camera
         self.jig_updates_paused=False;self.teaching_jig_results={};self.move_uses_held_jig=False
         self.camera_task=None;self.camera_sleeping=False;self.camera_manual_off=False;self.camera_close_requested=False;self.camera_view_requested=False
         if mode_override:self.profile['mode']=mode_override
@@ -202,30 +203,20 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         except queue.Empty:return
         self.apply_linear_state(state)
     def startup_connections(self):
-        if self.camera_only:return
+        # Startup may read libraries/status, but never acquire device ownership.
+        self.startup_devices_pending=False
         if self.closed or self.profile.get('mode')=='demo':return
-        if self.episode_sync.job:
-            self.startup_job=self.root.after(150,self.startup_connections);return
-        if self.remote_mode:
-            self.guard(self.settings.pi_panel.connect)
-        else:
-            self.connect_startup_devices()
+        self.connection.set('조회 전용 · 제어 미연결')
+        self.notice('조회 전용으로 시작했습니다. 로봇팔 제어는 전체 연결을 누르세요.')
     def startup_camera_only(self):
         if self.closed or not self.camera_only or not self.workspace_visible:return
-        if self.episode_sync.job:
-            self.startup_job=self.root.after(150,self.startup_camera_only);return
         self.startup_devices_pending=False;self.remote_mode=True
-        self.camera_view_requested=True;self.camera_manual_off=False
         self.show_page('camera')
-        self.guard(self.settings.pi_panel.connect)
-        self.notice('카메라 전용 연결 · 모터 자동 연결과 동작 명령은 차단됩니다.')
+        self.camera_tabs.select(self.camera_work_monitor);self.change_camera_tab()
+        self.notice('카메라 조회 전용 · 로봇팔 제어권을 요청하지 않습니다.')
     def connect_startup_devices(self):
-        if self.camera_only:return
-        if self.closed or not self.startup_devices_pending or self.profile.get('mode')=='demo':return
+        # Retire previously scheduled startup callbacks without opening devices.
         self.startup_devices_pending=False
-        if calibration_pending(self.profile):
-            self.notice('선택한 로봇팔의 새 3점 보정이 필요합니다.');return
-        self.guard(self.connect_devices)
     def card(self,parent,**kwargs):return ttk.Frame(parent,style='Surface.TFrame',padding=16,**kwargs)
     def button(self,parent,text,command,primary=False,**kw):
         return ttk.Button(parent,text=text,command=lambda:self.guard(command),style='Primary.TButton' if primary else 'TButton',**kw)
@@ -253,13 +244,14 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         tk.Label(nav,textvariable=self.device_target,justify='left',anchor='w',height=3,wraplength=148,bg=COLORS['nav'],fg='#b5ccd7',font=('Noto Sans CJK KR',10)).pack(side='bottom',fill='x',padx=18,pady=25)
         shell=ttk.Frame(self.root,padding=(22,10));shell.grid(row=0,column=1,sticky='nsew');shell.rowconfigure(2,weight=1);shell.columnconfigure(0,weight=1)
         header=ttk.Frame(shell);header.grid(row=0,column=0,sticky='ew',pady=(0,6));header.columnconfigure(0,weight=1)
-        self.page_title=tk.StringVar(value='티칭 워크스페이스');ttk.Label(header,textvariable=self.page_title,style='Title.TLabel').grid(row=0,column=0,sticky='w')
+        self.page_title=tk.StringVar(value='티칭');ttk.Label(header,textvariable=self.page_title,style='Title.TLabel').grid(row=0,column=0,sticky='w')
         self.build_arm_selector(header)
         self.connection=tk.StringVar(value='모터 미연결');self.badge=tk.Label(header,textvariable=self.connection,font=('Noto Sans CJK KR',11),width=30,height=2,wraplength=245,anchor='w',justify='left',padx=8,pady=0,bg=COLORS['bg'],fg=COLORS['ink']);self.badge.grid(row=0,column=2,padx=8)
         self.connect_btn=self.button(header,'팔로워 연결',self.toggle_connection,width=12);self.connect_btn.configure(style='Shell.TButton');self.connect_btn.grid(row=0,column=3)
-        banner=tk.Frame(shell,bg=COLORS['bg'],padx=12,pady=4);banner.grid(row=1,column=0,sticky='ew',pady=(0,8))
+        self.help_btn=self.button(header,'도움말',self.open_help);self.help_btn.configure(style='Shell.TButton');self.help_btn.grid(row=0,column=4,padx=(8,0))
+        # Keep contextual guidance available to callers; the persistent banner
+        # duplicated the task controls. Detailed instructions live in Help (F1).
         self.guidance=tk.StringVar(value='스텝을 선택하고 자세를 편집하세요. 오른쪽 3D에서 확인한 뒤 저장하거나 실행합니다.')
-        tk.Label(banner,textvariable=self.guidance,bg=COLORS['bg'],fg=COLORS['muted'],anchor='w').pack(fill='x')
         self.body=ttk.Frame(shell);self.body.grid(row=2,column=0,sticky='nsew');self.body.rowconfigure(0,weight=1);self.body.columnconfigure(0,weight=1)
         self.pages={key:ttk.Frame(self.body) for key in ('teach','camera','devices','model','settings')}
         for frame in self.pages.values():frame.grid(row=0,column=0,sticky='nsew')
@@ -276,7 +268,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.root.bind('<FocusOut>',self.cancel_jig_key,add='+')
         self.root.bind('<FocusOut>',self.cancel_space_key,add='+')
         footer=ttk.Frame(shell);footer.grid(row=3,column=0,sticky='ew',pady=(8,0));footer.columnconfigure(0,weight=1)
-        self.message=tk.StringVar(value='팔로워를 연결해 현재 틱을 확인하거나, 저장할 목표값을 편집하세요.')
+        self.message=tk.StringVar(value='준비')
         self.message_status=StatusText(footer,self.message,height=2,font=('Noto Sans CJK KR',11),background=COLORS['bg'])
         self.message_status.grid(row=0,column=0,sticky='ew');self.message_label=self.message_status.text
         self.linear_status_label=tk.Label(footer,textvariable=self.linear_status,font=('Noto Sans CJK KR',10),fg=COLORS['muted'],bg=COLORS['bg'],width=34,height=2,wraplength=265,anchor='e',justify='right')
@@ -324,6 +316,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.steps.grid(row=0,column=0,sticky='nsew');step_scroll=AutoScrollbar(step_list,orient='vertical',command=self.steps.yview);step_scroll.grid(row=0,column=1,sticky='ns');self.steps.configure(yscrollcommand=step_scroll.set)
         self.empty_steps=ttk.Label(self.steps,text='아직 스텝이 없습니다.\n자세 편집 → 새 스텝 추가\n또는 실물 자세 추가',style='Small.TLabel',justify='center');self.empty_steps.place(relx=.5,y=70,anchor='n');self.steps.bind('<<TreeviewSelect>>',self.select_step)
         self.steps.bind('<ButtonRelease-1>',self.drop_step);self.steps.bind('<ButtonPress-1>',self.left_step_press)
+        self.steps.bind('<B1-Motion>',self.drag_step_motion)
+        self.steps.bind('<FocusOut>',lambda e:self.cancel_step_drag())
+        self.step_drop_marker=tk.Frame(self.steps,background=COLORS['accent'],height=3)
         extra=ttk.Frame(left);extra.grid(row=9,column=0,sticky='ew',pady=4)
         self.step_edit_actions=extra
         self.safe_edit_btn=self.button(extra,'안전 자세 설정',self.begin_safe_edit);self.safe_edit_btn.pack(side='left',fill='x',expand=True)
@@ -338,6 +333,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.execute_btn=self.button(left,'에피소드 실물 실행',self.execute_episode,True);self.execute_btn.grid(row=12,column=0,sticky='ew',pady=(6,0))
         self.execute_taught_btn=self.button(left,'티칭 그대로 실행 · 보정 없음',self.execute_taught_episode);self.execute_taught_btn.grid(row=13,column=0,sticky='ew',pady=(4,0))
         self.execute_taught_btn.state(['disabled'])
+        self.pc_chain_btn=self.button(left,'PC 협력 A/B',self.show_pc_chain);self.pc_chain_btn.grid(row=0,column=0,sticky='e')
         def compact_actions(parent):
             for child in parent.winfo_children():
                 if isinstance(child,ttk.Button):child.configure(style='Compact.Primary.TButton' if child.cget('style')=='Primary.TButton' else 'Compact.TButton')
@@ -446,8 +442,39 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.episode_policy.set('\n'.join(lines))
         if hasattr(self,'episode_adjust_panel'):self.episode_adjust_panel.refresh()
     def left_step_press(self,event):
-        self.drag_step=self.steps.identify_row(event.y)
-        if self.drag_step:self.preview_editor=1;self.set_mode('target');self.last_render=None
+        self.cancel_step_drag()
+        key=self.steps.identify_row(event.y)
+        if not key:return
+        self.steps.focus_set();self.steps.focus(key);self.steps.selection_set(key)
+        self.preview_editor=1;self.select_step(event);self.set_mode('target');self.last_render=None
+        if not self.episode_adjusting() and not next(s for s in self.episode['steps'] if s['id']==key).get('safe_boundary'):
+            self.drag_step=key;self.drag_origin=(event.x,event.y);self.drag_episode=self.episode['id']
+        return 'break'
+
+    def cancel_step_drag(self):
+        self.drag_step=None;self.drag_active=False;self.drag_target=None
+        if hasattr(self,'step_drop_marker'):self.step_drop_marker.place_forget()
+        if hasattr(self,'steps'):self.steps.configure(cursor='')
+
+    def drag_step_motion(self,event):
+        source=getattr(self,'drag_step',None)
+        if not source or self.episode_adjusting() or self.drag_episode!=self.episode['id']:return 'break'
+        x,y=self.drag_origin
+        if not self.drag_active and (event.x-x)**2+(event.y-y)**2<8**2:return 'break'
+        self.drag_active=True;self.steps.configure(cursor='fleur')
+        self.drag_target=None;self.step_drop_marker.place_forget()
+        if not (0<=event.x<self.steps.winfo_width() and 0<=event.y<self.steps.winfo_height()):return 'break'
+        key=self.steps.identify_row(event.y)
+        step=next((s for s in self.episode['steps'] if s['id']==key),None)
+        if not step or step.get('safe_boundary'):return 'break'
+        bounds=self.steps.bbox(key)
+        if not bounds:return 'break'
+        _,top,_,height=bounds;after=event.y>=top+height/2
+        self.drag_target=(key,after)
+        self.step_drop_marker.place(x=0,y=top+height-2 if after else top,relwidth=1,height=3)
+        self.step_drop_marker.lift()
+        self.notice('스텝 순서 변경 · '+step['name']+(' 뒤' if after else ' 앞')+'에 놓기 · Esc 취소')
+        return 'break'
     def teaching_jig_id(self):
         editor=self.second_editor if self.preview_editor==2 and self.second_editor else self
         return editor.selected_jig_id()
@@ -548,6 +575,17 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             self.steps.item(step['id'],values=(name,'지그' if step.get('jig_id') else '고정','—' if marker=='없음' else marker),tags=('editor2',) if right else ())
     def change_camera_tab(self,event=None):
         if self.page!='camera':return
+        selected=self.camera_tabs.select()
+        if event is not None and getattr(self,'_last_camera_tab',None)==selected:return
+        self._last_camera_tab=selected
+        monitor=getattr(self,'camera_work_monitor',None)
+        if monitor and self.camera_tabs.select()==str(monitor):
+            self._work_monitor_selected=True;self._work_monitor_passive=True;monitor.activate();return
+        if getattr(self,'_work_monitor_selected',False):
+            self._work_monitor_selected=False;monitor.deactivate()
+            if self.camera_history_visible():self.camera_errors.activate()
+            if self.camera_gallery.visible():self.camera_gallery.refresh()
+            return  # Leaving observation must not reconfigure the executor's camera.
         if hasattr(self,'camera_yolo') and not self.camera_yolo.visible() and self.camera_yolo.active:
             self.camera_yolo.stop('탭 전환으로 인식 중지 · 인식 시작을 눌러 다시 실행하세요.')
         self.update_camera_mode()
@@ -573,6 +611,11 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         from .yolo_ui import YoloPanel
         self.camera_yolo=YoloPanel(self.camera_tabs,self)
         self.camera_tabs.add(self.camera_yolo,text='AI 인식')
+        from desktop_monitor.ui import WorkMonitorPanel
+        self.camera_work_monitor=WorkMonitorPanel(self.camera_tabs,self.data_dir)
+        from desktop_monitor.ownership import prepare as prepare_observation
+        self.camera_work_monitor.before_connect=lambda:prepare_observation(self)
+        self.camera_tabs.add(self.camera_work_monitor,text='실시간 작업')
         self.camera_tabs.bind('<<NotebookTabChanged>>',self.change_camera_tab)
         parent=detection
         parent.columnconfigure(0,weight=1);parent.rowconfigure(0,weight=1)
@@ -610,12 +653,14 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         ttk.Label(pipeline,text='지그 검출').pack(side='left',padx=(0,6))
         self.jig_detection_method=tk.StringVar(value=next(k for k,v in METHODS.items() if v==detection_settings['method']))
         self.jig_detection_model=tk.StringVar(value=next(k for k,v in MODELS.items() if v==detection_settings['model']))
-        self.jig_detection_confidence=tk.StringVar(value=f"{detection_settings['confidence']:.1f}")
+        self.jig_detection_confidence=tk.StringVar(value=f"{detection_settings['confidence']*100:g}")
         self.jig_method_choice=ttk.Combobox(pipeline,state='readonly',width=26,textvariable=self.jig_detection_method,values=tuple(METHODS))
         self.jig_method_choice.pack(side='left',padx=(0,8));self.jig_method_choice.bind('<<ComboboxSelected>>',lambda e:self.update_jig_detection_controls())
         self.jig_model_choice=ttk.Combobox(pipeline,state='readonly',width=18,textvariable=self.jig_detection_model,values=tuple(MODELS));self.jig_model_choice.pack(side='left',padx=(0,8))
-        ttk.Label(pipeline,text='최소 신뢰도').pack(side='left',padx=(0,5))
-        self.jig_confidence_choice=ttk.Combobox(pipeline,state='readonly',width=5,textvariable=self.jig_detection_confidence,values=('0.5','0.6','0.7','0.8','0.9'));self.jig_confidence_choice.pack(side='left',padx=(0,8))
+        ttk.Label(pipeline,text='최소 신뢰도 (50~90%)').pack(side='left',padx=(0,5))
+        self.jig_confidence_choice=ttk.Spinbox(pipeline,from_=50,to=90,increment=1,width=5,textvariable=self.jig_detection_confidence);self.jig_confidence_choice.pack(side='left',padx=(0,8))
+        self.jig_confidence_choice.configure(validate='key',validatecommand=(self.root.register(lambda s:s=='' or s.isascii() and s.isdecimal()),'%P'))
+        self.jig_confidence_choice.bind('<Return>',lambda e:self.guard(self.save_jig_detection))
         self.button(pipeline,'검출 방식 적용',self.save_jig_detection).pack(side='left',padx=(0,12))
         self.jig_detection_status=tk.StringVar(value=self.jig_detection_applied_text())
         ttk.Label(pipeline,textvariable=self.jig_detection_status,style='Small.TLabel').pack(side='left')
@@ -626,7 +671,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         ttk.Label(roi_bar,textvariable=self.roi_progress,style='Small.TLabel').pack(side='left',padx=(0,8))
         self.adoption_toggle=ttk.Checkbutton(roi_bar,text='채택 상태 표시',variable=self.show_adoption,command=self.toggle_adoption_display);self.adoption_toggle.pack(side='right',padx=(12,0))
         self.camera_view_area=ttk.Frame(card,style='Card.TFrame');self.camera_view_area.grid(row=1,column=0,sticky='nsew');self.camera_view_area.columnconfigure(0,weight=1);self.camera_view_area.rowconfigure(0,weight=1)
-        self.camera_canvas=tk.Canvas(self.camera_view_area,bg=COLORS['nav'],highlightthickness=0);self.camera_canvas.grid(row=0,column=0,sticky='nsew')
+        self.camera_canvas=tk.Canvas(self.camera_view_area,bg=COLORS['viewport'],highlightthickness=0);self.camera_canvas.grid(row=0,column=0,sticky='nsew')
         self.camera_canvas.bind('<ButtonPress-1>',self.roi_press);self.camera_canvas.bind('<B1-Motion>',self.roi_move);self.camera_canvas.bind('<ButtonRelease-1>',self.roi_release);self.camera_canvas.bind('<Button-3>',lambda e:self.cancel_roi_points())
         self.camera_overview=ttk.Frame(self.camera_view_area,style='Card.TFrame',padding=(12,0,0,0));self.camera_overview.grid(row=0,column=1,sticky='nsew');self.camera_overview.columnconfigure(0,weight=1);self.camera_overview.rowconfigure(6,weight=1)
         self.camera_overview_title=tk.StringVar(value='전체 지그 · 영상 대기')
@@ -681,9 +726,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.button(controls,'실물값 보기',lambda:self.set_mode('live')).pack(side='left',padx=3)
         self.button(controls,'스텝 자세',lambda:self.set_mode('target')).pack(side='left',padx=3)
         self.button(controls,'시점 복원',self.reset_view).pack(side='left',padx=3)
-        ttk.Label(preview,text='드래그: 회전 · 오른쪽/가운데: 이동 · 휠: 확대\n파랑: 베이스 원점 (0, 0, 0) · 주황: TCP\n원: 팔레트·지그 중심',style='Small.TLabel',wraplength=500).grid(row=5,column=0,sticky='w')
-        ttk.Label(card,text='관절 보정 · 계산에 적용',style='Section.TLabel').pack(anchor='w')
-        ttk.Label(card,text='3D·TCP·지그 보정 계산에 함께 적용됩니다. 지그 보정 실행 시 목표 틱이 달라질 수 있습니다.\n모터 영점·저장된 스텝 틱은 유지됩니다. 토크를 끈 뒤 적용하세요.',style='Muted.TLabel',wraplength=450).pack(anchor='w',pady=12)
+        ttk.Label(preview,text='드래그 회전 · 우/중클릭 이동 · 휠 확대',style='Small.TLabel',wraplength=500).grid(row=5,column=0,sticky='w')
+        ttk.Label(card,text='관절·높이 보정',style='Section.TLabel').pack(anchor='w')
+        ttk.Label(card,text='토크 해제 후 적용 · 3D·TCP·지그 보정에 반영\n모터 영점과 저장된 스텝 틱은 유지됩니다.',style='Muted.TLabel',wraplength=450).pack(anchor='w',pady=12)
         form=ttk.Frame(card,style='Card.TFrame');form.pack(anchor='w');self.trim_vars={};self.trim_controls=[]
         for i,(n,label) in enumerate(zip(JOINTS,LABELS)):
             ttk.Label(form,text=label+'  모델 보정 Δ틱').grid(row=i,column=0,sticky='w',pady=6)
@@ -693,7 +738,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         self.table_z=tk.StringVar(value=f'{floor_adjustment(self.profile):g}')
         ttk.Label(form,text='로봇팔 높이 보정 (mm)').grid(row=6,column=0,sticky='w',pady=8);ttk.Entry(form,textvariable=self.table_z,width=10).grid(row=6,column=1)
         ttk.Label(form,text='직접 설치 0mm · 마운트 결합 5mm',style='Small.TLabel').grid(row=6,column=2,sticky='w',padx=(8,0))
-        ttk.Label(form,text='원점이 높아질수록 +값입니다. 직접 설치 0mm, 상단 마운트 결합 +5mm가 기준입니다.\n+5mm를 적용하면 팔 기준 작업대 높이는 5mm 낮아집니다. 팔 번호가 아니라 설치 방식에 맞춰 설정하세요.',style='Small.TLabel',wraplength=420).grid(row=7,column=0,columnspan=3,sticky='w',pady=(0,6))
+        ttk.Label(form,text='원점이 높아질수록 + · 팔 번호가 아닌 설치 방식 기준',style='Small.TLabel',wraplength=420).grid(row=7,column=0,columnspan=3,sticky='w',pady=(0,6))
         row=ttk.Frame(card,style='Card.TFrame');row.pack(anchor='w',pady=20)
         self.button(row,'보정 적용·저장',self.save_model,True).pack(side='left',padx=(0,8));self.button(row,'보정 0으로 복원',self.reset_model).pack(side='left')
         self.angle_mode_note=tk.StringVar();ttk.Label(card,textvariable=self.angle_mode_note,wraplength=420,style='Muted.TLabel').pack(anchor='w')
@@ -756,7 +801,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
     def jig_detection_applied_text(self):
         from .model_regions import checked_settings
         value=checked_settings(self.profile)
-        return '적용: 기존 OpenCV' if value['method']=='opencv' else f"적용: 팔레트 CAD / 운반용 OpenCV · YOLO26{value['model']} · 신뢰도 {value['confidence']:.1f}"
+        return '적용: 기존 OpenCV' if value['method']=='opencv' else f"적용: 팔레트 CAD / 운반용 OpenCV · YOLO26{value['model']} · 신뢰도 {value['confidence']*100:g}%"
 
     def update_jig_detection_controls(self,sync=False):
         if sync:
@@ -764,20 +809,22 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             settings=checked_settings(self.profile)
             self.jig_detection_method.set(next(k for k,v in METHODS.items() if v==settings['method']))
             self.jig_detection_model.set(next(k for k,v in MODELS.items() if v==settings['model']))
-            self.jig_detection_confidence.set(f"{settings['confidence']:.1f}")
+            self.jig_detection_confidence.set(f"{settings['confidence']*100:g}")
             self.jig_detection_status.set(self.jig_detection_applied_text())
         hybrid=self.jig_detection_method.get()=='AI 마스크 + 지그별 정합'
-        for widget in (self.jig_model_choice,self.jig_confidence_choice):widget.configure(state='readonly' if hybrid else 'disabled')
+        self.jig_model_choice.configure(state='readonly' if hybrid else 'disabled')
+        self.jig_confidence_choice.configure(state='normal' if hybrid else 'disabled')
         self.jig_detection_help.set('AI 마스크 → 팔레트: CAD 정합만 사용 · 운반용 팔레트: OpenCV 보정·추적' if hybrid else '매 프레임 OpenCV로 상단 테두리의 중심·각도를 계산합니다.')
 
     def save_jig_detection(self):
         from .model_regions import checked_settings,METHODS,MODELS,runtime,identity
+        from .inference_protocol import confidence_percent
         from .pi_execution import active_execution
         if (self.pending_execution or self.camera_task or self.safe_entry or self.playing or self.detector.frozen
                 or self.pose_latch.frozen or getattr(getattr(self,'inspection_run',None),'busy',False) or active_execution(self)):
             raise ValueError('측정·검사·실행이 끝난 뒤 지그 검출 방식을 적용하세요.')
         value={'method':METHODS[self.jig_detection_method.get()],'model':MODELS[self.jig_detection_model.get()],
-               'confidence':float(self.jig_detection_confidence.get()),'model_identity':None}
+               'confidence':confidence_percent(self.jig_detection_confidence.get()),'model_identity':None}
         if value['method']=='model_roi':value['model_identity']=identity(runtime(value['model'])[2])
         from .ai_inspection import inspection_settings
         profile={**self.profile,'part_inspection':inspection_settings(self.profile),'jig_detection':value};checked_settings(profile)
@@ -801,7 +848,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         previous=self.page
         self.cancel_jig_key()
         self.guidance.set({'teach':'스텝 선택 → 지그 따라가기 선택 → 자세 편집 → 저장 · 실행', 'camera':'지그 검출 · 부품·조립 검사 · 영상 저장에서 실시간·촬영 사진 함께 보기', 'devices':'현재 모터값과 중단 이유를 확인합니다. 연결만으로 토크가 켜지지는 않습니다.', 'model':'3D 표시와 TCP·지그 보정 계산에 함께 적용됩니다. 화면만 바꾸는 설정이 아닙니다.','settings':'로봇·영점, 지그, 카메라와 TCP 설정을 한곳에서 관리합니다.'}[page])
-        self.page=page;self.last_render=None;self.pages[page].tkraise();self.page_title.set({'teach':'티칭 워크스페이스','camera':'상단 카메라','devices':'장비 모니터링','model':'모델·계산 보정','settings':'설정 · 안내'}[page])
+        self.page=page;self.last_render=None;self.pages[page].tkraise();self.page_title.set({'teach':'티칭','camera':'상단 카메라','devices':'장비 모니터링','model':'모델·계산 보정','settings':'설정 · 안내'}[page])
         for k,b in self.nav_buttons.items():
             b.state(['selected'] if k==page else ['!selected']);b.configure(text=('● ' if k==page else '   ')+{'teach':'티칭','camera':'상단 카메라','devices':'장비 모니터링','model':'모델·계산 보정','settings':'설정 · 안내'}[k])
         self.camera_page_changed(previous)
@@ -856,11 +903,13 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             if self.leader_session:self.leader_session.close()
             self.connection.set('연결 해제 중');return
         self.connect_devices()
-    def connect_devices(self):
+    def connect_devices(self,*,control_requested=False):
         if self.camera_only:raise ValueError('카메라 전용 실행에서는 모터를 연결하지 않습니다.')
-        # Startup may adopt an existing Pi session. Never toggle it off or arm it.
+        # An explicit request may adopt an existing Pi session without arming it.
         require_calibrated(self.profile)
         connected=bool(self.session and self.session.running)
+        if not connected and not control_requested and not self.demo_mode:
+            raise ValueError('조회 전용입니다. 상단 전체 연결을 눌러 로봇팔 제어권을 요청하세요.')
         if self.remote_mode and not connected:self.require_remote().sync(self)
         leader_config=None;leader_cal=None
         if not self.demo_mode and self.profile.get('mode')=='leader':
@@ -1020,6 +1069,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
                 self.steps.selection_set(self.episode['steps'][0]['id']);self.select_step()
         self.guard(load)
     def refresh_steps(self):
+        self.cancel_step_drag()
         editor=getattr(self,'second_editor',None)
         if editor and (editor.episode_id!=self.episode['id'] or not any(s['id']==editor.selected for s in self.episode['steps'])):self.close_second_editor()
         self.steps.delete(*self.steps.get_children())
@@ -1096,10 +1146,20 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         i=ids.index(self.selected);j=i+direction
         if 0<=j<len(ids) and not self.episode['steps'][j].get('safe_boundary'):self.episode['steps'][i],self.episode['steps'][j]=self.episode['steps'][j],self.episode['steps'][i];self.refresh_steps();self.save_episode()
     def drop_step(self,event):
-        if self.episode_adjusting():return
-        source=getattr(self,'drag_step',None);dest=self.steps.identify_row(event.y);ids=[s['id'] for s in self.episode['steps']]
-        if source in ids and dest in ids and source!=dest and not any(self.episode['steps'][ids.index(k)].get('safe_boundary') for k in (source,dest)):
-            step=self.episode['steps'].pop(ids.index(source));self.episode['steps'].insert(ids.index(dest),step);self.selected=source;self.refresh_steps();self.guard(self.save_episode)
+        source=getattr(self,'drag_step',None);active=getattr(self,'drag_active',False)
+        if active:self.drag_step_motion(event)
+        target=getattr(self,'drag_target',None);episode=getattr(self,'drag_episode',None)
+        self.cancel_step_drag()
+        if not active or not target or self.episode_adjusting() or episode!=self.episode['id']:return 'break'
+        ids=[s['id'] for s in self.episode['steps']];dest,after=target
+        if source not in ids or dest not in ids:return 'break'
+        index=ids.index(source);place=ids.index(dest)+int(after)
+        if place>index:place-=1
+        if place==index:return 'break'
+        step=self.episode['steps'].pop(index);self.episode['steps'].insert(place,step)
+        self.selected=source;self.refresh_steps()
+        if self.guard(self.save_episode):self.notice(f'스텝 순서 저장됨 · {step["name"]} → {place+1}번')
+        return 'break'
     def delete_step(self):
         ids=[s['id'] for s in self.episode['steps']]
         if self.selected not in ids:return
@@ -1399,7 +1459,15 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             from .episode_inspection_runtime import require_resources
             require_resources()
         self.inspection_run=None
+    def show_pc_chain(self):
+        from .pc_chain_ui import show
+        show(self)
+
     def execute_episode(self):
+        from .pi_execution import active_execution
+        job=active_execution(self)
+        if job is not None and getattr(job,'app',None) is self:
+            job.restart();return
         if self.remote_mode and self.profile.get('mode')!='demo':
             if self.camera_only:raise ValueError('카메라 전용에서는 에피소드를 실행할 수 없습니다.')
             from .pi_execution import PiExecution
@@ -1439,6 +1507,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if has_inspections(self.episode):self.prepare_execution('startup',steps,apply_jig=False);return
         self.continue_episode(steps,apply_jig=False)
     def stop_all(self):
+        self.cancel_step_drag()
         if getattr(getattr(self.workspace_manager,'safe_shutdown',None),'busy',False):
             self.guard(lambda:self.motion_request('hold'),during_shutdown=True);return
         self.stop_leader_assist()
@@ -1479,6 +1548,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             x,y,view=self.drag_start;self.view=(view[0]-(event.x-x)*.5,max(-80,min(20,view[1]-(event.y-y)*.3)),*view[2:]);self.last_render=None
     def zoom(self,factor):self.view=(*self.view[:2],max(.35,min(6. if self.workcell_preview else 2.,self.view[2]*factor)),*self.view[3:]);self.last_render=None
     def start_camera(self):
+        self._work_monitor_passive=False  # An explicit camera/measurement action leaves passive viewing.
         from .pi_execution import active_execution
         job=active_execution(self)
         if job:
@@ -1510,7 +1580,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         elif self.remote_mode:
             from .remote_client import RemoteCameraSession
             link=self.require_remote();link.sync(self);self.camera=RemoteCameraSession(link)
-        else:self.camera=CameraSession(**self.profile['camera'],processor=self.detector.process)
+        else:
+            self.camera=CameraSession(**self.profile['camera'],processor=self.detector.process)
+            self.detector.clear(start_on_frame=True)
         self.update_camera_mode();self.camera.start();self.last_camera_at=0
     def fit_image(self,canvas,rgb,*,resample=Image.Resampling.LANCZOS):
         image=Image.fromarray(rgb) if not isinstance(rgb,Image.Image) else rgb
@@ -1520,6 +1592,11 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         cached=getattr(canvas,'fitted_image',None)
         if isinstance(rgb,Image.Image) and cached and cached[0] is rgb and cached[1:]==(size,x,y,resample) and existing:
             return x,y,*size
+        pixels=getattr(canvas,'fitted_pixels',None)
+        if not isinstance(rgb,Image.Image) and pixels is not None and existing:
+            previous,geometry=pixels
+            if geometry==(size,x,y,resample) and previous.shape==rgb.shape and previous.dtype==rgb.dtype and np.array_equal(previous,rgb):
+                return x,y,*size
         photo=ImageTk.PhotoImage(image.resize(size,resample),master=canvas)
         existing=canvas.find_withtag('image')
         if existing:
@@ -1527,6 +1604,8 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         else:canvas.create_image(x,y,image=photo,anchor='nw',tags='image')
         canvas.tag_lower('image');canvas.photo=photo
         canvas.fitted_image=(rgb,size,x,y,resample) if isinstance(rgb,Image.Image) else None
+        # An owned copy also detects callers mutating an ndarray in place.
+        canvas.fitted_pixels=None if isinstance(rgb,Image.Image) else (rgb.copy(),(size,x,y,resample))
         return x,y,*size
     def image_point(self,x,y):
         if self.camera_rect is None:return None
@@ -1929,7 +2008,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
     def camera_view_key(self):return None if self.camera_all.get() else self.active_jig
     def update_camera_profile_text(self):
         if self.camera_all.get():
-            self.camera_profile_text.set('등록한 모든 지그의 최신 검출 결과를 함께 표시합니다.\n범위를 바꾸려면 지그를 선택하거나 오른쪽 목록을 더블클릭하세요.');return
+            self.camera_profile_text.set('범위 편집: 지그 선택 또는 목록 더블클릭');return
         m=self.mesh_profile;sx,sy=m['size_mm'][:2]
         instruction='드래그해서 사각형을 지정하세요.' if self.roi_mode.get()=='사각형' else '지그 주위를 여유 있게 둘러 그리고 마우스를 놓으세요.'
         self.camera_profile_text.set(f"{instruction} 영상 밖으로 끌면 가장자리에 맞춥니다. · 우클릭 취소\n{self.catalog.items[self.active_jig]['name']} · STL {sx:g}×{sy:g} mm · 받침 높이 {support_height(self.catalog.items[self.active_jig],self.profile):g} mm (바닥=0)")
@@ -2025,7 +2104,25 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
     def show_camera_overview_detail(self,event=None):
         selected=self.camera_jig_status.selection()
         set_text(self.camera_overview_detail,self.camera_overview_details.get(selected[0],'영상 대기') if selected else '행 선택: 상세 상태 · 더블클릭: 범위 편집')
+    def work_monitor_selected(self):
+        monitor=getattr(self,'camera_work_monitor',None)
+        return bool(monitor and self.camera_tabs.select()==str(monitor))
+
+    def camera_needed(self):
+        if self.work_monitor_selected() or getattr(self,'_work_monitor_passive',False):
+            return bool(getattr(getattr(self,'inspection_run',None),'busy',False) or self.pending_execution or self.camera_task)
+        return CameraLifecycle.camera_needed(self)
+
+    def camera_page_changed(self,previous):
+        if self.work_monitor_selected():
+            if self.page=='camera':self._work_monitor_passive=True;self.camera_work_monitor.activate()
+            else:self.camera_work_monitor.deactivate()
+            return
+        if getattr(self,'_work_monitor_passive',False):return
+        CameraLifecycle.camera_page_changed(self,previous)
+
     def update_camera_mode(self):
+        if self.work_monitor_selected() or getattr(self,'_work_monitor_passive',False):return
         yolo=getattr(self,'camera_yolo',None);camera=self.camera
         task=self.camera_task
         measuring=bool(self.pending_execution or task and task['kind'] in ('jig','follow') and not task.get('captured'))
@@ -2052,6 +2149,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         from .camera_display import display_results
         return display_results(self.camera_display_poses,results,now,raw=raw)
     def draw_camera_frame(self,now,*,scheduled=False,for_capture=False):
+        if not for_capture and self.work_monitor_selected():return
         yolo=getattr(self,'camera_yolo',None)
         if not for_capture and yolo is not None and yolo.visible():return
         if not for_capture and self.camera_history_visible():return
@@ -2083,13 +2181,19 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         detection_fresh=detection_at is not None and 0<=now-detection_at<detection_age_limit
         if not detection_fresh:self.camera_display_poses.clear()
         canvas=self.camera_inspection.canvas if inspection else self.camera_canvas
+        adopted=self.camera_adopted_positions(now)
+        # Evaluate expiry on every tick, including when video is unchanged.
+        # Remaining seconds are a label, not a change to an outline's pixels.
+        adoption_key=json.dumps({k:{n:v for n,v in r.items() if n!='hold_remaining_s'} for k,r in adopted.items()},sort_keys=True,default=lambda v:v.tolist() if isinstance(v,np.ndarray) else str(v))
+        result=self.camera_inspection.worker.result if inspection else None
         key=(id(frame),at,detection_at,detection_fresh,inspection,self.camera_view_key(),self.catalog.revision,
              canvas.winfo_width(),canvas.winfo_height(),self.camera_inspection.station.get(),
-             self.camera_inspection.product.get())
+             self.camera_inspection.product.get(),id(data),self.show_adoption.get(),adoption_key,
+             id(result),bool(result and 0<=now-result.get('completed',result['at'])<5))
         # Capture is at most 10 FPS. Paint new frames immediately; repeat metadata
         # at 5 FPS instead of resizing the same frame on every 30 FPS 3-D tick.
-        # Adoption/held poses have independent expiry and retain their full refresh.
-        if (scheduled and not self.show_adoption.get() and not self.teaching_jig_hold_active()
+        # Adoption expiry is part of the key; interpolation keeps its full rate.
+        if (scheduled and not self.teaching_jig_hold_active()
                 and not any(now-state[2]<self.camera_display_poses.duration for state in self.camera_display_poses.states.values())
                 and key==getattr(self,'camera_paint_key',None)
                 and 0<=now-getattr(self,'camera_painted_at',0)<.2):return
@@ -2105,8 +2209,9 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         previous=getattr(self.camera,'observation',None)
         if not detection_fresh and not for_capture and previous and 0<=now-previous[2]<5 and (data or {}).get('status') not in ('paused','settings_changed','error'):
             display_data=previous[1];display_pending=True
-        display_ready=detection_fresh or display_pending
-        adopted=self.camera_adopted_positions(now)
+        # Paused is a capture state, with no detection timestamp to expire.
+        # Keep it visible in both the render loop and the status poll.
+        display_ready=detection_fresh or display_pending or (data or {}).get('status')=='paused'
         from .label_layout import LabelLayout
         from .inspection_geometry import anchors_for,project
         label_results={**self.camera_view_results(display_data or {}),**adopted}
@@ -2166,7 +2271,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
 
     def require_remote(self):
         if self.demo_mode:raise ValueError('데모에서는 Pi에 연결하거나 명령을 보내지 않습니다.')
-        if not self.remote or self.remote.error:raise ValueError('Pi 연결 복구 대기 중입니다. 자동 재연결 후 다시 실행하세요.'+((' · '+self.remote.error) if self.remote else ''))
+        if not self.remote or self.remote.error:raise ValueError('조회 전용입니다. 전체 연결을 눌러 Pi 제어 연결을 다시 요청하세요.'+((' · '+self.remote.error) if self.remote else ''))
         return self.remote
     def sync_remote_episode(self,doc):
         # Pi is authoritative at startup. Editing creates a local draft; only
@@ -2182,6 +2287,139 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
             if data['calibration_sha256']!=self.calibration.sha256 or data['bundle_hash']!=self.require_remote().bundle_hash:raise ValueError('Pi 계산 기준이 변경됐습니다. 다시 실행하세요.')
             self.begin_execution(*request,_remote_plan=data['plan'])
         except Exception as exc:self.set_pose_frozen(False);self.notice(str(exc),True)
+    def motion_button_permissions(self,active,fresh,state):
+        ready=bool(active and fresh and state=='HOLD' and not self.pending_execution)
+        executable=bool(ready and self.episode['steps'])
+        return {
+            'arm_btn':bool(active and fresh and state in ('READ_ONLY','ACTIVATION_PAUSED')),
+            'hold_btn':bool(active and state in ('HOLD','MOVING','FOLLOW','ACTIVATING','ACTIVATION_PAUSED')),
+            'release_btn':self.torque_release_available(),
+            'move_btn':bool(active and fresh and self.live_adjust.owner is self) or ready,
+            'execute_btn':executable,
+            'execute_taught_btn':executable and not self.safe_entry,
+        }
+
+    def apply_command_permissions(self,permissions):
+        # Preserve the original precedence even when a status update failed:
+        # inspection < Pi execution (HOLD allowed) < observation-only modes.
+        motion=('arm_btn','follow_btn','move_btn','execute_btn','execute_taught_btn')
+        if self.inspection_run and self.inspection_run.busy:
+            permissions.update(dict.fromkeys(motion,False))
+        from .pi_execution import active_execution
+        job=active_execution(self)
+        label='에피소드 실물 실행'
+        if job:
+            permissions.update(dict.fromkeys(('connect_btn',*motion),False))
+            permissions['hold_btn']=True
+            if getattr(job,'app',None) is self and getattr(job,'paused',False):
+                label='재검사 중…' if getattr(job,'rechecking',False) else '재개 요청 중…' if getattr(job,'restart_pending',False) else '재검사 후 이어서 실행' if getattr(job,'recheck_required',False) else '작업 이어서 실행'
+                permissions['execute_btn']=bool(getattr(job,'can_restart',False))
+        if self.execute_btn.cget('text')!=label:self.execute_btn.configure(text=label)
+        if self.camera_only:
+            self.connection.set('카메라 전용 · 모터 연결 차단')
+        observing=(getattr(self,'work_observation_mode',False) and self.page=='camera' and self.work_monitor_selected())
+        if self.camera_only or observing:
+            permissions.update(dict.fromkeys(('connect_btn','arm_btn','hold_btn','release_btn','follow_btn','execute_btn','execute_taught_btn'),False))
+        self.render_command_permissions(permissions)
+
+    def render_command_permissions(self,permissions):
+        for name,allowed in permissions.items():
+            getattr(self,name).state(['!disabled'] if allowed else ['disabled'])
+
+    def poll_session_status(self):
+        if self.session:
+            if hasattr(self.session,'heartbeat'):self.session.heartbeat=time.monotonic()
+            newest_sample=None
+            while True:
+                try:kind,value=self.session.events.get_nowait()
+                except queue.Empty:break
+                if kind=='sample':newest_sample=value
+                elif kind=='error':self.notice(value,True)
+                elif kind=='notice':
+                    self.notice(value)
+                elif kind=='device_notice':self.device_notice(value)
+                elif kind=='motion':
+                    self.last_motion_stop=value['detail'] if value.get('paused') else None
+                    self.notice(value['detail'])
+            if newest_sample is not None:
+                self.latest=newest_sample
+                for n,label in zip(JOINTS,LABELS):
+                    h=newest_sample.telemetry[n]
+                    text=f'{label} · 현재 {newest_sample.ticks[n]}'
+                    if self.current_vars[n].get()!=text:self.current_vars[n].set(text)
+            connected=self.session.running and self.latest and self.latest.fresh()
+            if connected:
+                on=any(h['torque'] for h in self.latest.telemetry.values())
+                self.connection.set(('실물 실행 · ' if getattr(self.session,'state','')=='MOVING' else '현재 자세 유지 · ' if getattr(self.session,'state','')=='HOLD' else '리더 따라가기 · ' if getattr(self.session,'state','')=='FOLLOW' else '토크 준비 보류 · ' if getattr(self.session,'state','')=='ACTIVATION_PAUSED' else '시작 확인 · ' if getattr(self.session,'state','')=='ACTIVATING' else '읽기 연결 · ')+('토크 ON' if on else '토크 OFF')+('' if self.latest.calibration_matches else ' · 영점 불일치'))
+                if isinstance(self.session,MotionSession) and self.session.grip_contact.hold_tick is not None:self.connection.set(self.connection.get()+' · 집게 접촉 유지')
+                if self.connect_btn.cget('text')!='연결 해제':self.connect_btn.configure(text='연결 해제')
+                if isinstance(self.session,DemoSession):self.connection.set('데모 · USB 사용 안 함')
+            elif not self.session.running:
+                self.connection.set('오류로 연결 종료' if self.session.error else '연결 종료')
+                if self.connect_btn.cget('text')!='팔로워 연결':self.connect_btn.configure(text='팔로워 연결')
+                error_key=(id(self.session),self.session.error)
+                if self.session.error and error_key!=getattr(self,'last_reported_session_error',None):self.notice(self.session.error,True);self.last_reported_session_error=error_key
+            else:self.connection.set('현재값 수신 대기')
+
+    def poll_camera_status(self):
+        if self.camera:
+            if self.camera_sleeping:set_text(self.camera_status,'카메라 꺼짐 · 필요할 때 연결합니다.')
+            elif getattr(self.camera,'recovering',False):set_text(self.camera_status,'Pi 영상 재수신 중 · 로봇 연결은 유지합니다.')
+            elif self.camera.error:set_text(self.camera_status,self.camera.error)
+            elif self.camera_view_observation() and time.monotonic()-self.camera_view_observation()[2]<1:
+                frame,data,at=self.camera_view_observation();h,w=frame.shape[:2];result=self.camera_view_result(data)
+                if result and not result.get('live_view') and self.teaching_jig_hold_active():result=self.camera_results().get(self.active_jig,{'selected':None,'candidates':[],'error':'자동 갱신 정지 · 지그 다시 읽기 필요'})
+                adopted=self.camera_adopted_positions(time.monotonic())
+                if not self.camera_all.get() and self.active_jig in adopted:result={**adopted[self.active_jig],'adopted_view':True}
+                info=f'데모 {w}×{h} · 저장 영상 재생' if self.demo_mode else f'실시간 {w}×{h} · 원본 영상'
+                if not getattr(self.camera,'processing_enabled',True):info+=' · 검출 정지 · 영상 최대 5fps' if self.camera.preview_fps==5 else ' · 사진 수집 중'
+                if data.get('preview_detection_age_s',0)>.5:info+=f" · 검출 결과 {data['preview_detection_age_s']:.1f}초 전"
+                if self.camera_all.get():
+                    results=self.camera_view_results(data);self.update_camera_overview(results)
+                    count=sum(bool(r.get('selected')) and not r.get('pose_held',False) for r in results.values())
+                    info+=f'  |  전체 지그 감지 {count}/{len(self.catalog.items)} · 오른쪽 목록에서 상태 확인'
+                elif result and result.get('selected'):
+                    chosen=result['selected'];x,y=chosen['center_px'];metric=chosen['metric']
+                    if result.get('adopted_view'):info+='  |  채택 위치 · + 중심 표시'
+                    elif result.get('live_view'):info+='  |  최신 검출 · + 중심 표시'
+                    elif result.get('teaching_held'):info+='  |  자동 갱신 정지 · 티칭 위치 유지'
+                    else:info+=f"  |  {'실행 중 고정' if result.get('pose_frozen') else '위치 유지' if result.get('pose_held') else '새로 측정'} {result.get('hold_remaining_s',0):.1f}s · + 중심 표시 · {'연속 감지로 확정' if chosen.get('temporal_match') else '외곽·구멍 일치'}"
+                    if metric:
+                        dx,dy=display_position(metric['center_xy_mm']);heading=display_heading(metric['yaw_deg'],metric.get('symmetry_deg',90))
+                        info+=f"\n표시 X→ {dx:.1f}, Y↑ {dy:.1f} mm · 방향 {heading:.1f}° ({metric.get('symmetry_deg',90)}° 대칭) · 원점=로봇 베이스 · 카메라 추정값"
+                    if chosen.get('raised_features_verified'):info+='\nSTL 높이를 반영한 윗면 돌출 모서리 확인'
+                    if chosen.get('orientation_verified'):info+='\n'+('A/B 중단 접합부로 앞뒤 방향 확인' if chosen.get('orientation_method')=='central_junction' else 'A 지그 원형 구멍으로 앞뒤 방향 확인')
+                    if chosen.get('grid_verified'):info+='\n내부 교차점 2개와 외곽 방향 일치'+('' if chosen.get('orientation_verified') else ' · 앞뒤 180° 대칭')
+                    if chosen.get('partial_visible'):info+='\n일부가 화면 밖에 있습니다. 보이는 네 변과 STL 크기로 중심을 계산했습니다.'
+                elif result:
+                    info+='  |  '+(f"획득 {result['stable_candidate_seconds']:.1f}/{result.get('acquisition_seconds',3.):g}초 · 새 관측 {result.get('stable_candidate_samples',0)}회" if 'stable_candidate_seconds' in result else '여러 후보 · 영역을 좁혀 주세요' if result.get('status')=='ambiguous' else result.get('error','지그 형상 미확인'))
+                    if 'stable_candidate_seconds' in result and result.get('error'):info+='\n채택 불가: '+result['error']
+                set_text(self.camera_status,info)
+            elif not self.camera.running:set_text(self.camera_status,'카메라 연결 해제됨')
+            else:set_text(self.camera_status,'최신 카메라 영상 대기')
+        if self.camera_all.get():
+            view=self.camera_view_observation()
+            if not view or self.camera_sleeping or getattr(self.camera,'recovering',False) or getattr(self.camera,'error',None) or time.monotonic()-view[2]>=1:
+                self.update_camera_overview({});self.camera_display_snapshot=None;self.camera_canvas.delete('image')
+
+    def update_command_controls(self,permissions):
+        fresh=bool(not calibration_pending(self.profile) and self.session and self.session.running and self.latest and self.latest.fresh() and self.latest.calibration_matches)
+        self.capture_btn.state(['!disabled'] if fresh and not self.safe_editing else ['disabled'])
+        selected_step=next((s for s in self.episode['steps'] if s['id']==self.selected),None)
+        self.update_step_btn.state(['!disabled'] if selected_step and not selected_step.get('safe_boundary') and not self.safe_editing else ['disabled'])
+        state=getattr(self.session,'state','READ_ONLY');active=bool(self.session and self.session.running)
+        self.delete_episode_btn.state(['!disabled'] if not self.episode_delete_busy() and any(doc['id']==self.episode['id'] for _,doc in self.library_entries) else ['disabled'])
+        permissions.update(self.motion_button_permissions(active,fresh,state))
+        blocked_preview=bool(self.remote_plan_job or self.pending_execution or self.safe_entry or state in ('MOVING','FOLLOW','ACTIVATING'))
+        self.motion_speed_choice.configure(state='disabled' if blocked_preview or getattr(self.session,'command_pending',None) and self.session.command_pending.is_set() else 'readonly')
+        for widget in (self.pause_btn,self.preview_reset_btn,self.timeline):widget.state(['disabled'] if blocked_preview or not self.transport.targets else ['!disabled'])
+        permissions['connect_btn']=bool(self.session and self.session.running) and not (self.settings.worker and self.settings.worker.running)
+        leader_running=bool(self.leader_session and self.leader_session.running)
+        leader_ready=bool(leader_running and self.leader_session.latest and self.leader_session.latest.fresh())
+        follow_text='따라가기 준비 중' if (self.camera_task or {}).get('kind')=='follow' else '리더 따라가기' if leader_ready or state=='FOLLOW' else '리더 연결 중' if leader_running else '리더 다시 연결'
+        if self.follow_btn.cget('text')!=follow_text:self.follow_btn.configure(text=follow_text)
+        permissions['follow_btn']=bool(not self.camera_task and active and fresh and state=='HOLD' and self.profile.get('mode')=='leader' and (not leader_running or leader_ready))
+
     def poll(self):
         if self.closed:return
         if self.page=='devices' and self.workspace_visible:self.dual_monitor.update()
@@ -2189,115 +2427,26 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if getattr(getattr(self.workspace_manager,'safe_shutdown',None),'busy',False):
             if self.session and hasattr(self.session,'heartbeat'):self.session.heartbeat=time.monotonic()
             self.job=self.root.after(80,self.poll);return
+        permissions={}
         try:
             self.settings.poll();self.poll_remote_plan();self.poll_extended();self.poll_linear_state();self.poll_arm_selection()
-            if self.remote_mode and self.remote and self.remote.error:set_text(self.device_target,'장치: Pi · 자동 재연결 대기')
-            if self.session:
-                if hasattr(self.session,'heartbeat'):self.session.heartbeat=time.monotonic()
-                newest_sample=None
-                while True:
-                    try:kind,value=self.session.events.get_nowait()
-                    except queue.Empty:break
-                    if kind=='sample':newest_sample=value
-                    elif kind=='error':self.notice(value,True)
-                    elif kind=='notice':
-                        self.notice(value)
-                    elif kind=='device_notice':self.device_notice(value)
-                    elif kind=='motion':
-                        self.last_motion_stop=value['detail'] if value.get('paused') else None
-                        self.notice(value['detail'])
-                if newest_sample is not None:
-                    self.latest=newest_sample
-                    for n,label in zip(JOINTS,LABELS):
-                        h=newest_sample.telemetry[n]
-                        text=f'{label} · 현재 {newest_sample.ticks[n]}'
-                        if self.current_vars[n].get()!=text:self.current_vars[n].set(text)
-                connected=self.session.running and self.latest and self.latest.fresh()
-                if connected:
-                    on=any(h['torque'] for h in self.latest.telemetry.values())
-                    self.connection.set(('실물 실행 · ' if getattr(self.session,'state','')=='MOVING' else '현재 자세 유지 · ' if getattr(self.session,'state','')=='HOLD' else '리더 따라가기 · ' if getattr(self.session,'state','')=='FOLLOW' else '시작 확인 · ' if getattr(self.session,'state','')=='ACTIVATING' else '읽기 연결 · ')+('토크 ON' if on else '토크 OFF')+('' if self.latest.calibration_matches else ' · 영점 불일치'))
-                    if isinstance(self.session,MotionSession) and self.session.grip_contact.hold_tick is not None:self.connection.set(self.connection.get()+' · 집게 접촉 유지')
-                    if self.connect_btn.cget('text')!='연결 해제':self.connect_btn.configure(text='연결 해제')
-                    if isinstance(self.session,DemoSession):self.connection.set('데모 · USB 사용 안 함')
-                elif not self.session.running:
-                    self.connection.set('오류로 연결 종료' if self.session.error else '연결 종료')
-                    if self.connect_btn.cget('text')!='팔로워 연결':self.connect_btn.configure(text='팔로워 연결')
-                    error_key=(id(self.session),self.session.error)
-                    if self.session.error and error_key!=getattr(self,'last_reported_session_error',None):self.notice(self.session.error,True);self.last_reported_session_error=error_key
-                else:self.connection.set('현재값 수신 대기')
+            if self.remote_mode and self.remote and self.remote.error:set_text(self.device_target,'장치: Pi · 조회 전용 · 전체 연결 필요')
+            self.poll_session_status()
             if self.second_editor:self.second_editor.poll()
             self.poll_leader_status();self.poll_leader_assist()
             self.check_pending_execution()
             if self.inspection_run:self.inspection_run.poll()
             self.set_pose_frozen((self.live_adjust.owner is not None and not self.pending_execution and not self.camera_task) or bool(self.remote_plan_job) or bool(self.inspection_run and self.inspection_run.busy) or self.playing or bool(isinstance(self.session,MotionSession) and self.session.running and self.session.program_active.is_set()))
             self.update_live_jig_comparison();self.update_jig_pause_button()
-            fresh=bool(not calibration_pending(self.profile) and self.session and self.session.running and self.latest and self.latest.fresh() and self.latest.calibration_matches)
-            self.capture_btn.state(['!disabled'] if fresh and not self.safe_editing else ['disabled'])
-            selected_step=next((s for s in self.episode['steps'] if s['id']==self.selected),None)
-            self.update_step_btn.state(['!disabled'] if selected_step and not selected_step.get('safe_boundary') and not self.safe_editing else ['disabled'])
-            state=getattr(self.session,'state','READ_ONLY');active=bool(self.session and self.session.running)
-            self.delete_episode_btn.state(['!disabled'] if not self.episode_delete_busy() and any(doc['id']==self.episode['id'] for _,doc in self.library_entries) else ['disabled'])
-            for button,allowed in [(self.arm_btn,active and fresh and state=='READ_ONLY'),(self.hold_btn,active and state in ('HOLD','MOVING','FOLLOW')),(self.release_btn,self.torque_release_available()),(self.move_btn,active and fresh and (self.live_adjust.owner is self or state=='HOLD' and not self.pending_execution)),(self.execute_btn,active and fresh and state=='HOLD' and not self.pending_execution and bool(self.episode['steps'])),(self.execute_taught_btn,active and fresh and state=='HOLD' and not self.pending_execution and not self.safe_entry and bool(self.episode['steps']))]:button.state(['!disabled'] if allowed else ['disabled'])
-            blocked_preview=bool(self.remote_plan_job or self.pending_execution or self.safe_entry or state in ('MOVING','FOLLOW','ACTIVATING'))
-            self.motion_speed_choice.configure(state='disabled' if blocked_preview or getattr(self.session,'command_pending',None) and self.session.command_pending.is_set() else 'readonly')
-            for widget in (self.pause_btn,self.preview_reset_btn,self.timeline):widget.state(['disabled'] if blocked_preview or not self.transport.targets else ['!disabled'])
-            self.connect_btn.state(['disabled'] if self.settings.worker and self.settings.worker.running else ['!disabled'])
-            leader_running=bool(self.leader_session and self.leader_session.running)
-            leader_ready=bool(leader_running and self.leader_session.latest and self.leader_session.latest.fresh())
-            follow_text='따라가기 준비 중' if (self.camera_task or {}).get('kind')=='follow' else '리더 따라가기' if leader_ready or state=='FOLLOW' else '리더 연결 중' if leader_running else '리더 다시 연결'
-            if self.follow_btn.cget('text')!=follow_text:self.follow_btn.configure(text=follow_text)
-            self.follow_btn.state(['!disabled'] if not self.camera_task and active and fresh and state=='HOLD' and self.profile.get('mode')=='leader' and (not leader_running or leader_ready) else ['disabled'])
-            if self.camera:
-                if self.camera_sleeping:set_text(self.camera_status,'카메라 꺼짐 · 필요할 때 연결합니다.')
-                elif getattr(self.camera,'recovering',False):set_text(self.camera_status,'Pi 영상 재수신 중 · 로봇 연결은 유지합니다.')
-                elif self.camera.error:set_text(self.camera_status,self.camera.error)
-                elif self.camera_view_observation() and time.monotonic()-self.camera_view_observation()[2]<1:
-                    frame,data,at=self.camera_view_observation();h,w=frame.shape[:2];result=self.camera_view_result(data)
-                    if result and not result.get('live_view') and self.teaching_jig_hold_active():result=self.camera_results().get(self.active_jig,{'selected':None,'candidates':[],'error':'자동 갱신 정지 · 지그 다시 읽기 필요'})
-                    adopted=self.camera_adopted_positions(time.monotonic())
-                    if not self.camera_all.get() and self.active_jig in adopted:result={**adopted[self.active_jig],'adopted_view':True}
-                    info=f'데모 {w}×{h} · 저장 영상 재생' if self.demo_mode else f'실시간 {w}×{h} · 원본 영상'
-                    if not getattr(self.camera,'processing_enabled',True):info+=' · 검출 정지 · 영상 최대 5fps' if self.camera.preview_fps==5 else ' · 사진 수집 중'
-                    if data.get('preview_detection_age_s',0)>.5:info+=f" · 검출 결과 {data['preview_detection_age_s']:.1f}초 전"
-                    if self.camera_all.get():
-                        results=self.camera_view_results(data);self.update_camera_overview(results)
-                        count=sum(bool(r.get('selected')) and not r.get('pose_held',False) for r in results.values())
-                        info+=f'  |  전체 지그 감지 {count}/{len(self.catalog.items)} · 오른쪽 목록에서 상태 확인'
-                    elif result and result.get('selected'):
-                        chosen=result['selected'];x,y=chosen['center_px'];metric=chosen['metric']
-                        if result.get('adopted_view'):info+='  |  채택 위치 · + 중심 표시'
-                        elif result.get('live_view'):info+='  |  최신 검출 · + 중심 표시'
-                        elif result.get('teaching_held'):info+='  |  자동 갱신 정지 · 티칭 위치 유지'
-                        else:info+=f"  |  {'실행 중 고정' if result.get('pose_frozen') else '위치 유지' if result.get('pose_held') else '새로 측정'} {result.get('hold_remaining_s',0):.1f}s · + 중심 표시 · {'연속 감지로 확정' if chosen.get('temporal_match') else '외곽·구멍 일치'}"
-                        if metric:
-                            dx,dy=display_position(metric['center_xy_mm']);heading=display_heading(metric['yaw_deg'],metric.get('symmetry_deg',90))
-                            info+=f"\n표시 X→ {dx:.1f}, Y↑ {dy:.1f} mm · 방향 {heading:.1f}° ({metric.get('symmetry_deg',90)}° 대칭) · 원점=로봇 베이스 · 카메라 추정값"
-                        if chosen.get('raised_features_verified'):info+='\nSTL 높이를 반영한 윗면 돌출 모서리 확인'
-                        if chosen.get('orientation_verified'):info+='\n'+('A/B 중단 접합부로 앞뒤 방향 확인' if chosen.get('orientation_method')=='central_junction' else 'A 지그 원형 구멍으로 앞뒤 방향 확인')
-                        if chosen.get('grid_verified'):info+='\n내부 교차점 2개와 외곽 방향 일치'+('' if chosen.get('orientation_verified') else ' · 앞뒤 180° 대칭')
-                        if chosen.get('partial_visible'):info+='\n일부가 화면 밖에 있습니다. 보이는 네 변과 STL 크기로 중심을 계산했습니다.'
-                    elif result:
-                        info+='  |  '+(f"획득 {result['stable_candidate_seconds']:.1f}/{result.get('acquisition_seconds',3.):g}초 · 새 관측 {result.get('stable_candidate_samples',0)}회" if 'stable_candidate_seconds' in result else '여러 후보 · 영역을 좁혀 주세요' if result.get('status')=='ambiguous' else result.get('error','지그 형상 미확인'))
-                        if 'stable_candidate_seconds' in result and result.get('error'):info+='\n채택 불가: '+result['error']
-                    set_text(self.camera_status,info)
-                elif not self.camera.running:set_text(self.camera_status,'카메라 연결 해제됨')
-                else:set_text(self.camera_status,'최신 카메라 영상 대기')
-            if self.camera_all.get():
-                view=self.camera_view_observation()
-                if not view or self.camera_sleeping or getattr(self.camera,'recovering',False) or getattr(self.camera,'error',None) or time.monotonic()-view[2]>=1:
-                    self.update_camera_overview({});self.camera_display_snapshot=None;self.camera_canvas.delete('image')
+            self.update_command_controls(permissions)
+            self.poll_camera_status()
             if self.show_adoption.get():self.update_adoption_caption()
+            # Live adjustment can re-enable its own OFF toggle. Keep that
+            # update between ordinary permissions and the final safety overrides.
+            self.render_command_permissions(permissions);permissions={}
             self.live_adjust.poll()
         except Exception as exc:self.notice('상태 갱신 오류: '+str(exc),True)
-        if self.inspection_run and self.inspection_run.busy:
-            for button in (self.arm_btn,self.follow_btn,self.move_btn,self.execute_btn,self.execute_taught_btn):button.state(['disabled'])
-        from .pi_execution import active_execution
-        if active_execution(self):
-            for button in (self.connect_btn,self.arm_btn,self.follow_btn,self.move_btn,self.execute_btn,self.execute_taught_btn):button.state(['disabled'])
-            self.hold_btn.state(['!disabled'])
-        if self.camera_only:
-            self.connection.set('카메라 전용 · 모터 연결 차단')
-            for button in (self.connect_btn,self.arm_btn,self.hold_btn,self.release_btn,self.follow_btn,self.execute_btn,self.execute_taught_btn):button.state(['disabled'])
+        self.apply_command_permissions(permissions)
         self.job=self.root.after(80,self.poll)
     def close(self):
         if self.closed:return
@@ -2316,6 +2465,7 @@ class App(WorkspaceFeatures,CameraLifecycle,LeaderAssistControls,ArmSelectionCon
         if self.camera:self.camera.close()
         self.camera_inspection.worker.close()
         self.camera_yolo.close()
+        self.camera_work_monitor.close()
         if self.leader_session:self.leader_session.close()
         self.settings.close()
         if self.renderer:self.renderer.close()

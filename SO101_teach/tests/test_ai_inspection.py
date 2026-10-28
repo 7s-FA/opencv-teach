@@ -58,6 +58,7 @@ class AIInspectionTests(unittest.TestCase):
         self.assertEqual(out['cad_geometric_fault']['rotation_error_deg'],19.8)
         inspected=self.geometry.inspect.call_args.args[1][0]
         self.assertEqual(inspected,{**anchor,'templates':['middle']});self.assertEqual(anchor['templates'],['part','middle'])
+        self.assertEqual(self.geometry.inspect.call_args.kwargs['context_anchors'],[anchor])
         decision=InspectionDecision({'station':'linear','target':'1','expected':'insert_added','timeout_seconds':10},'A',10)
         self.assertFalse(decision.observe({'at':10.1,'row':out},10.2))
         with self.assertRaisesRegex(ValueError,'불합격'):decision.observe({'at':10.4,'row':out},10.5)

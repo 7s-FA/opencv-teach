@@ -1,4 +1,4 @@
-"""PC motion continues while fresh-frame visual inspections run."""
+"""Hold checkpoints for capture; continue motion while frozen images are classified."""
 from copy import deepcopy
 import time
 from .domain import atomic_json
@@ -11,6 +11,7 @@ class InspectedExecution:
         require_resources();self.app=app;self.session=app.session;self.episode_id=app.episode['id'];self.product=app.episode['product_type']
         self.steps=deepcopy(steps);self.targets=deepcopy(targets);self.scheduled=inspection_schedule(steps);self.started_checks=set();self.index=0;self.phase='ready';self.request_id=None;self.worker=None;self.decision=None;self.submitted_at=None;self.error=None;self.dispatching=False
         self.fixed_jigs=deepcopy(fixed_jigs or {})
+        self.segment_start=0;self.segment_end=0
         from .episode_inspection import inspection_jig_ids
         if inspection_jig_ids(steps)-self.fixed_jigs.keys():raise ValueError('실행 전 안착 검사 지그 위치를 먼저 확정하세요.')
         self.path=app.data_dir/'diagnostics'/f'episode-inspection-{time.time_ns()}.json'
@@ -20,20 +21,21 @@ class InspectedExecution:
         self.batch=InspectionBatch(self.product,self.make_worker,self.passed,evidence=self.assembly_evidence)
         self.record={'episode_id':self.episode_id,'product_type':self.product,'started_at':time.time(),'checks':[],'state':'prepared'};self.save()
     @property
-    def busy(self):return self.phase in ('ready','moving','inspection')
+    def busy(self):return self.phase in ('ready','moving','capture','inspection')
     def save(self):atomic_json(self.path,self.record)
     def dispatch(self):
+        self.segment_end=next((after for after,_ in self.scheduled if after>self.segment_start),len(self.steps))
         self.dispatching=True
-        try:self.request_id=self.app.motion_request('play',self.targets)
+        try:self.request_id=self.app.motion_request('play',self.targets[self.segment_start:self.segment_end])
         finally:self.dispatching=False
         self.phase='moving';return self.request_id
     def make_worker(self,step):
-        a=self.app;a.start_camera();a.notice('안착 검사 중 · '+step['name']+' · 다음 동작 계속')
+        a=self.app;a.start_camera();a.notice('검사 위치 영상 확보 중 · '+step['name'])
         from .episode_inspection_runtime import read_initial_linear_state
         reader=(lambda:read_initial_linear_state(a.data_dir)) if step['inspection']['station']=='linear' else None
-        return FrameInspection(a.data_dir,a.profile,a.catalog,a.workcell_preview,step['inspection'],self.product,linear_state_reader=reader,fixed_jigs=self.fixed_jigs)
+        return FrameInspection(a.data_dir,a.profile,a.catalog,a.workcell_preview,step['inspection'],self.product,linear_state_reader=reader,fixed_jigs=self.fixed_jigs,preserve_pending_frames=True)
     def passed(self,step):
-        self.record['checks'].append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})});self.save()
+        self.record['checks'].append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'result':'PASS','at':time.time(),'capture':deepcopy(step.get('inspection_capture')),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})});self.save()
     def close_worker(self):
         self.batch.close()
         if self.worker:self.worker.close();self.worker=None
@@ -59,17 +61,22 @@ class InspectedExecution:
             complete=s.completed_request_id==self.request_id and s.state=='HOLD'
             active=s.active_request_id==self.request_id
             if self.phase=='moving' and active and s.state=='HOLD' and not complete and not s.command_pending.is_set() and not s.program_active.is_set():raise ValueError('드라이버 보호 정지')
-            count=len(self.steps) if complete else getattr(s,'index',0) if active else 0
-            if type(count) is not int or not 0<=count<=len(self.steps):raise ValueError('실행 스텝 번호 오류')
+            local_count=self.segment_end-self.segment_start if complete else getattr(s,'index',0) if active else 0
+            if type(local_count) is not int or not 0<=local_count<=self.segment_end-self.segment_start:raise ValueError('실행 스텝 번호 오류')
+            count=self.segment_start+local_count
             for after,step in self.scheduled:
-                if count>=after and step['id'] not in self.started_checks:
-                    self.batch.start(step);self.started_checks.add(step['id'])
+                if complete and count==after and step['id'] not in self.started_checks:
+                    self.batch.start(step);self.started_checks.add(step['id']);self.phase='capture'
+            if self.batch.capturing and not complete:raise ValueError('검사 영상 확보 중 검사 위치 유지 상태 변경')
             if self.batch.pending:
                 if a.camera and getattr(a.camera,'error',None):raise ValueError('카메라 오류: '+a.camera.error)
-                view=a.camera_view_observation() if a.camera else None
+                view=a.camera_view_observation() if a.camera and self.batch.capturing else None
                 self.batch.poll((view[0],view[2]) if view else None)
             if complete:
-                if self.batch.pending:self.phase='inspection'
+                if self.batch.capturing:self.phase='capture'
+                elif self.segment_end<len(self.steps):
+                    self.segment_start=self.segment_end;self.dispatch()
+                elif self.batch.pending:self.phase='inspection'
                 else:self.advance()
         except Exception as exc:self.cancel(str(exc),hold=True)
     def advance(self):
@@ -94,7 +101,7 @@ class StartupInspectionRun(InspectedExecution):
             raise ValueError('시작 전 검사에는 팔로워의 최신 자세 유지 상태가 필요합니다.')
         if a.episode['id']!=self.episode_id:raise ValueError('시작 전 검사 중 에피소드가 변경됨')
     def begin_check(self):
-        self.phase='inspection';self.decision=GroupInspectionDecision(self.checks,time.monotonic(),evidence=self.assembly_evidence);self.submitted_at=None
+        self.phase='inspection';self.decision=GroupInspectionDecision(self.checks,time.monotonic(),evidence=self.assembly_evidence);self.submitted_at=None;self.inflight=None
         from .episode_inspection_runtime import read_initial_linear_state
         reader=(lambda:read_initial_linear_state(self.app.data_dir)) if any(s['inspection']['station']=='linear' for s in self.checks) else None
         self.worker=FrameInspections(self.app.data_dir,self.app.profile,self.app.catalog,self.app.workcell_preview,self.checks,linear_state_reader=reader,fixed_jigs=self.fixed_jigs)
@@ -104,15 +111,20 @@ class StartupInspectionRun(InspectedExecution):
         try:
             self.require_hold();a=self.app;now=time.monotonic()
             if a.camera and getattr(a.camera,'error',None):raise ValueError('카메라 오류: '+a.camera.error)
-            view=a.camera_view_observation() if a.camera else None
-            if view and now-view[2]<1 and view[2]<=now and view[2]!=self.submitted_at:
-                self.worker.submit(view[0],view[2]);self.submitted_at=view[2]
-            passed=self.decision.observe(self.worker.result,now)
+            observed=self.worker.result
+            passed=self.decision.observe(observed,now)
+            if observed and observed.get('at')==self.inflight:self.inflight=None
             for step in passed:
                 self.record['checks'].append({'step_id':step['id'],'step_name':step['name'],'check':deepcopy(step['inspection']),'product':step['inspection_product'],'result':'PASS','at':time.time(),**({'evidence':deepcopy(step['inspection_basis'])} if step.get('inspection_basis') else {})})
             if passed:self.save()
             self.worker.retain(self.decision.pending)
             if self.decision.pending:
+                if self.inflight is None and self.worker.accepting_frame:
+                    view=a.camera_view_observation() if a.camera else None
+                    if (view and 0<=now-view[2]<1 and (self.submitted_at is None or view[2]>self.submitted_at)
+                            and any(d.started<=view[2] for d in self.decision.pending.values())):
+                        if self.worker.submit(view[0],view[2]) is not False:
+                            self.submitted_at=view[2];self.inflight=view[2]
                 counts=' · '.join(self.decision.steps[key]['name']+f" {d.count}/{d.check.get('minimum_observations',2)}" for key,d in self.decision.pending.items())
                 a.notice('시작 전 동시 검사 · '+counts+' · 이동 대기');return
             self.close_worker()

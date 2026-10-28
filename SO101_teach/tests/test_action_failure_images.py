@@ -5,6 +5,8 @@ from types import SimpleNamespace
 from unittest.mock import patch,Mock
 import cv2,numpy as np
 from tests.test_episode_cli import cli,FakeLink,FakeLinear
+from tests.standby_fixtures import PreparedResources
+import standby_preparation
 from failure_images import FailureImages
 
 
@@ -77,6 +79,7 @@ class FailureImageTests(unittest.TestCase):
             return {'at':at,'row':{'quality':'normal','state':'housing_seated','product':'A','product_certain':True,'reason':'관측 결과',**changes}}
         image,raw=jpeg(140);now=[100.];events=[]
         class Worker:
+            accepting_frame=True
             def __init__(self,*args,**kwargs):self.result=None
             def submit(self,frame,at):self.result={'at':at,'results':{s['id']:result(at,quality='abnormal') for s in steps}}
             def retain(self,ids):pass
@@ -121,10 +124,16 @@ class ActionEntryFailureTests(unittest.TestCase):
             events.append('save')
             if save_error:raise OSError('disk full')
             return original(cache,*args,**kwargs)
-        with patch.object(cli,'ROOT',folder),patch.object(cli,'load_job',return_value=(folder/'data',episode,bundle,400,20)),patch.object(cli,'Link',Link),patch('linear_client.LinearClient',Linear),patch.object(cli,'control_server'),patch.object(cli.signal,'signal'),patch.object(cli.time,'monotonic',side_effect=lambda:now[0]),patch.object(cli.time,'sleep',side_effect=lambda t:now.__setitem__(0,now[0]+t)),patch.object(FailureImages,'save',save):
+        emit=cli.Status.emit
+        def stop_after_fault(status,event):
+            emit(status,event)
+            if event=='PAUSED':status.control.shutdown.set()
+        with patch.object(cli.Status,'emit',stop_after_fault),patch.object(standby_preparation,'WorkcellPreparation',PreparedResources),patch.object(cli,'ROOT',folder),patch.object(cli,'load_job',return_value=(folder/'data',episode,bundle,400,20)),patch.object(cli,'Link',Link),patch('linear_client.LinearClient',Linear),patch.object(cli,'control_server'),patch.object(cli.signal,'signal'),patch.object(cli.time,'monotonic',side_effect=lambda:now[0]),patch.object(cli.time,'sleep',side_effect=lambda t:now.__setitem__(0,now[0]+t)),patch.object(FailureImages,'save',save):
             self.assertEqual(cli.main(['build_a','--no-ros']),1)
         status=json.loads((folder/'data/episode-cli-arm2.json').read_text())
-        self.assertIn('FAILED:지그 측정 실패',status['status']);self.assertEqual(events,['save'])
+        self.assertIn('FAILED:PROCESS_SHUTDOWN',status['status']);self.assertEqual(events,['save']*(2 if save_error else 1))
+        run=json.loads(next((folder/'data/episode-cli-runs').glob('*.json')).read_text())
+        self.assertTrue(any('RECOVERY_REQUIRED:지그 측정 실패' in event['status'] for event in run['events']))
         # Preparation can enable holding torque before measuring jigs. A failed
         # acquisition must still HOLD before saving and never dispatch motion.
         self.assertFalse(any(m=='command' and a.get('action') in ('move','play') for link in links for m,a in link.calls))

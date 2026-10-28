@@ -1,4 +1,4 @@
-import json
+import json,os
 from concurrent.futures import Future
 from copy import deepcopy
 from pathlib import Path
@@ -54,7 +54,7 @@ class EpisodeTransferUITests(unittest.TestCase):
         panel.job=future;panel.job_kind='deliver';panel.poll()
         self.assertIn('작업 실행 중',panel.status.get());self.assertTrue(panel.query_button.instate(['!disabled']))
         from PIL import ImageGrab
-        out=Path(__file__).parents[1]/'verification/episode-transfer';out.mkdir(exist_ok=True)
+        out=Path(os.environ.get('SO101_TEST_REPORT_DIR',str(self.data/'verification')))/'episode-transfer';out.mkdir(parents=True,exist_ok=True)
         for size in ('1920x1043','1920x1080'):
             self.root.geometry(size);self.root.update()
             self.assertLessEqual(panel.send_button.winfo_rootx()+panel.send_button.winfo_width(),self.root.winfo_rootx()+self.root.winfo_width())

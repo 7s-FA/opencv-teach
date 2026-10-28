@@ -32,7 +32,7 @@ class LeaderCalibrationUITests(unittest.TestCase):
     def test_missing_leader_setup_does_not_open_any_port(self):
         a=self.app;a.profile['mode']='leader';a.profile.pop('leader',None)
         with patch('so101_teach.ui.MotionSession.start') as follower,patch('so101_teach.ui.ReadOnlySession.start') as leader:
-            with self.assertRaisesRegex(ValueError,'리더 설정'):a.toggle_connection()
+            with self.assertRaisesRegex(ValueError,'리더 설정'):a.connect_devices(control_requested=True)
             follower.assert_not_called();leader.assert_not_called()
         self.assertIsNone(a.session)
     def test_missing_mode_defaults_to_leader(self):

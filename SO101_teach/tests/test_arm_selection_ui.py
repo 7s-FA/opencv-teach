@@ -230,7 +230,7 @@ class ArmSelectionUITests(unittest.TestCase):
         self.assertEqual(app.profile['robot_id'],'arm3');self.assertEqual(app.profile['calibration_status'],'ready')
         self.assertEqual(app.library_entries,[])
         with patch('so101_teach.ui.MotionSession.start') as start:
-            app.connect_devices()
+            app.connect_devices(control_requested=True)
         start.assert_called_once();self.assertTrue(app.session.port.endswith('28218-if00'))
 
 

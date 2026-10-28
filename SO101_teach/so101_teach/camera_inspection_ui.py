@@ -21,6 +21,17 @@ from .adoption_display import drawable_adoptions
 from .shape_inspection import InspectionWorker
 from .display_coordinates import display_position,display_heading
 from .ai_inspection import METHODS,inspection_settings,inspection_label
+from .inference_protocol import confidence_percent
+
+
+def _same_values(a,b):
+    """Exact comparison, including arrays; no rounded pose or time cache keys."""
+    if isinstance(a,np.ndarray) or isinstance(b,np.ndarray):
+        return isinstance(a,np.ndarray) and isinstance(b,np.ndarray) and a.dtype==b.dtype and a.shape==b.shape and np.array_equal(a,b)
+    if type(a) is not type(b):return False
+    if isinstance(a,dict):return a.keys()==b.keys() and all(_same_values(a[k],b[k]) for k in a)
+    if isinstance(a,(list,tuple)):return len(a)==len(b) and all(_same_values(x,y) for x,y in zip(a,b))
+    return a==b
 
 
 class CameraInspectionPanel(ttk.Frame):
@@ -42,13 +53,19 @@ class CameraInspectionPanel(ttk.Frame):
         self.method=tk.StringVar(value=inspection_label(app.profile))
         self.method_choice=ttk.Combobox(method_bar,textvariable=self.method,values=tuple(METHODS),state='readonly',width=17)
         self.method_choice.pack(side='left',padx=(0,8));self.method_choice.bind('<<ComboboxSelected>>',lambda e:self.update_method_controls())
+        ttk.Label(method_bar,text='최소 신뢰도 (50~90%)').pack(side='left',padx=(0,5))
+        self.confidence=tk.StringVar(value=f"{inspection_settings(app.profile)['confidence']*100:g}")
+        self.confidence_entry=ttk.Spinbox(method_bar,from_=50,to=90,increment=1,width=5,textvariable=self.confidence)
+        self.confidence_entry.configure(validate='key',validatecommand=(self.register(lambda s:s=='' or s.isascii() and s.isdecimal()),'%P'))
+        self.confidence_entry.pack(side='left',padx=(0,8));self.confidence_entry.bind('<Return>',lambda e:app.guard(self.apply_method))
         self.method_apply=app.button(method_bar,'검사 방식 적용',self.apply_method);self.method_apply.pack(side='left',padx=(0,16))
         self.method_status=tk.StringVar()
         self.method_status_label=ttk.Label(method_bar,textvariable=self.method_status,style='Small.TLabel');self.method_status_label.pack(side='left')
         self.update_method_controls(sync=True)
+        self.confidence.trace_add('write',lambda *args:self.update_method_controls())
         self.status=tk.StringVar(value='영상 대기')
         status=tk.Label(self,textvariable=self.status,font=('Noto Sans CJK KR',10),fg='#526477',bg=UI_COLORS['panel'],height=2,width=1,anchor='w',justify='left');status.grid(row=1,column=0,columnspan=2,sticky='ew',pady=8);status.bind('<Configure>',lambda e:status.configure(wraplength=max(1,e.width)))
-        self.canvas=tk.Canvas(self,bg='#132b3a',highlightthickness=0);self.canvas.grid(row=2,column=0,sticky='nsew')
+        self.canvas=tk.Canvas(self,bg=UI_COLORS['viewport'],highlightthickness=0);self.canvas.grid(row=2,column=0,sticky='nsew')
         self.summary=ttk.Frame(self,padding=(8,8),style='Card.TFrame',width=520);self.summary.grid(row=2,column=1,sticky='nsew',padx=(8,0));self.summary.grid_propagate(False);self.summary.columnconfigure(0,weight=1)
         self.title=tk.StringVar(value='전체 검사 · 9개 대상')
         ttk.Label(self.summary,textvariable=self.title,style='Section.TLabel').grid(row=0,column=0,sticky='w')
@@ -70,10 +87,15 @@ class CameraInspectionPanel(ttk.Frame):
         self.bind('<Destroy>',lambda e:self.worker.close() if e.widget is self else None)
     def update_method_controls(self,sync=False):
         settings=inspection_settings(self.app.profile);label=inspection_label(self.app.profile)
-        if sync:self.method.set(label)
-        detail='형상·색상·CAD 안착 비교' if settings['method']=='opencv' else f"YOLO26{settings['model']} · 신뢰도 {settings['confidence']:.1f} · AI 부품 분류 + CAD 안착 · 마스크 경계 검사 제외"
+        if sync:
+            self.method.set(label)
+            self.confidence.set(f"{settings['confidence']*100:g}")
+        self.confidence_entry.configure(state='normal' if self.method.get()=='AI 라벨 + CAD' else 'disabled')
+        detail='형상·색상 비교' if settings['method']=='opencv' else f"YOLO26{settings['model']} · {settings['confidence']*100:g}% · CAD 안착"
         set_text(self.method_status,'적용 중: '+label+' · '+detail)
-        self.method_apply.state(['disabled'] if self.method.get()==label else ['!disabled'])
+        try:unchanged=confidence_percent(self.confidence.get())==settings['confidence']
+        except ValueError:unchanged=False
+        self.method_apply.state(['disabled'] if self.method.get()==label and (settings['method']=='opencv' or unchanged) else ['!disabled'])
 
     def apply_method(self):
         from .model_regions import runtime,identity
@@ -84,7 +106,9 @@ class CameraInspectionPanel(ttk.Frame):
             raise ValueError('측정·검사·실행이 끝난 뒤 안착검사 방식을 적용하세요.')
         settings=inspection_settings(app.profile)
         settings['method']=METHODS[self.method.get()]
-        if settings['method']=='model_roi':settings['model_identity']=identity(runtime(settings['model'])[2])
+        if settings['method']=='model_roi':
+            settings['confidence']=confidence_percent(self.confidence.get())
+            settings['model_identity']=identity(runtime(settings['model'])[2])
         profile={**app.profile,'part_inspection':settings};inspection_settings(profile)
         if app.remote_mode and app.remote:
             if app.remote.error:raise ValueError('Pi 통신을 복구한 뒤 검사 방식을 적용하세요.')
@@ -184,13 +208,26 @@ class CameraInspectionPanel(ttk.Frame):
         if self.reference.data is None:self.clear();set_text(self.status,'부품 CAD 기준 파일 확인 필요');return
         app=self.app;now=time.monotonic();frame_at=now if frame_at is None else frame_at
         adopted=drawable_adoptions(app.camera_adoption_results(now),now,app.pose_latch.seconds)
-        anchors,messages=all_anchors(frame,results if detection_fresh else {},adopted,app.catalog.items,app.profile,self.reference.data,app.workcell_preview,self.endpoint.get())
+        # Remaining-time labels are not geometry; expiry already removed them
+        # above. All pose, calibration and placement values remain exact keys.
+        anchor_inputs=(frame.shape,results if detection_fresh else {},
+                       {k:{n:v for n,v in row.items() if n!='hold_remaining_s'} for k,row in adopted.items()},
+                       app.catalog.items,app.profile,self.reference.data,app.workcell_preview,self.endpoint.get())
+        cached=getattr(self,'_anchor_cache',None)
+        if cached is None or cached[0]!=frame_at or not _same_values(cached[1],anchor_inputs):
+            anchors,messages=all_anchors(frame,*anchor_inputs[1:])
+            self._anchor_cache=(frame_at,deepcopy(anchor_inputs),deepcopy(anchors),dict(messages))
+        else:anchors,messages=deepcopy(cached[2]),dict(cached[3])
+        profile_cache=getattr(self,'_profile_cache',None)
+        if profile_cache is None or not _same_values(profile_cache[0],app.profile):
+            profile_cache=(deepcopy(app.profile),json.dumps(app.profile,sort_keys=True,default=str));self._profile_cache=profile_cache
+        profile_key=profile_cache[1]
         # Detected pose jitter is frame input, not a new inspection task.
         # Reset the UI worker only for an actual reference/arm/endpoint change.
         stage=(app.workcell_preview or {}).get('linear_stage',{})
         stage_context={name:stage.get(name) for name in ('position_mm','yaw_deg','endpoint_reference','alignment')}
         stage_context['state']={name:stage.get('startup_state',{}).get(name) for name in ('known','commanded_mm','moving','pending')}
-        key=(self.generation,self.endpoint.get(),app.catalog.revision,json.dumps(app.profile,sort_keys=True,default=str),json.dumps(stage_context,sort_keys=True,default=str))
+        key=(self.generation,self.endpoint.get(),app.catalog.revision,profile_key,json.dumps(stage_context,sort_keys=True,default=str))
         if key!=self.context:self.context=key;self.last_submit=None
         if frame_at!=self.last_submit and now-self.last_submit_at>=.3:
             recovery={'catalog':app.catalog.items,'reference':self.reference.data,'placement':app.workcell_preview,'reference_directory':str(app.data_dir/'inspection_reference')}
@@ -202,7 +239,7 @@ class CameraInspectionPanel(ttk.Frame):
         valid=result and result['key']==key and 0<=now-completed_at<5
         if valid:anchors=deepcopy(result['anchors'])
         rows={r['id']:r for r in result['rows']} if valid else {};image=frame.copy();positions=[];seen=set();values=[]
-        outline_context=(self.generation,self.endpoint.get(),app.catalog.revision,json.dumps(app.profile,sort_keys=True,default=str))
+        outline_context=(self.generation,self.endpoint.get(),app.catalog.revision,profile_key)
         rows,retained=self.display_rows(rows,outline_context,now,completed_at if valid else None)
         # Add cached regions only after submitting the fresh inspection job.
         # Retained rows must keep their matching regions during detector gaps.
@@ -280,7 +317,10 @@ class CameraInspectionPanel(ttk.Frame):
         if retained:message='이전 검사 결과 표시 · 갱신 중 · '+message
         if not detection_fresh:message='영상 정상 · 검출 갱신 대기 · '+message
         if valid and result.get('error'):message+=' · '+result['error']
-        self.capture_snapshot={'at':frame_at,'raw':frame.copy(),'image':image.copy(),'metadata':deepcopy({'schema':1,'demo_replay':bool(getattr(app,'demo_mode',False)),'demo_scene':getattr(app,'demo_scene',None),'label_layout':self.label_rectangles,'frame_monotonic':frame_at,'inspection_monotonic':result['at'] if valid else None,'inspection_valid':bool(valid),'display_retained':retained,'inspection_error':result.get('error') if valid else None,'rows':list(rows.values()),'display_rows':values,'anchors':anchors,'profile':app.profile,'placement':app.workcell_preview,'endpoint':self.endpoint.get(),'reference':self.reference.data})}
+        raw=getattr(self,'_capture_raw',None)
+        if raw is None or not _same_values(raw,frame):self._capture_raw=frame.copy()
+        # image belongs to this render only; neither fit_image nor save mutates it.
+        self.capture_snapshot={'at':frame_at,'raw':self._capture_raw,'image':image,'metadata':deepcopy({'schema':1,'demo_replay':bool(getattr(app,'demo_mode',False)),'demo_scene':getattr(app,'demo_scene',None),'label_layout':self.label_rectangles,'frame_monotonic':frame_at,'inspection_monotonic':result['at'] if valid else None,'inspection_valid':bool(valid),'display_retained':retained,'inspection_error':result.get('error') if valid else None,'rows':list(rows.values()),'display_rows':values,'anchors':anchors,'profile':app.profile,'placement':app.workcell_preview,'endpoint':self.endpoint.get(),'reference':self.reference.data})}
         blocked=bool(self.app.camera_gallery.capture_blocked(frame_at))
         if self.save_button.instate(['disabled'])!=blocked:self.save_button.state(['disabled'] if blocked else ['!disabled'])
         set_text(self.status,message);app.fit_image(self.canvas,cv2.cvtColor(image,cv2.COLOR_BGR2RGB),resample=Image.Resampling.BILINEAR)

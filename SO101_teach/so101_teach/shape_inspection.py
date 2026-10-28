@@ -193,7 +193,8 @@ class ShapeInspector:
         self.cache[key]=value
         return value
 
-    def inspect(self,frame,anchors,profile):
+    def inspect(self,frame,anchors,profile,*,context_anchors=None):
+        surrounding=anchors if context_anchors is None else context_anchors
         rows=[]
         for anchor in anchors:
             if getattr(self,'stop',None) is not None and self.stop.is_set():break
@@ -420,8 +421,23 @@ class ShapeInspector:
                         if references:
                             hue=hsv[component,0].astype(float);delta=np.abs(hue-references[0]['hue']);delta=np.minimum(delta,180-delta)
                             if np.mean(delta<references[0]['tolerance'])<.65:continue
-                        other_centers=[project([[0,0,20]],a,profile)[0]-lo for a in anchors if a['id']!=anchor['id']]
-                        if any(np.linalg.norm(centers[i]-point)<distance for point in other_centers):continue
+                        other_owner=None
+                        for other in surrounding:
+                            if other['id']==anchor['id'] or not other.get('inspection_allowed',True):continue
+                            try:
+                                other_center=project([[0,0,20]],other,profile)[0]-lo
+                                if np.linalg.norm(centers[i]-other_center)>=distance:continue
+                                _,_,other_templates=self.projected(other,profile,frame.shape)
+                                point=tuple(float(v) for v in centers[i]+lo)
+                                # A merely closer fixture is not enough: keep
+                                # detecting real parts dropped outside every ROI.
+                                if any(cv2.pointPolygonTest(np.asarray(m['roi_polygon'],np.float32),point,False)>=0
+                                       for _,m in other_templates):
+                                    other_owner=other['id'];break
+                            except (KeyError,ValueError,cv2.error):continue
+                        if other_owner is not None:
+                            row.setdefault('excluded_neighbor_components',[]).append({'fixture_id':other_owner,'pixels':int(size)})
+                            continue
                         options.append((distance,i))
                     if options:body[labels==min(options)[1]]=255
                 # All stations allow the same small segmentation fringe.

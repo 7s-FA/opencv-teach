@@ -36,7 +36,8 @@ class SeatingToleranceTests(unittest.TestCase):
         with redirect_stdout(output):
             for status in ('B_INSPECTION_FAILED:중단','B_FAILED:중단 · X +190.0','ACTION_RESULT:build_b:ERROR'):
                 monitor.print_event(dict(at=1,arm='arm2',status=status))
-        self.assertEqual(output.getvalue().count('B_FAILED: B 작업 실패'),1)
+        self.assertEqual(output.getvalue().count('B · 작업 실패'),1)
+        self.assertNotIn('B_FAILED:',output.getvalue())
         self.assertIn('    - 중단',output.getvalue());self.assertIn('    - X +190.0',output.getvalue())
 
     def test_failed_empty_check_names_remaining_observed_parts(self):

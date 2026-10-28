@@ -137,19 +137,19 @@
   },
   "material_reference_images": [
     {
-      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/finished-empty-arm3/camera.jpg",
+      "path": "tests/fixtures/finished-empty-arm3/camera.jpg",
       "sha256": "31067127c87907776407163422a3f9a2244ebe1e438422afde29cbef68e876e9"
     },
     {
-      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/carrier-moved/camera-0.png",
+      "path": "tests/fixtures/carrier-moved/camera-0.png",
       "sha256": "9d781ba4af65e53b6ff6c826b897e6c3fc4ac20707e9ef8838708171267d3a8f"
     },
     {
-      "path": "/path/to/Final_Arm/SO101_teach/tests/fixtures/b-housing-seating/camera-1.jpg",
+      "path": "tests/fixtures/b-housing-seating/camera-1.jpg",
       "sha256": "b9c84019b599d72218d5ef5474dbf3260a27bf4fc760f2e1b49a3b48d471280d"
     },
     {
-      "path": "/path/to/Final_Arm/SO101_teach/verification/arm2_video_20261014/run_03_b_view1/frame_10.png",
+      "path": "verification/arm2_video_20261014/run_03_b_view1/frame_10.png",
       "sha256": "dd7089cafd70b94f29f5531eaa959aed7c7383fd1092a7a74c9e55cf6d85678a"
     }
   ],
@@ -1194,15 +1194,18 @@
   "mujoco": {
     "floor_reflectance": 0.012,
     "headlight_ambient": [
-      0.32,
-      0.35,
-      0.38
+      0.55,
+      0.56,
+      0.58
     ],
     "headlight_diffuse": [
-      0.06,
-      0.065,
-      0.07
+      0.12,
+      0.12,
+      0.12
     ],
-    "floor_texture_contrast": 1.0
+    "ceiling_shadow_diffuse": 0.045,
+    "ceiling_fill_diffuse": 0.1,
+    "floor_texture_contrast": 0.65,
+    "floor_color_gain": 0.82
   }
 }

@@ -38,7 +38,7 @@ def geometric_fault(row):
                                    ('insert_center_error_mm','insert_center_tolerance_mm'),('insert_shape_ratio','insert_shape_tolerance')))
 
 
-def prefer_ai_label(row,anchor,item,inspector,frame,profile,templates):
+def prefer_ai_label(row,anchor,item,inspector,frame,profile,templates,*,context_anchors=None):
     """AI supplies semantics; CAD still has to verify the corresponding geometry."""
     product,state=semantic(item,anchor);original=deepcopy(row)
     equivalent=(state==row['state'] or product=='B' and state=='cap_added' and row['state']=='cap_visible')
@@ -53,7 +53,8 @@ def prefer_ai_label(row,anchor,item,inspector,frame,profile,templates):
                        reason='AI 라벨에 대응하는 CAD 안착 기준 없음')
         else:
             evidence={key:row[key] for key in ('inspection_method','cad_observation','ai_observations','mask_boundary_check')}
-            checked=inspector.inspect(frame,[{**anchor,'templates':names}],profile)[0]
+            checked=inspector.inspect(frame,[{**anchor,'templates':names}],profile,
+                **({'context_anchors':context_anchors} if context_anchors is not None else {}))[0]
             row={**checked,**evidence}
             row['cad_label_recheck']={key:checked.get(key) for key in ('template','state','quality','score')}
             decisive=checked.get('state') not in ('unknown','checking') and checked.get('quality')!='waiting'
@@ -105,18 +106,24 @@ def inconclusive(row,reason):
     return row
 
 
-def combine(rows,anchors,detections,inspector,frame,profile,confidence,*,mask_boundary=False):
+def combine(rows,anchors,detections,inspector,frame,profile,confidence,*,mask_boundary=False,context_anchors=None):
     from .shape_inspection import BOUNDARY_FRACTION
     # Match ShapeInspector's existing V > 30 image-evidence floor. A model
     # can attach a dark background spur to a correctly classified part. Such
     # pixels are not visible body evidence. This is full-frame filtering: it
     # never clips a displaced part to the permitted ROI or moves the ROI.
     visible_body=frame.max(axis=2)>30 if mask_boundary else None
-    prepared={};by_id={a['id']:a for a in anchors};assigned={a['id']:[] for a in anchors};ambiguous=set()
-    for anchor in anchors:
-        lo,hi,templates=inspector.projected(anchor,profile,frame.shape)
+    prepared={};by_id={a['id']:a for a in anchors};ambiguous=set()
+    surrounding={a['id']:a for a in (context_anchors or anchors) if a.get('inspection_allowed',True)}
+    surrounding.update(by_id)
+    for anchor in surrounding.values():
+        try:lo,hi,templates=inspector.projected(anchor,profile,frame.shape)
+        except (KeyError,ValueError,cv2.error):
+            if anchor['id'] in by_id:raise
+            continue  # Unprojectable neighbours cannot establish association.
         region=np.logical_or.reduce([m['roi']>0 for _,m in templates])
         prepared[anchor['id']]=(lo,hi,templates,region)
+    assigned={key:[] for key in prepared}
     objects=[d for d in detections if d['class_id'] in PARTS and d['confidence']>=confidence]
     for item in objects:
         choices=[]
@@ -150,7 +157,8 @@ def combine(rows,anchors,detections,inspector,frame,profile,confidence,*,mask_bo
         if len(items)!=1:
             output.append(inconclusive(row,'AI 부품 미검출' if not items else '검사 영역의 AI 부품 후보가 여러 개'));continue
         item=items[0]
-        row=prefer_ai_label(row,anchor,item,inspector,frame,profile,templates)
+        row=prefer_ai_label(row,anchor,item,inspector,frame,profile,templates,
+                            context_anchors=list(surrounding.values()))
         templates=dict(templates);masks=templates.get(row.get('template'))
         if masks is None:
             output.append(describe_ai_row(row,anchor));continue
@@ -178,7 +186,9 @@ def combine(rows,anchors,detections,inspector,frame,profile,confidence,*,mask_bo
 
 
 class ModelInspector:
+    supports_evidence=True
     def __init__(self,geometry=None,provider=None):
+        self.timing=None;self.timing_prefix='inspection'
         from .shape_inspection import ShapeInspector
         self.geometry=geometry if geometry is not None else ShapeInspector()
         self.provider=provider if provider is not None else RegionModel(class_ids=tuple(range(13)))
@@ -198,36 +208,45 @@ class ModelInspector:
                 continue
     def predict_all(self,frame,settings):
         return self.provider.predict(frame,settings)
-    def inspect(self,frame,anchors,profile,*,inference=None):
+    def inspect(self,frame,anchors,profile,*,inference=None,context_anchors=None,evidence=None):
+        from .preparation_profile import timed
+        from .decision_evidence import notify
         self.geometry.stop=self.stop
         settings=inspection_settings(profile)
+        context={'context_anchors':context_anchors} if context_anchors is not None else {}
         if not anchors or settings['method']!='model_roi' or self.stop is not None and self.stop.is_set():
-            rows=self.geometry.inspect(frame,anchors,profile)
+            rows=timed(self.timing,self.timing_prefix+'.geometry',self.geometry.inspect,frame,anchors,profile,**context)
             if settings['method']!='model_roi':self.provider.close()
+            notify(evidence,frame,[],rows)
             return rows
         def predict():
             start=time.monotonic()
             detections=inference.get(frame,settings) if inference is not None else None
             if detections is None:detections=self.predict_all(frame,settings)
             return detections,time.monotonic()-start
-        future=self.inference_pool.submit(predict)
+        future=self.inference_pool.submit(timed,self.timing,self.timing_prefix+'.ai',predict)
         try:
-            rows=self.geometry.inspect(frame,anchors,profile)
+            rows=timed(self.timing,self.timing_prefix+'.geometry',self.geometry.inspect,frame,anchors,profile,**context)
         except BaseException:
             # Drain before the caller can close/reuse the provider.
             try:future.result()
             except Exception:pass
             raise
-        detections,seconds=future.result()
+        detections,seconds=timed(self.timing,self.timing_prefix+'.ai_wait_after_geometry',future.result)
         if self.stop is not None and self.stop.is_set():
+            notify(evidence,frame,detections,rows)
             return rows
         # Production uses AI only for part identity/slot association. Seating
         # remains the CAD/OpenCV result, without an extra AI-mask boundary veto.
-        rows=combine(rows,anchors,detections,self.geometry,frame,profile,settings['confidence'],mask_boundary=False)
+        rows=timed(self.timing,self.timing_prefix+'.combine',combine,rows,anchors,detections,self.geometry,frame,profile,settings['confidence'],mask_boundary=False,**context)
         for row in rows:row['ai_seconds']=seconds
+        notify(evidence,frame,detections,rows)
         return rows
 
 
-def inspector_for(profile):
+def inspector_for(profile,*,compute=None):
+    if compute is not None:
+        from .pc_compute import RemoteInspector
+        return RemoteInspector(compute)
     from .shape_inspection import ShapeInspector
     return ModelInspector() if inspection_settings(profile)['method']=='model_roi' else ShapeInspector()

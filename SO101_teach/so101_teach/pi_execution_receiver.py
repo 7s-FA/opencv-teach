@@ -58,7 +58,7 @@ def install_adapters(cli,request,job,stream):
             state=self.post('/state',{'lease':self.lease,'alive':False})
             if state['instance']!=info['instance'] or state['detached']:
                 raise RuntimeError('앱의 Pi 제어 연결이 변경되었습니다.')
-            self.rpc('claim_episode')
+            self.rpc('claim_episode',{'preserve_idle_release':True} if self.preserve_idle_release else {})
             follower=self.state()
             if not (cli.settled(follower) or cli.torque_off(follower)):
                 raise RuntimeError('두 팔이 최신 정지 상태여야 에피소드를 실행할 수 있습니다.')
@@ -66,7 +66,7 @@ def install_adapters(cli,request,job,stream):
         def state(self):
             # Unlike /state, this read passes require_lease on the Pi. A lost
             # UI/lease must stop the runner before it can command the linear stage.
-            return super().rpc('execution_state')
+            return self.observe_motion_state(super().rpc('execution_state'))
         def rpc(self,method,args=None):
             if cancelled.is_set() and method not in ('camera_stop','detect_freeze') and not (method=='command' and (args or {}).get('action') in ('hold','release')):
                 raise cli.ShutdownRequested('GUI_CANCELLED')
@@ -81,8 +81,12 @@ def install_adapters(cli,request,job,stream):
             # The GUI still owns and observes the controller after job completion.
             self.stop.set()
     class PipeControl(base_control):
+        # A selected GUI snapshot keeps its existing controller ownership and
+        # need not contain either of the workcell's saved A/B start poses.
+        workcell_preparation=False
         def __init__(self):
             super().__init__()
+            if request.get('execution_id'):self.job_id=request['execution_id']
             signal.signal(signal.SIGHUP,lambda *_:self.cancel_execution())
             threading.Thread(target=self.read_controls,daemon=True).start()
         def read_controls(self):
@@ -90,7 +94,7 @@ def install_adapters(cli,request,job,stream):
                 for line in stream:
                     command=line.strip()
                     if command=='cancel':self.cancel_execution()
-                    elif command in ('estop','restart','reset'):
+                    elif command in ('estop','restart','reset') or command.startswith('control '):
                         try:self.command(command)
                         except Exception as exc:print('CONTROL_REJECTED:'+str(exc),flush=True)
             finally:self.cancel_execution()
@@ -102,7 +106,7 @@ def install_adapters(cli,request,job,stream):
         def __init__(self,arm,command,ros,**kwargs):
             super().__init__(arm,request['episode'].get('product_type') or 'GUI',ros,**kwargs)
     cli.Link=BorrowedLink;cli.Control=PipeControl;cli.Status=GuiStatus
-    cli.load_job=lambda arm,command:job
+    cli.load_job=lambda arm,command,*,timing=None:job
 
 
 def main():
@@ -114,11 +118,18 @@ def main():
     if '--check' in sys.argv[2:]:
         print('CHECK_OK GUI snapshot · '+request['arm']+' · '+str(len(job[1]['steps']))+' steps',flush=True)
         return 0
+    execution_id=request.get('execution_id')
+    if not isinstance(execution_id,str) or len(execution_id)!=32 or any(c not in '0123456789abcdef' for c in execution_id):
+        raise ValueError('GUI 실행 식별자 오류')
     install_adapters(cli,request,job,sys.stdin)
     # Only the selection of arm is encoded here. load_job returns the actual GUI
     # snapshot, never an A/B recipe lookup or an implicit overwrite of Pi files.
     command=('build_' if request['arm']=='arm2' else 'load_')+('b' if request['episode'].get('product_type')=='B' else 'a')
-    return cli.main([command])
+    result=cli.main([command])
+    # This is emitted only after CLI finalization, including its status writer
+    # and publisher cleanup. Human-readable stage/error text is never a result.
+    print('GUI_RESULT:'+json.dumps({'execution_id':execution_id,'exit_code':result}),flush=True)
+    return result
 
 
 if __name__=='__main__':

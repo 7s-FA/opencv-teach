@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 RUN=re.compile(r'[0-9a-f]{32}\Z')
-FOLDER=re.compile(r'\d{8}-\d{6}-[0-9a-f]{32}\Z')
+FOLDER=re.compile(r'\d{8}-\d{6}-[0-9a-f]{32}(?:-retry-[0-9a-f]{32})?\Z')
 PICTURES={role+suffix+'.jpg' for role in ('inspection','detection','last-received','jig-confirmed') for suffix in ('','-annotated')}
 
 

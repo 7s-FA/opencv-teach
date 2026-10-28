@@ -14,6 +14,7 @@ from .domain import ROOT,atomic_json
 from .ui_status import StatusText,set_text
 from .ui_theme import COLORS
 from .yolo_worker import YoloWorker,confidence_value
+from .inference_protocol import DEFAULT_CONFIDENCE,confidence_percent
 
 MODEL_PATH=ROOT/'assets/models/yolo26s_mixed_fp16'
 MODEL_PATHS={'pc':ROOT/'assets/models/yolo26x_mixed_trt_fp16','sam3':ROOT/'assets/models/sam3_mixed_bf16',
@@ -38,19 +39,21 @@ class YoloPanel(ttk.Frame):
         self.model_choice=tk.StringVar(value='PC · YOLO26x')
         self.model_selector=ttk.Combobox(bar,textvariable=self.model_choice,values=tuple(MODEL_CHOICES),state='readonly',width=16)
         self.model_selector.grid(row=0,column=2,padx=(0,16));self.model_selector.bind('<<ComboboxSelected>>',self.model_changed)
-        ttk.Label(bar,text='최소 신뢰도').grid(row=0,column=3,padx=(0,6))
-        self.confidence=tk.StringVar(value='0.5')
-        self.threshold=ttk.Combobox(bar,textvariable=self.confidence,values=('0.5','0.6','0.7','0.8','0.9'),state='readonly',width=5)
-        self.threshold.grid(row=0,column=4);self.threshold.bind('<<ComboboxSelected>>',self.threshold_changed)
+        ttk.Label(bar,text='최소 신뢰도 (50~90%)').grid(row=0,column=3,padx=(0,6))
+        self.applied_confidence=DEFAULT_CONFIDENCE;self._threshold_resume=False;self._syncing_confidence=False
+        self.confidence=tk.StringVar(value=f'{DEFAULT_CONFIDENCE*100:g}')
+        self.threshold=ttk.Spinbox(bar,textvariable=self.confidence,from_=50,to=90,increment=1,width=5,command=self.threshold_changed)
+        self.threshold.configure(validate='key',validatecommand=(self.register(lambda s:s=='' or s.isascii() and s.isdecimal()),'%P'))
+        self.threshold.grid(row=0,column=4);self.threshold.bind('<Return>',self.threshold_changed);self.threshold.bind('<FocusOut>',self.threshold_changed)
         app.button(bar,'4분할 사진 비교',self.open_comparison).grid(row=0,column=5,padx=(16,0))
         self.view=tk.StringVar(value='인식 결과')
         choice=ttk.Combobox(bar,textvariable=self.view,values=('인식 결과','실시간 원본'),state='readonly',width=12)
         choice.grid(row=0,column=7,padx=8);choice.bind('<<ComboboxSelected>>',lambda e:self.repaint())
         app.button(bar,'카메라 연결',app.start_camera).grid(row=0,column=8,padx=(8,0))
         app.button(bar,'카메라 해제',app.stop_camera).grid(row=0,column=9,padx=(8,0))
-        self.status=tk.StringVar(value='인식 대기 · 카메라를 연결한 뒤 인식 시작을 누르세요.')
+        self.status=tk.StringVar(value='인식 대기')
         StatusText(self,self.status,height=2).grid(row=1,column=0,columnspan=2,sticky='ew',pady=8)
-        self.canvas=tk.Canvas(self,bg=COLORS['nav'],highlightthickness=0)
+        self.canvas=tk.Canvas(self,bg=COLORS['viewport'],highlightthickness=0)
         self.canvas.grid(row=2,column=0,sticky='nsew');self.canvas.bind('<Configure>',lambda e:self.repaint())
         summary=ttk.Frame(self,style='Card.TFrame',padding=12,width=390)
         summary.grid(row=2,column=1,sticky='nsew',padx=(12,0));summary.grid_propagate(False)
@@ -71,10 +74,11 @@ class YoloPanel(ttk.Frame):
         self.save_button=app.button(summary,'인식 결과 저장',self.save_capture)
         self.save_button.grid(row=5,column=0,sticky='ew');self.save_button.state(['disabled'])
         app.button(summary,'저장 폴더 열기',app.open_capture_folder).grid(row=6,column=0,sticky='ew',pady=(8,0))
-        ttk.Label(summary,text='마스크: 보이는 물체 영역\n신뢰도: 모델 예측 점수\n\nOpenCV 지그 검출과 독립 실행\n좌표 채택·안착 판정·모터 실행에 사용하지 않습니다.',style='Small.TLabel',wraplength=350,justify='left').grid(row=7,column=0,sticky='ew',pady=(16,0))
-        self.caption=tk.StringVar(value='인식 결과는 해당 촬영 프레임에 표시됩니다.')
+        ttk.Label(summary,text='인식 결과 확인용 · 제어·안착 판정과 별개',style='Small.TLabel',wraplength=350,justify='left').grid(row=7,column=0,sticky='ew',pady=(12,0))
+        self.caption=tk.StringVar(value='')
         ttk.Label(self,textvariable=self.caption,style='Small.TLabel').grid(row=3,column=0,columnspan=2,sticky='ew',pady=(8,0))
         self.bind('<Destroy>',lambda e:self.close() if e.widget is self else None)
+        self.confidence.trace_add('write',self.threshold_edited)
         self.job=self.after(100,self.poll)
 
     def visible(self):
@@ -97,7 +101,7 @@ class YoloPanel(ttk.Frame):
 
     def update_model_label(self):
         key=self.model_key();pc=key in ('pc','sam3')
-        set_text(self.model_title,'혼합 학습 · '+MODEL_NAMES[key])
+        set_text(self.model_title,('순차 학습 · ' if key=='pi_n' else '혼합 학습 · ')+MODEL_NAMES[key])
         detail=('BF16 · 컴파일 + 텍스트 캐시 · 입력 1008' if key=='sam3' else
                 'FP16 · TensorRT · 입력 960' if pc else 'FP16 · NCNN · 입력 960 · 4스레드')
         detail+='\n'+('PC NVIDIA GPU · 카메라 갱신에 맞춰 최대 10 FPS' if pc else 'Pi CPU에서 추론')
@@ -124,7 +128,8 @@ class YoloPanel(ttk.Frame):
     def start(self):
         if self.active:return
         self.update_model_label()
-        confidence_value(self.confidence.get());model_path,options=self.runtime_options()
+        value=confidence_percent(self.confidence.get());model_path,options=self.runtime_options()
+        self.applied_confidence=value;self._threshold_resume=False;self.threshold.state(['!invalid'])
         if not self.app.camera or not self.app.camera.running:self.app.start_camera()
         self.clear_result();self.valid_after=time.monotonic();self.source=self.app.camera
         self.worker.start(model_path,**options);self.active=True;self.last_error=None
@@ -146,10 +151,29 @@ class YoloPanel(ttk.Frame):
         set_text(self.metrics,'인식 FPS —\n모델 추론 — · 처리 —\n인식 결과 시각 —');self.save_button.state(['disabled'])
         self.canvas.delete('image');self.canvas.delete('empty')
 
+    def threshold_edited(self,*args):
+        if self._syncing_confidence:return
+        self._threshold_resume=self._threshold_resume or self.active
+        self.stop('신뢰도 입력 중 · 50~90% 입력 후 Enter 또는 다른 곳을 클릭하세요.')
+        self.threshold.state(['!invalid'])
+
     def threshold_changed(self,event=None):
-        was_active=self.active
+        try:value=confidence_percent(self.confidence.get())
+        except ValueError as exc:
+            self.threshold.state(['invalid']);set_text(self.status,str(exc));return False
+        self.threshold.state(['!invalid'])
+        pending=self._threshold_resume;was_active=self.active or pending
+        changed=value!=self.applied_confidence
+        self.applied_confidence=value;self._threshold_resume=False
+        self._syncing_confidence=True
+        try:self.confidence.set(f'{value*100:g}')
+        finally:self._syncing_confidence=False
+        if not changed and not pending:
+            if not self.active:set_text(self.status,f'최소 신뢰도 {value*100:g}% 적용 · 인식 시작을 누르세요.')
+            return True
         self.stop('신뢰도 변경 · 새 영상 인식 대기')
         if was_active:self.app.guard(self.start)
+        return True
 
     def model_changed(self,event=None):
         was_active=self.active;self.stop('모델 변경 · 새 영상 인식 대기');self.update_model_label()
@@ -185,7 +209,7 @@ class YoloPanel(ttk.Frame):
             if self.result is not None:self.clear_result()
             self.canvas.delete('image');self.canvas.delete('empty')
             self.canvas.create_text(max(1,self.canvas.winfo_width())/2,max(1,self.canvas.winfo_height())/2,
-                                    text='카메라 영상 대기',fill='white',font=('Noto Sans CJK KR',16),tags='empty')
+                                    text='카메라 영상 대기',fill=COLORS['muted'],font=('Noto Sans CJK KR',12),tags='empty')
             if self.active:set_text(self.status,'최신 카메라 영상 대기 · 이전 인식 결과는 표시하지 않습니다.')
             self.save_button.state(['disabled']);return
         frame,_,frame_at=obs
@@ -200,7 +224,7 @@ class YoloPanel(ttk.Frame):
             for row in item['detections']:
                 self.table.insert('','end',values=(row['label'],f"{row['confidence']*100:.1f}%"))
             set_text(self.count,f"인식된 객체 {len(item['detections'])}개")
-        if self.active and frame_at!=self.last_submitted and self.worker.submit(frame,frame_at,float(self.confidence.get())):
+        if self.active and frame_at!=self.last_submitted and self.worker.submit(frame,frame_at,self.applied_confidence):
             self.last_submitted=frame_at
         result=self.result
         if result and now-result['frame_at']>MAX_RESULT_AGE:

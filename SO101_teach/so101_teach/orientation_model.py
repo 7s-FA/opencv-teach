@@ -4,7 +4,7 @@ import numpy as np
 from .height_reference import detection_plane_z
 
 
-def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None,junction_source=None):
+def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None,junction_source=None,recover_carrier=False):
     from .vision import project_plane,world_xy,projected_jig_axes
     feature=mesh.get('assembly',{}).get('orientation_hole');candidate=result.get('selected')
     if not feature or not candidate or not candidate.get('metric') or not profile:return result
@@ -59,15 +59,24 @@ def orient_carrier(frame,mesh,allowed,profile,result,*,evidence=None,junction_so
                 raw_frame,raw_roi,raw_profile=junction_source
                 raw_allowed=roi_mask(raw_roi,raw_frame.shape[1],raw_frame.shape[0])
                 junction=evaluate(raw_frame,mesh,raw_allowed,raw_profile,candidate,outline_profile=profile)
-        except (OSError,ValueError,cv2.error) as exc:
+            if recover_carrier:
+                from .carrier_cad import resolve
+                if junction_source is None:junction=resolve(frame,mesh,allowed,profile,candidate,junction)
+                else:junction=resolve(raw_frame,mesh,raw_allowed,raw_profile,candidate,junction)
+        except (OSError,ValueError,KeyError,cv2.error) as exc:
             junction={'verified':False,'scores':[],'reason':str(exc)}
         candidate['orientation_junction_scores']=junction['scores']
+        for key in ('cad_direction_verification','orientation_corroborated_by_cad','cad_direction_scores'):
+            if key in junction:candidate[key]=junction[key]
         if not junction['verified']:
             candidate['orientation_verified']=False
             return {**result,'selected':None,'status':'orientation_unconfirmed','error':'원형 기준과 접합부로 앞뒤 방향을 확인하지 못했습니다. '+junction['reason']}
         best={'yaw':junction['yaw_deg']}
         candidate.update(orientation_method='central_junction',orientation_junction_outline_px=junction['outline_px'],
                          orientation_junction_score=junction['score'],orientation_junction_margin=junction['margin'])
+        if junction.get('method')=='cad_fixed_features':
+            candidate['orientation_method']='cad_fixed_features'
+            for key in ('orientation_junction_scores','orientation_junction_outline_px','orientation_junction_score','orientation_junction_margin'):candidate.pop(key,None)
     else:
         candidate.update(orientation_method='circular_opening',orientation_hole_px=best['center_px'].tolist(),
                          orientation_hole_outline_px=best['outline_px'].tolist(),orientation_hole_alignment_error_mm=best['error_mm'])

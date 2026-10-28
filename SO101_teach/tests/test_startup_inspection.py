@@ -52,7 +52,7 @@ class PCStartTests(unittest.TestCase):
         self.app=SimpleNamespace(data_dir=Path(self.temp.name),episode={'id':'e','product_type':'A','startup_inspections':[EMPTY],'steps':[]},session=s,latest=SimpleNamespace(fresh=lambda:True,calibration_matches=True),profile={},catalog={},workcell_preview={},start_camera=Mock(),camera_needed=lambda:False,suspend_camera=Mock(),notice=Mock(),camera=None)
         self.workers=[]
         def worker(*args,**kwargs):
-            value=SimpleNamespace(result=None,submit=Mock(),close=Mock(),retain=Mock());self.workers.append(value);return value
+            value=SimpleNamespace(result=None,submit=Mock(),close=Mock(),retain=Mock(),accepting_frame=True);self.workers.append(value);return value
         patcher=patch('so101_teach.episode_execution.FrameInspections',side_effect=worker);patcher.start();self.addCleanup(patcher.stop)
         self.continue_run=Mock()
     def run_start(self):
@@ -72,6 +72,28 @@ class PCStartTests(unittest.TestCase):
         self.run_start();self.now=20.;self.run.poll();self.assertEqual(self.run.phase,'failed');self.continue_run.assert_not_called()
     def test_missing_hold_blocks_camera_worker_and_continuation(self):
         self.session.state='MOVING';self.run_start();self.assertEqual(self.workers,[]);self.continue_run.assert_not_called();self.assertEqual(self.run.phase,'failed')
+    def test_one_frame_inflight_and_no_camera_read_after_final_pass(self):
+        import numpy as np
+        self.run_start();worker=self.workers[-1];key=self.run.checks[0]['id']
+        self.app.camera=SimpleNamespace(error=None)
+        self.app.camera_view_observation=Mock(side_effect=lambda:(np.zeros((4,4,3),np.uint8),{},self.now))
+        self.now=10.1;self.run.poll()
+        self.now=10.2;self.run.poll()
+        self.app.camera_view_observation.assert_called_once();worker.submit.assert_called_once()
+        row={'state':'empty','quality':'abnormal','seating':'missing'}
+        worker.result={'at':10.1,'results':{key:{'at':10.1,'row':row}}}
+        self.now=10.3;self.run.poll()
+        self.assertEqual(worker.submit.call_count,2)
+        worker.result={'at':10.3,'results':{key:{'at':10.3,'row':row}}}
+        self.now=10.4;self.run.poll()
+        self.continue_run.assert_called_once()
+        self.assertEqual(worker.submit.call_count,2)
+        self.assertEqual(self.app.camera_view_observation.call_count,2)
+    def test_pre_start_image_never_enters_inference(self):
+        import numpy as np
+        self.run_start();worker=self.workers[-1];self.app.camera=SimpleNamespace(error=None)
+        self.app.camera_view_observation=Mock(return_value=(np.zeros((4,4,3),np.uint8),{},9.99))
+        self.now=10.1;self.run.poll();worker.submit.assert_not_called()
 
 class PiStartTests(unittest.TestCase):
     def episode(self):return {'id':'e','product_type':'A','startup_inspections':[ALL,EMPTY],'steps':[{'id':'s','name':'안전','ticks':{},'safe_boundary':'start'},{'id':'n','name':'작업','ticks':{}}]}

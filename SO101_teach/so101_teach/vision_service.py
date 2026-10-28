@@ -5,12 +5,15 @@ from .vision import PoseLatch,detect
 from .mask_pose import detect_mask_seeded
 from .two_frame_gate import carrier_observation_reason
 class MultiDetector:
-    def __init__(self,catalog,profile,active='pallet',default_latch=None):
+    def __init__(self,catalog,profile,active='pallet',default_latch=None,*,compute=None):
+        self.compute=compute;self.evidence=None
         self.catalog=catalog;self.profile=profile;self.active=active;self.lock=threading.RLock();self.meshes={};self.revision=-1
         self.latches={active:default_latch or PoseLatch()};self.frozen=False;self.seconds=10.;self.generation=0;self.sequence=0
         self.acquisition_seconds=self.latches[active].stability.seconds;self.attempts_limit=self.latches[active].stability.attempts_limit
         self.region_model=None;self.shared_region_model=None;self.region_tracks={};self.region_retry_after={};self.region_context=None
     def close(self):
+        evidence=self.evidence;self.evidence=None
+        if evidence:evidence.close()
         if self.region_model:self.region_model.close()
         if self.shared_region_model:self.shared_region_model.close()
         with self.lock:
@@ -19,12 +22,12 @@ class MultiDetector:
         if self.revision!=self.catalog.revision:
             self.meshes={k:self.catalog.mesh(k) for k in self.catalog.items};self.revision=self.catalog.revision
             for key in self.meshes:self.latches.setdefault(key,PoseLatch(self.seconds,self.acquisition_seconds,self.attempts_limit))
-    def clear(self,key=None):
+    def clear(self,key=None,*,start_on_frame=False):
         with self.lock:
             if self.frozen:return False
             self.generation+=1
             for k,v in self.latches.items():
-                if key is None or key==k:v.clear(time.monotonic())
+                if key is None or key==k:v.clear(None if start_on_frame else time.monotonic())
             if key is None:self.region_tracks.clear();self.region_retry_after.clear()
             else:self.region_tracks.pop(key,None);self.region_retry_after.pop(key,None)
             return True
@@ -36,12 +39,32 @@ class MultiDetector:
         """Prepare inference without filling latches, tracks or saved poses."""
         from .model_regions import checked_settings,RegionModel
         began=time.monotonic();settings=checked_settings(self.profile);called=False
+        key=(frame.shape,self.catalog.revision,self.profile)
+        if key!=getattr(self,'preparation_geometry_key',None):
+            from .lens_geometry import DetectionFrame
+            prepared=DetectionFrame(frame,self.profile)
+            if prepared.error:raise ValueError(prepared.error)
+            self.refresh()
+            for config in self.catalog.items.values():prepared.mask(config.get('roi'))
+            self.preparation_geometry_key=deepcopy(key)
         if settings['method']=='model_roi':
-            if self.region_model is None:self.region_model=RegionModel()
+            if self.region_model is None:self.region_model=self.compute.provider() if self.compute else RegionModel()
             called=self.region_model.prepare(frame,settings)
+        completed=time.monotonic()
+        if called:self.preparation_timing={'started':began,'completed':completed,'seconds':completed-began}
         return {'status':'prepared','vision_ready':True,'selected':None,'candidates':[],
-                'model_inference_called':called,'processing_seconds':time.monotonic()-began}
-    def process_shared(self,frame):
+                'model_inference_called':called,'processing_seconds':completed-began,
+                'model_preparation_timing':getattr(self,'preparation_timing',None)}
+    def process_captured(self,frame,at,*,shared=False):
+        evidence=self.evidence
+        try:return self.process_shared(frame,captured_at=at) if shared else self.process(frame,captured_at=at)
+        except Exception as exc:
+            if evidence is not None and self.evidence is evidence:
+                exc.decision_evidence=evidence.submit(frame,at,metadata={
+                    'kind':'jig_processing_error','input_kind':'camera_capture','error':str(exc),
+                    'mask_state':'unavailable_after_processing_error'})
+            raise
+    def process_shared(self,frame,*,captured_at=None):
         """Live inspection view: one raw capture supplies both model consumers."""
         from .ai_inspection import inspection_settings
         from .model_regions import checked_settings,RegionModel
@@ -49,19 +72,20 @@ class MultiDetector:
         with self.lock:profile=deepcopy(self.profile)
         settings=inspection_settings(profile)
         if settings['method']!='model_roi' or settings!=checked_settings(profile):
-            return self.process(frame)
-        if self.shared_region_model is None:self.shared_region_model=RegionModel(class_ids=tuple(range(13)))
+            return self.process(frame,captured_at=captured_at)
+        if self.shared_region_model is None:self.shared_region_model=self.compute.provider(class_ids=tuple(range(13))) if self.compute else RegionModel(class_ids=tuple(range(13)))
         inference=FrameInference(frame,settings,self.shared_region_model.predict)
-        result=self.process(frame,inference=inference)
+        result=self.process(frame,inference=inference,captured_at=captured_at)
         if result.get('status')=='settings_changed':return result
         # An attempted, failed jig inference cannot be retried behind its
         # existing retry budget. Carrier tracking may need no jig AI at all.
         if inference.rows is None and result.get('model_inference_called'):return result
         if inference.get(frame,settings) is not None:result['shared_ai']=inference.to_wire()
         return result
-    def process(self,frame,*,inference=None):
+    def process(self,frame,*,inference=None,captured_at=None):
         began=time.monotonic()
         with self.lock:
+            evidence=self.evidence;search_evidence={}
             self.refresh();items=deepcopy(self.catalog.items);meshes=deepcopy(self.meshes);revision=self.catalog.revision;generation=self.generation;base_profile=deepcopy(self.profile)
             context=(frame.shape,revision,base_profile,items)
             if context!=self.region_context:
@@ -81,7 +105,9 @@ class MultiDetector:
             nonlocal opencv_seconds
             start=time.monotonic()
             options={'search_mask':mask} if mask is not None else {}
-            result=detect(frame,meshes[key],items[key].get('roi'),profiles[key],prepared=prepared,**options)
+            if evidence is not None and mask is not None:search_evidence[f'{key}:{len(search_evidence)}']=mask
+            result=(self.compute.rim(frame,meshes[key],items[key].get('roi'),profiles[key],**options) if self.compute else
+                    detect(frame,meshes[key],items[key].get('roi'),profiles[key],prepared=prepared,**options))
             opencv_seconds+=time.monotonic()-start
             return result
         if settings['method']!='model_roi' and self.region_model:self.region_model.close()
@@ -112,7 +138,7 @@ class MultiDetector:
             try:
                 detections=inference.get(frame,settings) if inference is not None else None
                 if detections is None:
-                    if self.region_model is None:self.region_model=RegionModel()
+                    if self.region_model is None:self.region_model=self.compute.provider() if self.compute else RegionModel()
                     detections=self.region_model.predict(frame,settings)
             except Exception as exc:model_error='모델 영역 검출 실패 · '+str(exc)
             model_seconds=time.monotonic()-start
@@ -121,7 +147,8 @@ class MultiDetector:
             if model_called and not model_error:
                 start=time.monotonic()
                 try:
-                    raw=detect_mask_seeded(frame,meshes[key],items[key].get('roi'),profiles[key],detections,settings,prepared=prepared)
+                    raw=(self.compute.mask_pose(frame,meshes[key],items[key].get('roi'),profiles[key],detections,settings) if self.compute else
+                         detect_mask_seeded(frame,meshes[key],items[key].get('roi'),profiles[key],detections,settings,prepared=prepared))
                 except (ValueError,KeyError) as exc:
                     raw={'selected':None,'candidates':[],'status':'model_error','error':'마스크 후보 보정 실패 · '+str(exc),'verified_for_motion':False}
                 opencv_seconds+=time.monotonic()-start;regions=raw.get('model_regions',[])
@@ -161,11 +188,34 @@ class MultiDetector:
             now=time.monotonic();self.sequence+=1
             if settings['method']=='model_roi' and not self.frozen:
                 for key,raw in live_results.items():
-                    if key in lost or not raw.get('selected'):self.latches[key].clear(now)
+                    if key in lost or not raw.get('selected'):
+                        latch=self.latches[key];current=raw.get('selected');stability=latch.stability
+                        from .jig_consensus import agrees
+                        from .two_frame_gate import pose_delta
+                        continue_pending=(meshes[key].get('shape')=='rectangle' and latch.saved is None
+                            and current is not None and raw.get('tracking_state')=='reacquired'
+                            and model_called and not model_error and raw.get('mask_seed_refined')
+                            and current.get('observed_boundary_refined') and current.get('grid_verified')
+                            and current.get('orientation_verified') and current.get('symmetry_deg')==360
+                            and stability.started is not None and now<=stability.started+stability.seconds
+                            and stability.last_at is not None and 0<now-stability.last_at<=stability.seconds
+                            and bool(stability.samples)
+                            and all(agrees(current,previous) and max(pose_delta(current,previous))<=.5 for _,previous in stability.samples))
+                        if continue_pending:raw['same_frame_reacquisition_continuity']=True
+                        else:latch.clear(now)
             results={key:self.latches[key].update(raw,now,profile=profiles[key],mesh=meshes[key]) for key,raw in live_results.items()}
             main=deepcopy(results.get(self.active,{'selected':None,'candidates':[],'status':'not_found'}))
             main.update(by_jig=results,live_by_jig=live_results,detector_generation=generation,detector_sequence=self.sequence,processing_seconds=time.monotonic()-began,
                         model_inference_called=model_called,model_seconds=model_seconds,opencv_seconds=opencv_seconds)
+            if evidence is not None and self.evidence is evidence:
+                reference=evidence.submit(frame,captured_at,masks=detections,search_masks=search_evidence,
+                    metadata={'kind':'jig_processing','input_kind':'camera_capture' if captured_at is not None else 'direct_algorithm_input',
+                              'generation':generation,'sequence':self.sequence,'processing_started_at':began,'processing_completed_at':now,
+                              'settings':settings,'model_called':model_called,'model_error':model_error,
+                              'mask_state':'current_inference' if model_called and not model_error else 'inference_error' if model_error else 'no_new_inference',
+                              'latch_resets':{key:('tracking_lost' if key in lost else 'no_selected_candidate') for key,raw in live_results.items() if (key in lost or not raw.get('selected')) and not raw.get('same_frame_reacquisition_continuity')},
+                              'live_by_jig':live_results,'by_jig':results})
+                main['decision_evidence']=reference
             return main
 
     def finish_observation(self,detection,now):
@@ -175,6 +225,9 @@ class MultiDetector:
             results={key:(self.latches[key].poll(now) or value) if key in self.latches else value
                      for key,value in detection['by_jig'].items()}
             main=deepcopy(results.get(self.active,detection));main.update(by_jig=results,live_by_jig=detection.get('live_by_jig',{}),detector_generation=self.generation,detector_sequence=self.sequence,processing_seconds=detection.get('processing_seconds'))
-            for name in ('model_inference_called','model_seconds','opencv_seconds','shared_ai'):
+            for name in ('model_inference_called','model_seconds','opencv_seconds','shared_ai','decision_evidence'):
                 if name in detection:main[name]=detection[name]
+            evidence=self.evidence;reference=detection.get('decision_evidence')
+            if evidence is not None and reference and reference.get('session')==evidence.session:
+                evidence.note(reference,{'kind':'jig_latch_poll','at':now,'by_jig':results})
             return main

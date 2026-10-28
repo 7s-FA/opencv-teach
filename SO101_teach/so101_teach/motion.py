@@ -58,6 +58,11 @@ RUNAWAY_TICKS=128  # 11.25 degrees; explicit large unexpected displacement guard
 INTERNAL_TARGET_MARGIN=8  # Firmware target must stay inside the commanded segment.
 HEARTBEAT_TIMEOUT=2.
 START_ORDER=('wrist_roll','gripper','shoulder_pan','shoulder_lift','elbow_flex','wrist_flex')
+ACTIVATION_OBSERVATION_SECONDS=.35
+ACTIVATION_SCAN_MAX_AGE=.5
+ACTIVATION_GOAL_MAX_AGE=.05
+
+class ActivationPaused(RuntimeError):pass
 
 class MotionGate:
     def __init__(self,calibration):self.calibration=calibration;self.permit=None
@@ -100,18 +105,25 @@ class MotionSession(ReadOnlySession):
         self.follow_initial=False;self.follow_initial_target={}
         factory=kwargs.pop('bus_factory',motion_bus)
         super().__init__(port,calibration,bus_factory=factory,**kwargs)
+        # Diagnostic identity is independent of request numbers, which restart
+        # when a controller session is recreated. Never used by motion control.
+        import uuid
+        self.diagnostic_session_id=uuid.uuid4().hex;self.arrival_seq=0
         self.requires_port_check=factory is motion_bus
         self.commands=queue.Queue(4);self.release_requested=threading.Event();self.hold_requested=threading.Event()
         self.state='READ_ONLY';self.heartbeat=time.monotonic();self.motion_attempted=False;self.last_goals={};self.enabled={}
+        self.activation_pending_goal=None;self.activation_pausing=False;self.activation_paused_at=None
         from .telemetry import TemperatureTracker
         self.temperature=TemperatureTracker();self.leader_provider=None;self.leader_calibration=None;self.follow_time=None;self.follow_last_valid_at=0.;self.follow_waiting=False;self.follow_recovering=False;self.follow_control_at=0.
         self.program_active=threading.Event();self.command_pending=threading.Event();self.request_serial=0;self.active_request_id=None;self.completed_request_id=None
+        self.progress_lock=threading.RLock()
         self.sequence=[];self.sequence_stops=[];self.episode_run=False;self.residual_reason=None;self.residual_since=None;self.index=0;self.segment=None;self.settled_at=None;self.motion_log=[]
         self.command_log=deque(maxlen=512);self.activation_log=deque(maxlen=512)
+        self.configured_velocities={}
         self.joint_path=None;self.path_slot=0;self.path_segment=None;self.load_compensation=LoadCompensation();self.internal_paths={};self.last_snapshot=None;self.follow_progress={};self.sync_unconfirmed={}
     def set_speed(self,rate):
         if rate not in SPEED_PRESETS.values():raise ValueError('지원하지 않는 실물 속도')
-        if self.state not in ('READ_ONLY','HOLD') or self.command_pending.is_set() or self.program_active.is_set():
+        if self.state not in ('READ_ONLY','HOLD','ACTIVATION_PAUSED') or self.command_pending.is_set() or self.program_active.is_set():
             raise ValueError('실행이 끝난 뒤 속도를 바꾸세요.')
         self.rate_ticks_s=float(rate)
     @property
@@ -121,8 +133,12 @@ class MotionSession(ReadOnlySession):
         for name in JOINTS:
             phase=self.read(bus,name,'Phase')
             value=(int(FOLLOW_RATE_TICKS_S) if phase&4 else int(FOLLOW_RATE_TICKS_S/50)) if follow else velocity_register(self.rate_ticks_s,phase)
-            self.write(bus,name,'Goal_Velocity',value)
-            if self.read(bus,name,'Goal_Velocity')!=value:raise RuntimeError(name+': 이동 속도 확인 실패')
+            # Read the actual register on every command; never trust a cached
+            # write across resets, external changes or a different speed mode.
+            if self.configured_velocities.get(name)!=value or self.read(bus,name,'Goal_Velocity')!=value:
+                self.write(bus,name,'Goal_Velocity',value)
+                if self.read(bus,name,'Goal_Velocity')!=value:raise RuntimeError(name+': 이동 속도 확인 실패')
+            self.configured_velocities[name]=value
         self.report['motion_rate_ticks_s']=self.rate_ticks_s
         self.active_rate=FOLLOW_RATE_TICKS_S if follow else self.rate_ticks_s
         if follow:self.report['follow_rate_ticks_s']=FOLLOW_RATE_TICKS_S
@@ -130,13 +146,16 @@ class MotionSession(ReadOnlySession):
         self.state=state;event={'at':time.time(),'state':state,'detail':detail}
         if paused:event['paused']=True
         self.motion_log.append(event);self.publish('motion',event)
+    def request_progress(self):
+        with self.progress_lock:
+            return {'index':self.index,'request_id':self.active_request_id,'completed_request_id':self.completed_request_id}
     def request(self,action,targets=None):
         if not self.running:raise ValueError('팔로워를 먼저 연결하세요.')
         if action=='release':self.release_requested.set();return
         if action=='hold':self.hold_requested.set();return
         if action not in ('arm','move','play','follow'):raise ValueError('잘못된 실물 명령')
         if self.command_pending.is_set():raise ValueError('실물 명령 처리 중입니다.')
-        if self.state!=('READ_ONLY' if action=='arm' else 'HOLD'):raise ValueError('현재 자세 유지 상태에서 이동을 실행하세요.')
+        if self.state not in (('READ_ONLY','ACTIVATION_PAUSED') if action=='arm' else ('HOLD',)):raise ValueError('현재 자세 유지 상태에서 이동을 실행하세요.')
         # Copy validated values; UI edits cannot change an in-flight program.
         values=[self.calibration.ticks(t) for t in (targets or [])]
         if action in ('move','play') and (not values or len(values)>500):raise ValueError('실행할 스텝을 선택하세요.')
@@ -150,10 +169,13 @@ class MotionSession(ReadOnlySession):
         return request_id
     def check_abort(self):
         if self.stop.is_set() or self.release_requested.is_set():raise RuntimeError('사용자 토크 해제/연결 종료 요청')
-    def write(self,bus,name,register,value):
+        if self.state=='ACTIVATING' and self.hold_requested.is_set() and not self.activation_pausing:raise ActivationPaused('토크 준비 보류')
+    def write(self,bus,name,register,value,*,before_send=None):
         off=register=='Torque_Enable' and value==0
         record={'at':time.time(),'joint':name,'register':register,'value':value,'acknowledged':False,'attempts':0};self.command_log.append(record)
         def send():
+            if not off:self.check_abort()
+            if before_send:before_send()
             if not off:self.check_abort()
             bus.motion_gate.allow(name,register,value);record['attempts']+=1
             try:bus.write(register,name,value,normalize=False,num_retry=0)
@@ -187,6 +209,7 @@ class MotionSession(ReadOnlySession):
             try:self.commands.get_nowait()
             except queue.Empty:break
         self.release_requested.clear();self.hold_requested.clear()
+        self.activation_pending_goal=None;self.activation_paused_at=None
         if errors:self.transition('FAULT','; '.join(errors));raise RuntimeError('; '.join(errors))
         self.transition('READ_ONLY','토크 OFF 확인')
     def activation_sample(self,bus,name,goal,phase):
@@ -202,14 +225,48 @@ class MotionSession(ReadOnlySession):
         row['scan_seconds']=time.monotonic()-began
         return row
     def check_enabled(self,bus):
+        began=time.monotonic();rows={}
         for name,goal in self.enabled.items():
             row=self.activation_sample(bus,name,goal,'activation_monitor')
-            actual=row['actual_ticks']
-            if abs(actual-goal)>RUNAWAY_TICKS:raise RuntimeError(f'{name}: 큰 위치 이탈 ({goal} → {actual}틱, 허용 {RUNAWAY_TICKS}틱)')
-            if row['torque']!=1 or row['status'] not in (0,1):raise RuntimeError(name+': 시작 상태 이상')
-            if row['command_goal_ticks']!=goal:raise RuntimeError(name+': 시작 목표 변경')
-            self.check_internal_target(name,row['internal_goal_ticks'],goal,goal,
-                                       actual=actual,command_goal=row['command_goal_ticks'])
+            if time.monotonic()-began>=ACTIVATION_SCAN_MAX_AGE:raise RuntimeError('토크 준비 전체 상태 조회 지연 · 최신 상태 미확인')
+            self.check_activation_row(name,goal,row);rows[name]=row
+        return rows
+    def check_activation_row(self,name,goal,row):
+        actual=row['actual_ticks']
+        if abs(actual-goal)>RUNAWAY_TICKS:raise RuntimeError(f'{name}: 큰 위치 이탈 ({goal} → {actual}틱, 허용 {RUNAWAY_TICKS}틱)')
+        if row['torque']!=1 or row['status'] not in (0,1):raise RuntimeError(name+': 시작 상태 이상')
+        if row['command_goal_ticks']!=goal:raise RuntimeError(name+': 시작 목표 변경')
+        self.check_internal_target(name,row['internal_goal_ticks'],goal,goal,
+                                   actual=actual,command_goal=row['command_goal_ticks'])
+    def check_activation_snapshot(self,snapshot):
+        self.check_abort()
+        if not snapshot.fresh() or not snapshot.calibration_matches:raise RuntimeError('토크 준비 보류 중 최신 위치·영점 확인 실패')
+        for name in JOINTS:
+            h=snapshot.telemetry[name]
+            if name in self.enabled:
+                self.temperature.observe(name,h['temperature_c'],snapshot.monotonic)
+                self.check_activation_row(name,self.enabled[name],{'actual_ticks':snapshot.ticks[name],
+                    'command_goal_ticks':h['goal_ticks'],'internal_goal_ticks':h['internal_goal_ticks'],
+                    'torque':h['torque'],'status':h['status']})
+            elif h['torque']!=0:raise RuntimeError(name+': 보류 중 미활성 관절 토크 변경')
+    def pause_activation(self,bus):
+        # Goal_Position may have enabled the in-flight joint before HOLD arrived.
+        # Reconcile it without writing any more goals or disabling supported joints.
+        self.activation_pausing=True
+        try:
+            if self.activation_pending_goal is not None:
+                name,goal=self.activation_pending_goal;torque=self.read(bus,name,'Torque_Enable')
+                if torque==1:self.enabled[name]=goal
+                elif torque!=0:raise RuntimeError(name+': 보류 시 토크 상태 읽기 오류')
+            self.check_enabled(bus);self.check_abort()
+            self.activation_pending_goal=None;self.last_goals=self.enabled.copy()
+            self.command_pending.clear();self.program_active.clear()
+            while not self.commands.empty():
+                try:self.commands.get_nowait()
+                except queue.Empty:break
+            self.hold_requested.clear();self.activation_paused_at=time.monotonic()
+            self.transition('ACTIVATION_PAUSED','토크 준비 보류 · 켜진 관절 유지 · 추가 활성화 중지',paused=True)
+        finally:self.activation_pausing=False
     def check_internal_target(self,name,internal,start,goal,*,actual=None,command_goal=None):
         if not min(start,goal)-INTERNAL_TARGET_MARGIN<=internal<=max(start,goal)+INTERNAL_TARGET_MARGIN:
             self.report['internal_target_fault']={'at':time.time(),'joint':name,'phase':self.state,
@@ -221,18 +278,34 @@ class MotionSession(ReadOnlySession):
             raise RuntimeError(f'{name}: 서보 내부 목표 불일치 · 실물 현재 {present} · {target} · '
                                f'목표 레지스터 {written} · 내부 목표 {internal}틱 (허용 여유 ±{INTERNAL_TARGET_MARGIN}틱). '
                                '내부 목표값은 실물 위치가 아닙니다. 활성화·제어 진단 기록을 확인하세요.')
+    def observe_activation(self,bus,until):
+        # Keep monitoring every enabled joint; do not replace feedback with sleep.
+        while time.monotonic()<until:
+            self.check_abort();self.check_enabled(bus)
+            remaining=until-time.monotonic()
+            if remaining>0:self.stop.wait(min(.01,remaining))
+        # A scan that began before the deadline is not the final confirmation.
+        self.check_abort();self.check_enabled(bus);self.check_abort()
     def arm(self,bus,snapshot):
+        try:self.activate(bus,snapshot)
+        except ActivationPaused:self.pause_activation(bus)
+    def activate(self,bus,snapshot):
         if not snapshot.fresh() or not snapshot.calibration_matches:raise RuntimeError('최신 위치·영점 대조가 필요합니다.')
         initial=self.calibration.ticks(snapshot.ticks)
-        if any(h['torque'] for h in snapshot.telemetry.values()):raise RuntimeError('이미 켜진 토크를 해제한 후 시작하세요.')
+        resumed=self.state=='ACTIVATION_PAUSED'
+        if resumed:self.check_activation_snapshot(snapshot);initial.update(self.enabled)
+        elif any(h['torque'] for h in snapshot.telemetry.values()):raise RuntimeError('이미 켜진 토크를 해제한 후 시작하세요.')
         # A calibration readback alone cannot confirm the live control mode.
         for name in JOINTS:
             mode=self.read(bus,name,'Operating_Mode')
             if mode!=0:raise RuntimeError(f'{name}: 위치 제어 모드가 아닙니다 (모드 {mode}).')
         self.transition('ACTIVATING','팔을 받친 상태로 현재 자세 확인')
         self.motion_attempted=True
+        until=time.monotonic()+ACTIVATION_OBSERVATION_SECONDS
+        if resumed and self.enabled:self.observe_activation(bus,until)
         # Test the known problematic wrist before powering the load-bearing joints.
         for name in START_ORDER:
+            if name in self.enabled:continue
             self.check_abort();self.check_enabled(bus)
             if self.read(bus,name,'Torque_Enable')!=0 or self.read(bus,name,'Status') not in (0,1):raise RuntimeError(name+': 시작 전 상태 이상')
             self.temperature.observe(name,self.read(bus,name,'Present_Temperature'),time.monotonic())
@@ -241,8 +314,20 @@ class MotionSession(ReadOnlySession):
             for reg,value in [('Acceleration',0),('Goal_Time',0),('Goal_Velocity',1)]:
                 self.write(bus,name,reg,value)
                 if self.read(bus,name,reg)!=value or self.read(bus,name,'Torque_Enable')!=0:raise RuntimeError(name+': 시작 설정 확인 실패')
-            self.activation_sample(bus,name,initial[name],'before_goal_write')
-            self.write(bus,name,'Goal_Position',initial[name])
+            # A previous joint can fail while these settings are being written.
+            # Check it before Goal_Position can implicitly enable another joint.
+            self.check_enabled(bus)
+            sampled=time.monotonic();before=self.activation_sample(bus,name,initial[name],'before_goal_write')
+            if time.monotonic()-sampled>=ACTIVATION_GOAL_MAX_AGE:raise RuntimeError(name+': 활성화 직전 위치 조회 지연')
+            if before['torque']!=0 or before['status'] not in (0,1):raise RuntimeError(name+': 활성화 직전 상태 변경')
+            initial[name]=self.calibration.ticks({**initial,name:before['actual_ticks']})[name]
+            before['hold_goal_ticks']=initial[name]
+            def validate_goal():
+                began=time.monotonic();actual=self.read(bus,name,'Present_Position');torque=self.read(bus,name,'Torque_Enable')
+                if time.monotonic()-began>=ACTIVATION_GOAL_MAX_AGE:raise RuntimeError(name+': 활성화 목표 확인 지연')
+                if torque!=0 or abs(actual-initial[name])>INTERNAL_TARGET_MARGIN:raise RuntimeError(name+': 활성화 목표 기록 전 자세·토크 변경')
+            self.activation_pending_goal=(name,initial[name])
+            self.write(bus,name,'Goal_Position',initial[name],before_send=validate_goal)
             written=self.activation_sample(bus,name,initial[name],'after_goal_write')
             implicit=written['torque']
             if implicit not in (0,1):raise RuntimeError(name+': 토크 상태 읽기 오류')
@@ -250,9 +335,18 @@ class MotionSession(ReadOnlySession):
             if self.read(bus,name,'Goal_Position')!=initial[name]:raise RuntimeError(name+': 시작 목표 읽기 불일치')
             if not implicit:self.write(bus,name,'Torque_Enable',1)
             self.enabled[name]=initial[name]
-            until=time.monotonic()+.35
-            while time.monotonic()<until:self.check_enabled(bus);self.stop.wait(.01)
-        self.last_goals=initial.copy();self.transition('HOLD','현재 자세 유지')
+            self.activation_pending_goal=None
+            until=time.monotonic()+ACTIVATION_OBSERVATION_SECONDS
+            if name==START_ORDER[0]:
+                # Preserve the isolated wrist check before any other joint is on.
+                self.observe_activation(bus,until)
+            else:
+                # Confirm immediately, then overlap its observation window with
+                # subsequent setup on this same serial-owner thread.
+                self.check_enabled(bus)
+        # The last deadline is also later than every earlier joint's deadline.
+        self.observe_activation(bus,until)
+        self.activation_paused_at=None;self.last_goals=initial.copy();self.transition('HOLD','현재 자세 유지')
     def check_active(self,snapshot):
         self.check_abort()
         if not snapshot.fresh() or not snapshot.calibration_matches:raise RuntimeError('실행 중 위치/영점 확인 실패')
@@ -342,6 +436,14 @@ class MotionSession(ReadOnlySession):
             self.last_snapshot=snapshot
             if self.release_requested.is_set():
                 self.motion_attempted=True;self.release(bus);return
+            if self.state=='ACTIVATION_PAUSED':
+                self.check_activation_snapshot(snapshot)
+                if self.hold_requested.is_set():
+                    self.hold_requested.clear();self.command_pending.clear()
+                    while not self.commands.empty():
+                        try:self.commands.get_nowait()
+                        except queue.Empty:break
+                    return
             if self.state in ('HOLD','MOVING','FOLLOW'):
                 pause=self.check_active(snapshot)
                 if pause:self.pause_motion(bus,snapshot,pause);return
@@ -352,14 +454,23 @@ class MotionSession(ReadOnlySession):
                         try:self.commands.get_nowait()
                         except queue.Empty:break
                     self.transition('HOLD','이동 정지 · 현재 자세 유지');return
-            else:self.hold_requested.clear()
+            elif self.state=='READ_ONLY' and self.hold_requested.is_set():
+                self.hold_requested.clear();self.command_pending.clear()
+                while not self.commands.empty():
+                    try:self.commands.get_nowait()
+                    except queue.Empty:break
+                return
             try:action,values,submitted,request_id=self.commands.get_nowait()
             except queue.Empty:action=None
             if action:
-                self.command_pending.clear();self.active_request_id=request_id
+                # Publish identity and zero progress together, before slow speed
+                # configuration can expose the previous program's step count.
+                with self.progress_lock:
+                    self.index=0;self.active_request_id=request_id
+                self.command_pending.clear()
                 if time.monotonic()-submitted>5:raise ValueError('5초 이상 대기한 명령을 취소했습니다. 다시 실행하세요.')
                 if action=='arm':
-                    if self.state!='READ_ONLY':raise ValueError('이미 토크를 유지하고 있습니다.')
+                    if self.state not in ('READ_ONLY','ACTIVATION_PAUSED'):raise ValueError('이미 토크를 유지하고 있습니다.')
                     self.arm(bus,snapshot);return
                 if self.state!='HOLD':raise ValueError('현재 자세 유지가 확인된 후 실행하세요.')
                 self.configure_motion_speed(bus,follow=action=='follow')
@@ -445,18 +556,25 @@ class MotionSession(ReadOnlySession):
                 if fraction>=1 and (passing or not outside) and self.grip_contact.pending is None and residual_ready:
                     self.settled_at=self.settled_at or now
                     if passing or now-self.settled_at>=.2:
-                        completion={'at':time.time(),'request_id':self.active_request_id,'step_index':self.index+1,
+                        self.arrival_seq+=1
+                        completion={'at':time.time(),'at_monotonic_s':now,
+                                    'controller_session_id':self.diagnostic_session_id,'arrival_seq':self.arrival_seq,
+                                    'request_id':self.active_request_id,'step_index':self.index+1,
                                     'arrival_type':'residual_accepted' if self.residual_reason else 'pass_through' if passing else 'settled',
                                     'residual_acceptance_reason':self.residual_reason,
                                     'tolerance_ticks':dict.fromkeys(JOINTS,PASS_THROUGH_TOLERANCE_TICKS) if passing else tolerances.copy(),
-                                    'target':goal.copy(),'actual':snapshot.ticks.copy(),'servo_command':self.last_goals.copy(),
+                                    'target':goal.copy(),'requested_target':self.sequence[self.index].copy(),
+                                    'gripper_target_adjusted':goal['gripper']!=self.sequence[self.index]['gripper'],
+                                    'actual':snapshot.ticks.copy(),'servo_command':self.last_goals.copy(),
                                     'residual_ticks':{n:snapshot.ticks[n]-goal[n] for n in JOINTS},
                                     'load_compensation':self.load_compensation.evidence()}
                         self.report.setdefault('step_arrivals',[]).append(completion)
                         self.report['step_arrivals']=self.report['step_arrivals'][-200:]
                         if self.audit_path:
                             try:atomic_json(self.audit_path.parent/f'arrival-{self.audit_path.stem}.json',
-                                            {'steps':self.report['step_arrivals']})
+                                            {'controller_session_id':self.diagnostic_session_id,
+                                             'last_arrival_seq':self.arrival_seq,
+                                             'retention_limit':200,'steps':self.report['step_arrivals']})
                             except OSError as exc:self.report['arrival_record_error']=str(exc)
                         if self.residual_reason:self.publish('notice',f'스텝 {self.index+1}: 작은 잔여 오차 기록 후 진행 · '+', '.join(f'{LABELS[JOINTS.index(n)]} {v:+d}틱' for n,v in completion['residual_ticks'].items() if v))
                         self.index+=1

@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 from .lens_geometry import DetectionFrame,detection_region
 from .height_reference import detection_plane_z
-from .vision import world_xy,fit_planar_rectangle,detect
+from .vision import world_xy,project_plane,fit_planar_rectangle,detect
 
 
 def mask_candidate(frame,mesh,roi,profile,mask,prepared=None,*,diagnostics=None):
@@ -49,6 +49,19 @@ def mask_search_region(mask,box):
     return allowed,{'box':[x,y,x+w,y+h],'source':'model_mask'}
 
 
+def carrier_search_region(mask,box,prepared,mesh,pad=8):
+ mode='plane_rectangle'
+ filled=np.zeros(mask.shape,np.uint8);source=prepared.search_mask(mask.astype(np.uint8)*255) if mode=='plane_rectangle' else mask.astype(np.uint8)
+ contours,_=cv2.findContours(source,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+ if contours:
+  points=np.concatenate(contours)[:,0,:].astype(float)
+  if mode=='plane_rectangle':
+   z=detection_plane_z(prepared.profile,mesh);xy=world_xy(points,prepared.profile,z);quad=cv2.boxPoints(cv2.minAreaRect(np.float32(xy)));uv=project_plane(quad,prepared.profile,z);border=np.concatenate([a+(b-a)*np.linspace(0,1,64,endpoint=False)[:,None] for a,b in zip(uv,np.roll(uv,-1,axis=0))]);raw=prepared.raw_points(border);cv2.fillPoly(filled,[np.rint(raw).astype(np.int32)],255)
+  else:
+   quad=cv2.boxPoints(cv2.minAreaRect(np.float32(points)));cv2.fillConvexPoly(filled,np.rint(quad).astype(np.int32),255)
+ allowed=cv2.dilate(filled,np.ones((2*pad+1,2*pad+1),np.uint8));x,y,w,h=cv2.boundingRect(allowed);return allowed,{'box':[x,y,x+w,y+h],'source':'model_plane_rectangle'}
+
+
 def detect_mask_seeded(frame,mesh,roi,profile,detections,settings,*,prepared=None):
     """Retain ambiguity and reject failed fits; a mask itself is never adopted."""
     prepared=prepared or DetectionFrame(frame,profile)
@@ -57,6 +70,7 @@ def detect_mask_seeded(frame,mesh,roi,profile,detections,settings,*,prepared=Non
     shape=mesh.get('shape','ring')
     if shape not in ('ring','rectangle'):raise ValueError('이 지그 형상에는 마스크 모델이 연결되지 않았습니다.')
     target=0 if shape=='rectangle' else 1;matches=[];regions=[];last=None;model_detected=False
+    single_target=sum(row.get('class_id')==target and row.get('confidence',0)>=settings['confidence'] for row in detections)==1
     for row in sorted(detections,key=lambda row:-row.get('confidence',0)):
         if row.get('class_id')!=target or row.get('confidence',0)<settings['confidence']:continue
         model_detected=True
@@ -67,7 +81,7 @@ def detect_mask_seeded(frame,mesh,roi,profile,detections,settings,*,prepared=Non
         if shape=='ring':
             from .cad_pallet import detect as detect_cad_pallet
             _,region=mask_search_region(mask,box)
-            raw=detect_cad_pallet(frame,mesh,roi,profile,mask,prepared=prepared)
+            raw=detect_cad_pallet(frame,mesh,roi,profile,mask,prepared=prepared,recover_shape=single_target)
         else:
             diagnostics={}
             candidate=mask_candidate(frame,mesh,roi,profile,mask,prepared,diagnostics=diagnostics)
@@ -75,9 +89,21 @@ def detect_mask_seeded(frame,mesh,roi,profile,detections,settings,*,prepared=Non
                 last={'selected':None,'candidates':[],'status':'mask_rim_not_found',
                       'model_detected':True,**diagnostics}
                 continue
-            search,region=mask_search_region(mask,box)
+            carrier=bool(mesh.get('assembly',{}).get('orientation_hole'))
+            search,region=carrier_search_region(mask,box,prepared,mesh) if carrier else mask_search_region(mask,box)
             seed=[*candidate['center_xy_mm'],np.deg2rad(candidate['yaw_deg'])]
             raw=detect(frame,mesh,roi,profile,prepared=prepared,search_mask=search,pose_seed=seed)
+            chosen=raw.get('selected')
+            if carrier and chosen and chosen.get('observed_boundary_refined') and not chosen.get('grid_verified'):
+                larger,_=carrier_search_region(mask,box,prepared,mesh,pad=10)
+                retry=detect(frame,mesh,roi,profile,prepared=prepared,search_mask=larger,pose_seed=seed)
+                other=retry.get('selected')
+                if (other and other.get('grid_verified') and other.get('orientation_verified')
+                        and np.linalg.norm(np.asarray(chosen['metric']['center_xy_mm'])-other['metric']['center_xy_mm'])<=.2
+                        and abs((chosen['metric']['yaw_deg']-other['metric']['yaw_deg']+180)%360-180)<=.2):
+                    for key,value in other.items():
+                        if key.startswith('grid_'):chosen[key]=deepcopy(value)
+                    chosen['grid_small_roi_retry_px']=10
             raw['mask_seed']=candidate
         regions.append(region)
         raw.update(model_regions=[region]);last=raw;chosen=raw.get('selected')

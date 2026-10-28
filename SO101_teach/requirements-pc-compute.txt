@@ -1,0 +1,8 @@
+# Match the Pi's geometry environment. OpenCV 5 returns different Hough line array shapes.
+numpy==2.2.6
+scipy==1.15.3
+opencv-python-headless==4.12.0.88
+Pillow==12.3.0
+# GPU libraries are reused read-only from the installed Python 3.11 runtime:
+# torch 2.7.1+cu128, tensorrt 10.16.1.11, ultralytics 8.4.177.
+# data/pc-compute.json identifies this task's isolated .venv-pc-compute interpreter.

@@ -42,7 +42,7 @@ def ensure_available(port):
     if result.returncode!=1:raise RuntimeError('시리얼 포트 사용 상태를 확인할 수 없습니다.')
 
 def new_bus(port,calibration,counts,*,gate_installer=install_read_gate):
-    # Hardware serial ownership is Linux-only; the offline GUI also runs on Windows.
+    # Linux hardware imports are unavailable in the Windows offline demo.
     import fcntl
     import termios
     from .motor_backend import motor_backend
@@ -266,8 +266,13 @@ class CameraSession:
                     processor=owner.process_shared
             if pending is None:continue
             frame,at=pending
-            try:result=processor(frame) if processor else None
-            except Exception as exc:result={'error':str(exc),'selected':None,'candidates':[],'status':'error'}
+            try:
+                if hasattr(owner,'process_captured') and processor in (owner.process,getattr(owner,'process_shared',None)):
+                    result=owner.process_captured(frame,at,shared=processor==getattr(owner,'process_shared',None))
+                else:result=processor(frame) if processor else None
+            except Exception as exc:
+                result={'error':str(exc),'selected':None,'candidates':[],'status':'error'}
+                if getattr(exc,'decision_evidence',None):result['decision_evidence']=exc.decision_evidence
             with self.frame_lock:
                 if not self.stop.is_set() and revision==self.processor_revision:self.observation=(frame,result,at)
     def run(self):
@@ -275,8 +280,12 @@ class CameraSession:
         cap=None
         try:
             source=int(self.source) if str(self.source).isdecimal() else self.source
-            cap=cv2.VideoCapture(source,cv2.CAP_V4L2)
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH,self.width);cap.set(cv2.CAP_PROP_FRAME_HEIGHT,self.height);cap.set(cv2.CAP_PROP_BUFFERSIZE,1);cap.set(cv2.CAP_PROP_FPS,10)
+            factory=getattr(self,'capture_factory',None)
+            if factory is not None:cap=factory(source,self.width,self.height)
+            else:
+                cap=cv2.VideoCapture(source,cv2.CAP_V4L2)
+                cap.set(cv2.CAP_PROP_FRAME_WIDTH,self.width);cap.set(cv2.CAP_PROP_FRAME_HEIGHT,self.height);cap.set(cv2.CAP_PROP_BUFFERSIZE,1);cap.set(cv2.CAP_PROP_FPS,10)
+            self.capture=cap
             if not cap.isOpened():raise RuntimeError('카메라를 열 수 없습니다.')
             if self.processor:
                 self.processing_thread=threading.Thread(target=self.process_frames,name='SO101-vision',daemon=True);self.processing_thread.start()
@@ -288,7 +297,8 @@ class CameraSession:
                     if failure_started is None:failure_started=now
                     if now-failure_started>=1.:raise RuntimeError('카메라 영상 수신이 1초 이상 중단되었습니다.')
                     self.stop.wait(.05);continue
-                failure_started=None;at=time.monotonic()
+                failure_started=None;captured=getattr(cap,'captured_at',None)
+                at=captured if type(captured) in (int,float) else time.monotonic()
                 # Drain the device at its capture rate to avoid stale buffered
                 # frames on resume; publish and transmit only at the view rate.
                 if self.preview_frame is None or (self.max_fps and self.preview_fps>=self.max_fps) or at-self.preview_frame[1]>=1/self.preview_fps:

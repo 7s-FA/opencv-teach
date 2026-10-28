@@ -26,10 +26,16 @@ class YoloProtocolTests(unittest.TestCase):
                        {'image_bytes':3,'image_shape':[1,1,4],'image_codec':'raw'}):
             header=json.dumps(fields).encode();stream=io.BytesIO(struct.pack('!I',len(header))+header+b'abc')
             with self.assertRaises(ValueError):receive_packet(stream)
-    def test_threshold_choices_are_strict(self):
-        for value in (.5,.6,.7,.8,.9):self.assertEqual(confidence_value(str(value)),value)
-        for value in (.4,1.,float('nan'),.55):
+    def test_threshold_range_allows_finite_intermediate_values(self):
+        from so101_teach.inference_protocol import confidence_percent,DEFAULT_CONFIDENCE
+        self.assertEqual(DEFAULT_CONFIDENCE,.5)
+        for value in (.5,.51,.55,.6,.7,.75,.8,.9):self.assertEqual(confidence_value(str(value)),value)
+        for percent in ('50','75','90'):
+            self.assertEqual(confidence_percent(percent),float(percent)/100)
+        for value in (.499,.901,.755,1.,float('nan'),float('inf'),True,None,'bad',''):
             with self.assertRaises(ValueError):confidence_value(value)
+        for value in ('49','91','75.0','75.5','nan','inf','',None,True,'0.75'):
+            with self.assertRaises(ValueError):confidence_percent(value)
     def test_conflicting_masks_require_both_overlap_and_margin(self):
         masks=np.ones((4,8,8),bool)
         result={'scores':np.array([.9,.85,.89,.8]),'classes':np.array([1,2,1,0]),'masks':masks,'boxes':np.zeros((4,4))}

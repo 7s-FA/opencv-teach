@@ -188,7 +188,16 @@ def corrected_step(kin,step,current_reference,mesh_sha,*,previous_ticks=None,pre
         previous=np.array(kin.reference.angles(previous_ticks))[:5]
         prior_reference=np.array(kin.reference.angles(previous_taught_ticks))[:5]
         expected+=previous-prior_reference
-    def pose_of(x):return kin.fk_angles(np.r_[x,q[5]])
+    # Objective and finite-difference constraints revisit exactly the same
+    # coordinates. Keep this bounded cache local to this target/kinematics;
+    # never round coordinates or reuse a pose across corrected steps.
+    poses={}
+    def pose_of(x):
+        key=np.asarray(x,dtype=np.float64).tobytes()
+        if key not in poses:
+            if len(poses)>=128:poses.pop(next(iter(poses)))
+            poses[key]=kin.fk_angles(np.r_[x,q[5]])
+        return poses[key]
     def objective(x):
         rotation=Rotation.from_matrix(pose_of(x)[:3,:3]@target[:3,:3].T).as_rotvec()
         return float(np.dot(rotation*np.array([2.,2.,1.]),rotation*np.array([2.,2.,1.]))
@@ -200,10 +209,14 @@ def corrected_step(kin,step,current_reference,mesh_sha,*,previous_ticks=None,pre
     seeds.append(np.clip(q[:5],lower,upper))
     best=base['ticks'];best_score=objective(base_q);best_metrics=base_metrics;used=0
     position_limit=min(3.,max(.5,base_metrics['position']+.05))
+    evaluated=[]
     for seed in seeds:
         if used and np.linalg.norm(seed-seeds[0])<1e-7:continue
+        start=np.clip(seed,lower,upper)
+        if any(np.array_equal(start,old) for old in evaluated):continue
+        evaluated.append(start.copy())
         used+=1
-        result=minimize(objective,np.clip(seed,lower,upper),method='SLSQP',bounds=list(zip(lower,upper)),
+        result=minimize(objective,start,method='SLSQP',bounds=list(zip(lower,upper)),
                         constraints=[constraint],options={'maxiter':90,'ftol':1e-10})
         if not result.success or not np.isfinite(result.x).all():continue
         try:
