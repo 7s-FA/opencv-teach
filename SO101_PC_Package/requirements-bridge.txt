@@ -1,0 +1,7 @@
+# Isolated Python 3.12 venv; ROS Jazzy comes from /opt/ros via setup.bash.
+fastapi==0.161.1
+starlette==1.9.0
+uvicorn==0.54.0
+websockets==17.3
+pydantic==2.14.1
+prompt_toolkit>=3.0,<4

@@ -1,0 +1,77 @@
+<Window x:Class="So101.Console.Wpf.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ Title="{Binding WindowTitle}" Style="{StaticResource {x:Type Window}}" Width="1500" Height="950" MinWidth="960" MinHeight="640" WindowState="Maximized">
+ <Grid>
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+  <Border Background="{StaticResource HeaderBrush}" Padding="26,17">
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="4" Height="40" Background="{StaticResource HeaderAccentBrush}" Margin="0,0,14,0"/><StackPanel><TextBlock Text="SO-101" Foreground="{StaticResource InverseBrush}" FontWeight="Bold" FontSize="25"/><TextBlock Text="OPERATOR CONSOLE" Foreground="{StaticResource HeaderMutedBrush}" FontFamily="Consolas" FontSize="11" Margin="1,2,0,0"/></StackPanel></StackPanel>
+    <StackPanel Grid.Column="1" Margin="32,0,0,0" VerticalAlignment="Center"><TextBlock Text="팔2 · 팔3 작업 관제" Foreground="{StaticResource InverseBrush}" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="{Binding SystemState}" Style="{StaticResource HeaderStatus}"/></StackPanel>
+    <Border Grid.Column="2" BorderBrush="{StaticResource HeaderBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="16,9"><StackPanel><TextBlock Text="{Binding ModeTitle}" Foreground="{StaticResource InverseBrush}" FontWeight="Bold" FontSize="13"/><TextBlock Text="{Binding ModeDescription}" Foreground="{StaticResource HeaderHintBrush}" FontSize="12" Margin="0,4,0,0"/></StackPanel></Border>
+   </Grid>
+  </Border>
+  <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="24,18,24,6" IsEnabled="{Binding MainEnabled}">
+   <StackPanel>
+    <Border Style="{StaticResource Card}">
+     <StackPanel>
+      <DockPanel Margin="0,0,0,10"><TextBlock DockPanel.Dock="Right" Text="작업을 선택하면 해당 팔로 명령을 전송합니다" Foreground="{StaticResource MutedBrush}" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"/><StackPanel Orientation="Horizontal"><TextBlock Text="01" Style="{StaticResource SectionNumber}"/><TextBlock Text="전체 명령" Style="{StaticResource SectionTitle}"/></StackPanel></DockPanel>
+      <ItemsControl ItemsSource="{Binding Groups}"><ItemsControl.ItemTemplate><DataTemplate>
+       <Grid Margin="-4,0,-4,2"><Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <StackPanel VerticalAlignment="Center" Margin="4,0,10,0"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13"/></StackPanel>
+        <ItemsControl Grid.Column="1" ItemsSource="{Binding Commands}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="6"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate>
+         <Button Style="{StaticResource CommandButton}" Command="{Binding Invoke}" IsEnabled="{Binding Available}" ToolTip="{Binding Hint}" AutomationProperties.Name="{Binding Definition.Label}" AutomationProperties.HelpText="{Binding Hint}">
+          <StackPanel><TextBlock Text="{Binding Definition.Label}" FontWeight="SemiBold" FontSize="16"/><TextBlock Text="{Binding Definition.Code}" FontFamily="Consolas" FontSize="11" Margin="0,5,0,0"/></StackPanel>
+         </Button>
+        </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+       </Grid>
+      </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+     </StackPanel>
+    </Border>
+    <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+     <StackPanel><DockPanel Margin="0,0,0,12"><TextBlock DockPanel.Dock="Right" Text="이 관제에서 보낸 업무·제어 요청" FontSize="12" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right"/><StackPanel Orientation="Horizontal"><TextBlock Text="02" Style="{StaticResource SectionNumber}"/><TextBlock Text="연결 · 운전 상태" Style="{StaticResource SectionTitle}"/></StackPanel></DockPanel>
+      <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="0.85*"/><ColumnDefinition/><ColumnDefinition/></Grid.ColumnDefinitions>
+       <Grid Margin="0,0,20,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+        <StackPanel><TextBlock Text="{Binding BridgeLabel}" FontWeight="Bold" FontSize="15"/><TextBlock Text="{Binding Connection}" FontSize="16" Margin="0,8,0,6"/><TextBlock Foreground="{StaticResource MutedBrush}" FontSize="12"><Run Text="마지막 수신  "/><Run Text="{Binding Updated, Mode=OneWay}"/></TextBlock></StackPanel>
+        <Button Grid.Column="1" Content="재연결" Command="{Binding Reconnect}" Visibility="{Binding IsLive, Converter={StaticResource BoolVisibility}}" Margin="8,0,0,0" VerticalAlignment="Top" FontSize="12"/>
+       </Grid>
+       <Border Grid.Column="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="20,0"><ContentControl Content="{Binding Arm2}" ContentTemplate="{StaticResource ArmStatusTemplate}"/></Border>
+       <Border Grid.Column="2" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1,0,0,0" Padding="20,0,0,0"><ContentControl Content="{Binding Arm3}" ContentTemplate="{StaticResource ArmStatusTemplate}"/></Border>
+      </Grid>
+     </StackPanel>
+    </Border>
+    <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+     <StackPanel>
+      <DockPanel Margin="0,0,0,9"><TextBlock DockPanel.Dock="Right" Text="최신 2개 · 요청과 최종 결과를 구분합니다" FontSize="12" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right"/><StackPanel Orientation="Horizontal"><TextBlock Text="03" Style="{StaticResource SectionNumber}"/><TextBlock Text="최근 명령" Style="{StaticResource SectionTitle}"/></StackPanel></DockPanel>
+      <Border Background="{StaticResource SubtleBrush}" Padding="14,17" Visibility="{Binding HistoryEmpty, Converter={StaticResource BoolVisibility}}"><TextBlock Text="아직 전송한 명령이 없습니다. 연결 상태를 확인하고 작업을 선택하세요." Foreground="{StaticResource MutedBrush}"/></Border>
+      <ItemsControl ItemsSource="{Binding History}"><ItemsControl.ItemTemplate><DataTemplate>
+       <Border BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="0,9,0,7">
+        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="86"/><ColumnDefinition Width="216"/><ColumnDefinition Width="152"/><ColumnDefinition/></Grid.ColumnDefinitions>
+         <TextBlock Text="{Binding Time}" Foreground="{StaticResource MutedBrush}" FontFamily="Consolas" FontSize="14" VerticalAlignment="Top" Margin="0,3,0,0"/>
+         <TextBlock Grid.Column="1" Text="{Binding Command}" FontWeight="Bold" VerticalAlignment="Top" Margin="0,2,10,0"/>
+         <TextBlock Grid.Column="2" Text="{Binding State}" Style="{StaticResource ResultState}"/>
+         <StackPanel Grid.Column="3"><TextBox Text="{Binding Text, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="80" VerticalScrollBarVisibility="Auto" BorderThickness="0" Background="{StaticResource SurfaceBrush}" Padding="0" FontSize="13"/><TextBlock Text="{Binding RequestId}" FontFamily="Consolas" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/></StackPanel>
+        </Grid>
+       </Border>
+      </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+     </StackPanel>
+    </Border>
+   </StackPanel>
+  </ScrollViewer>
+  <Border Grid.Row="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="24,13,24,12">
+   <StackPanel>
+    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="100"/><ColumnDefinition/><ColumnDefinition Width="116"/><ColumnDefinition Width="20"/><ColumnDefinition Width="236"/></Grid.ColumnDefinitions>
+     <StackPanel VerticalAlignment="Center"><TextBlock Text="04  명령 입력" FontWeight="Bold" FontSize="13"/><TextBlock Text="Enter 전송" FontSize="11" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/></StackPanel>
+     <TextBox x:Name="CommandInput" Grid.Column="1" Text="{Binding Input, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding MainEnabled}" AutomationProperties.Name="명령 입력" ToolTip="예: BUILD_A, STATUS, RETRY · Enter 전송" FontFamily="Consolas, Malgun Gothic"><TextBox.InputBindings><KeyBinding Key="Return" Command="{Binding SubmitInput}"/></TextBox.InputBindings></TextBox>
+     <Button Grid.Column="2" Content="명령 전송" Command="{Binding SubmitInput}" IsEnabled="{Binding MainEnabled}" Margin="8,0,0,0" HorizontalContentAlignment="Center" Background="{StaticResource AccentBrush}" Foreground="{StaticResource InverseBrush}"/>
+     <Button Grid.Column="4" Style="{StaticResource StopButton}" Command="{Binding EmergencyStop.Invoke}" IsEnabled="{Binding EmergencyStop.Available}" ToolTip="{Binding EmergencyStop.Hint}" AutomationProperties.Name="팔 정지·보류 고정 버튼"><StackPanel><TextBlock Text="Ⅱ   팔 정지·보류" FontWeight="Bold" FontSize="16" HorizontalAlignment="Center"/><TextBlock FontSize="11" HorizontalAlignment="Center" Margin="0,3,0,0"><Run Text="대상 "/><Run Text="{Binding Target, Mode=OneWay}"/><Run Text=" · 리니어는 계속 진행"/></TextBlock></StackPanel></Button>
+    </Grid>
+    <DockPanel Margin="100,8,0,0"><TextBlock DockPanel.Dock="Right" Text="F1 도움말  /  Esc 입력창" FontFamily="Malgun Gothic" FontSize="11" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Right"/><TextBlock Text="{Binding Notice}" FontSize="12" Foreground="{StaticResource MutedBrush}" Margin="0,0,14,0"/></DockPanel>
+    <WrapPanel Margin="100,9,0,0" Visibility="{Binding IsDemo, Converter={StaticResource BoolVisibility}}"><TextBlock Text="데모 시나리오" VerticalAlignment="Center" Margin="0,0,12,0" FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+     <Button Content="다음 단계" Command="{Binding AdvanceDemo}" Margin="0,0,8,0" FontSize="12"/><Button Content="연결 끊김" Command="{Binding DisconnectDemo}" Margin="0,0,8,0" FontSize="12"/><Button Content="재연결" Command="{Binding ReconnectDemo}" Margin="0,0,8,0" FontSize="12"/><Button Content="다음 작업 오류" Command="{Binding FailNextDemo}" Margin="0,0,8,0" FontSize="12"/><Button Content="다음 접수 응답 유실" Command="{Binding LoseReplyDemo}" FontSize="12"/>
+    </WrapPanel>
+   </StackPanel>
+  </Border>
+  <Border Grid.RowSpan="2" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" CornerRadius="5" Padding="26" Margin="44,22,44,12" Visibility="{Binding HelpVisible, Converter={StaticResource BoolVisibility}}">
+   <DockPanel><DockPanel DockPanel.Dock="Top" Margin="0,0,0,18"><Button DockPanel.Dock="Right" x:Name="HelpCloseButton" Content="닫기 · Esc" HorizontalAlignment="Right" Command="{Binding CloseHelp}"/><StackPanel><TextBlock Text="명령 안내" FontWeight="Bold" FontSize="22"/><TextBlock Text="실행 전 대상과 동작을 확인하세요" Foreground="{StaticResource MutedBrush}" Margin="0,4,0,0"/></StackPanel></DockPanel><ScrollViewer VerticalScrollBarVisibility="Auto"><TextBlock Text="{Binding HelpText}" FontSize="15"/></ScrollViewer></DockPanel>
+  </Border>
+ </Grid>
+</Window>

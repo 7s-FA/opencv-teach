@@ -1,0 +1,1226 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SO-101 operator bridge contract",
+    "version": "1.0.0",
+    "description": "HTTPS/WSS bridge and offline demo share this protocol. Full snapshots carry the stream cursor; authenticated session lease frames also test UI responsiveness."
+  },
+  "security": [
+    {
+      "BearerToken": []
+    }
+  ],
+  "paths": {
+    "/v1/session": {
+      "post": {
+        "summary": "Create the single operator session",
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionInfo"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid version/body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request expired before dispatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session or state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable / storage pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequest"
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "End supervision without sending RESET",
+        "responses": {
+          "200": {
+            "description": "Closed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionClosed"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request expired before dispatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session or state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable / storage pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Session-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "description": "Active operator session generation; reject stale or mismatched values."
+          }
+        ]
+      }
+    },
+    "/v1/snapshot": {
+      "get": {
+        "summary": "Read current state and stream cursor",
+        "responses": {
+          "200": {
+            "description": "Snapshot",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Snapshot"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request expired before dispatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session or state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable / storage pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Session-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "description": "Active operator session generation; reject stale or mismatched values."
+          }
+        ]
+      }
+    },
+    "/v1/commands": {
+      "post": {
+        "summary": "Submit a new execution/control intent with an idempotency ID",
+        "responses": {
+          "202": {
+            "description": "Accepted for processing, not robot success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandReply"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Existing request, no re-execution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandReply"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Command/state conflict or stale session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CommandReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid command, ID or protocol version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandReply"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Storage or runtime unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/CommandReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or protocol version",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Expired before dispatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Request body exceeds limit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommandRequest"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Session-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "description": "Active operator session generation; reject stale or mismatched values."
+          }
+        ]
+      }
+    },
+    "/v1/requests/{request_id}": {
+      "get": {
+        "summary": "Query an existing request, never execute",
+        "responses": {
+          "200": {
+            "description": "Request state",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestRecord"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "ID absent from bridge ledger; not proof of no robot execution",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Request expired before dispatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session or state conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Unavailable / storage pending",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Session-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "description": "Active operator session generation; reject stale or mismatched values."
+          },
+          {
+            "name": "request_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          },
+          {
+            "name": "command",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BUILD_A",
+                "LOAD_A",
+                "BUILD_B",
+                "LOAD_B",
+                "BUILD_LOAD_A",
+                "BUILD_LOAD_B",
+                "PC_BUILD_LOAD_A",
+                "PC_BUILD_LOAD_B",
+                "BUILD_SLIDE",
+                "LOAD_SLIDE",
+                "PREPARE_HOME",
+                "EMER_STOP",
+                "RESTART",
+                "RESET",
+                "CLEAR_ERROR"
+              ]
+            },
+            "description": "Original command for a missing API receipt; query only."
+          },
+          {
+            "name": "arm",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "arm2",
+                "arm3"
+              ]
+            },
+            "description": "Original target hint; authoritative stored target wins."
+          }
+        ]
+      }
+    },
+    "/v1/events": {
+      "get": {
+        "summary": "Upgrade to WebSocket; see websocket.md",
+        "responses": {
+          "101": {
+            "description": "Authenticated WebSocket: initial snapshot then ordered events and supervision frames"
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "WebSocket upgrade denied before accept (authentication or session)"
+          }
+        },
+        "parameters": [
+          {
+            "name": "X-Session-Generation",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            },
+            "description": "Active operator session generation; reject stale or mismatched values."
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerToken": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "SessionRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          }
+        },
+        "required": [
+          "protocol_version"
+        ]
+      },
+      "SessionInfo": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "demo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "protocol_version",
+          "session_generation",
+          "bridge_instance_id",
+          "demo"
+        ]
+      },
+      "CommandRequest": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "request_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "BUILD_A",
+              "LOAD_A",
+              "BUILD_B",
+              "LOAD_B",
+              "BUILD_LOAD_A",
+              "BUILD_LOAD_B",
+              "PC_BUILD_LOAD_A",
+              "PC_BUILD_LOAD_B",
+              "BUILD_SLIDE",
+              "LOAD_SLIDE",
+              "PREPARE_HOME",
+              "EMER_STOP",
+              "RESTART",
+              "RESET",
+              "CLEAR_ERROR"
+            ]
+          }
+        },
+        "required": [
+          "protocol_version",
+          "session_generation",
+          "request_id",
+          "command"
+        ]
+      },
+      "RequestRecord": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "command": {
+            "type": "string",
+            "enum": [
+              "BUILD_A",
+              "LOAD_A",
+              "BUILD_B",
+              "LOAD_B",
+              "BUILD_LOAD_A",
+              "BUILD_LOAD_B",
+              "PC_BUILD_LOAD_A",
+              "PC_BUILD_LOAD_B",
+              "BUILD_SLIDE",
+              "LOAD_SLIDE",
+              "PREPARE_HOME",
+              "EMER_STOP",
+              "RESTART",
+              "RESET",
+              "CLEAR_ERROR"
+            ]
+          },
+          "arm": {
+            "type": "string",
+            "enum": [
+              "arm2",
+              "arm3"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "JOB",
+              "CONTROL"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "RUNNING",
+              "BUILD_DONE",
+              "PAUSED",
+              "UNKNOWN",
+              "SUCCEEDED",
+              "FAILED",
+              "CANCELLED",
+              "CLEARED"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "result_code": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "IDLE",
+                  "RUNNING",
+                  "PAUSED",
+                  "BUILD_DONE",
+                  "ERROR",
+                  "PENDING",
+                  "UNKNOWN",
+                  "STORAGE_PENDING",
+                  "NOT_FOUND",
+                  "CLEARED"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "request_id",
+          "command",
+          "arm",
+          "kind",
+          "state",
+          "detail",
+          "updated_at",
+          "result_code"
+        ]
+      },
+      "CommandReply": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "accepted": {
+            "type": "boolean"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "ACCEPTED",
+              "EXISTING_REQUEST",
+              "VERSION_MISMATCH",
+              "SESSION_EXPIRED",
+              "INVALID_REQUEST",
+              "INVALID_COMMAND",
+              "ID_CONFLICT",
+              "NOT_ALLOWED",
+              "STORAGE_ERROR",
+              "RESPONSE_UNKNOWN"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          },
+          "request": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "protocol_version",
+          "accepted",
+          "code",
+          "detail",
+          "request"
+        ]
+      },
+      "ArmSnapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "arm": {
+            "type": "string",
+            "enum": [
+              "arm2",
+              "arm3"
+            ]
+          },
+          "connection": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "COMM_LOST"
+            ]
+          },
+          "job": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "control": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RequestRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "arm",
+          "connection",
+          "job",
+          "control"
+        ]
+      },
+      "Snapshot": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "demo": {
+            "type": "boolean"
+          },
+          "bridge_connection": {
+            "type": "string",
+            "enum": [
+              "ONLINE",
+              "COMM_LOST"
+            ]
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "arms": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArmSnapshot"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "storage_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "active_arm": {
+            "type": "string",
+            "enum": [
+              "arm2",
+              "arm3"
+            ]
+          }
+        },
+        "required": [
+          "protocol_version",
+          "bridge_instance_id",
+          "session_generation",
+          "sequence",
+          "demo",
+          "bridge_connection",
+          "observed_at",
+          "arms",
+          "storage_error",
+          "active_arm"
+        ]
+      },
+      "GatewayEvent": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "event_type": {
+            "type": "string",
+            "enum": [
+              "snapshot",
+              "state_changed",
+              "connection_changed"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "snapshot": {
+            "$ref": "#/components/schemas/Snapshot"
+          }
+        },
+        "required": [
+          "protocol_version",
+          "bridge_instance_id",
+          "session_generation",
+          "sequence",
+          "event_type",
+          "occurred_at",
+          "snapshot"
+        ]
+      },
+      "SupervisionChallenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "arm": {
+            "type": "string",
+            "enum": [
+              "arm2",
+              "arm3"
+            ]
+          },
+          "epoch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "expires_in_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "protocol_version",
+          "session_generation",
+          "bridge_instance_id",
+          "arm",
+          "epoch",
+          "nonce",
+          "expires_in_ms"
+        ]
+      },
+      "SupervisionAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "arm": {
+            "type": "string",
+            "enum": [
+              "arm2",
+              "arm3"
+            ]
+          },
+          "epoch": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "nonce": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          }
+        },
+        "required": [
+          "protocol_version",
+          "session_generation",
+          "bridge_instance_id",
+          "arm",
+          "epoch",
+          "nonce"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNAUTHORIZED",
+              "SESSION_EXPIRED",
+              "SESSION_IN_USE",
+              "INVALID_REQUEST",
+              "INVALID_COMMAND",
+              "VERSION_MISMATCH",
+              "NOT_FOUND",
+              "STORAGE_PENDING",
+              "UNAVAILABLE",
+              "REQUEST_EXPIRED"
+            ]
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "protocol_version",
+          "code",
+          "detail"
+        ]
+      },
+      "SessionClosed": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "closed": {
+            "const": true
+          }
+        },
+        "required": [
+          "protocol_version",
+          "session_generation",
+          "closed"
+        ]
+      },
+      "UiLeaseChallenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "lease"
+          },
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "expires_in_ms": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        },
+        "required": [
+          "type",
+          "protocol_version",
+          "bridge_instance_id",
+          "session_generation",
+          "nonce",
+          "expires_in_ms"
+        ]
+      },
+      "UiLeaseAck": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "const": "lease_ack"
+          },
+          "protocol_version": {
+            "type": "integer",
+            "const": 1
+          },
+          "bridge_instance_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "session_generation": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          }
+        },
+        "required": [
+          "type",
+          "protocol_version",
+          "bridge_instance_id",
+          "session_generation",
+          "nonce"
+        ]
+      },
+      "SupervisionFrame": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "supervision_challenge"
+              },
+              "payload": {
+                "$ref": "#/components/schemas/SupervisionChallenge"
+              }
+            },
+            "required": [
+              "type",
+              "payload"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "const": "supervision_ack"
+              },
+              "payload": {
+                "$ref": "#/components/schemas/SupervisionAck"
+              }
+            },
+            "required": [
+              "type",
+              "payload"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

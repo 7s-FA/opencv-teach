@@ -47,5 +47,15 @@
     "raw datasets, recordings and logs"
   ],
   "new_release_created": false,
-  "windows_current_build": "GitHub Actions after source push; not claimed as locally tested"
+  "windows_current_build": "GitHub Actions after source push; not claimed as locally tested",
+  "monitor_portability_tests_passed": 1,
+  "console_bridge_tests_passed": 44,
+  "native_console_tests_passed": 62,
+  "wpf_cross_build": "passed, 0 warnings and 0 errors",
+  "ci_followup": {
+    "first_windows_failure": "Work monitor formatter imported Linux-only fcntl through action_protocol at UI startup.",
+    "fix": "Load fcntl only inside the Pi-specific clear_paused_job operation.",
+    "regression": "Block fcntl/termios imports and load work-monitor UI; run in the existing cross-platform asset test job."
+  },
+  "scope_note": "Publish Windows native console and bridge sources, contracts and unit tests. Local VM provisioning/launcher and its local-only test are not part of the public export."
 }

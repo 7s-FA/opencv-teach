@@ -4,6 +4,7 @@ import threading
 
 from rclpy.node import Node
 from console_ui import console, PromptLogger
+from console_text import arm_name as arm_label, state_name
 
 
 HELP = '''
@@ -14,21 +15,25 @@ HELP = '''
   LOAD_B            팔3 B 적재
   BUILD_LOAD_A      팔2 A 조립 → 팔3 A 적재
   BUILD_LOAD_B      팔2 B 조립 → 팔3 B 적재
-  BUILD_SLIDE       리니어 조립 위치
-  LOAD_SLIDE        리니어 하차 위치
-  PREPARE_HOME      두 팔 안전 자세 복귀 → 리니어 하차 위치 (팔 토크 유지)
+  PC_BUILD_LOAD_A   PC GPU 판정 · A 조립 → 적재 (별도 명령)
+  PC_BUILD_LOAD_B   PC GPU 판정 · B 조립 → 적재 (별도 명령)
+  BUILD_SLIDE       양팔·카메라·모델 준비 + 리니어 조립 위치 · 3분 준비 유지
+  LOAD_SLIDE        양팔·카메라·모델 준비 + 리니어 하차 위치 · 3분 준비 유지
+  PREPARE_HOME      두 팔 안전 복귀 → 리니어 하차 → 카메라·모델 준비 · 3분 준비 유지
   EMER_STOP         팔 정지·작업 보류 (리니어는 계속 진행)
-  RESTART           팔/작업 재개 (리니어 재명령 없음)
-  RESET             작업 취소·두 팔 순차 안전 복귀·토크 OFF
+  RETRY             저장된 동일 업무 ID의 상태·결과 조회 (재실행 없음)
+  RETRY_CONTROL     마지막 제어 요청의 상태·결과 조회
+  RESTART           보류 작업 상태 확인·재검사 후 이어서 실행
+  RESET             작업 취소·두 팔 동시 안전 복귀·토크 OFF
   CLEAR_ERROR       보류 작업 종료·오류 해제 (이동·토크 변경 없음)
   STATUS            서버 연결과 이 관제에서 보낸 작업 상태
   HELP              명령 목록
-  QUIT              관제 프로그램 종료 (Pi 작업은 계속됨)
-Ctrl+C도 관제만 종료합니다. 로봇 정지는 EMER_STOP을 사용하세요.
+  QUIT              관제 종료 (생존 신호 만료 시 담당 작업 보류)
+Ctrl+C도 관제를 종료합니다. 즉시 정지를 요청하려면 EMER_STOP을 사용하세요.
 '''
 COMMANDS = {
     'build_a': 'arm2', 'build_b': 'arm2', 'build_slide': 'arm2',
-    'build_load_a': 'arm2', 'build_load_b': 'arm2', 'prepare_home': 'arm2',
+    'build_load_a': 'arm2', 'build_load_b': 'arm2', 'pc_build_load_a': 'arm2', 'pc_build_load_b': 'arm2', 'prepare_home': 'arm2',
     'load_a': 'arm3', 'load_b': 'arm3', 'load_slide': 'arm3',
 }
 # 원본의 1=build_a, 2=load_a를 유지합니다.
@@ -53,7 +58,7 @@ class RobotController(Node):
 
     def read_input(self):
         # input()은 executor의 timer 콜백 안에서 호출하지 않습니다.
-        console.write(HELP)
+        console.help_text=HELP.strip()
         while not self.exit_requested.is_set():
             try:
                 command = console.read().strip()
@@ -76,23 +81,30 @@ class RobotController(Node):
             self.console_logger.error(f'명령 처리 오류: {exc}')
 
     def dispatch(self, command):
+        console.begin_command(command.strip())
+        try:return self._dispatch(command)
+        finally:console.end_command()
+
+    def _dispatch(self, command):
         command = command.strip().lower()
         command = KEYS.get(command, command)
         if command.lower() in ('q', 'quit', 'exit'):
             self.exit_requested.set()
             return
         if command.lower() == 'help':
-            console.write(HELP)
+            console.show_help(HELP)
             return
         if command.lower() == 'status':
+            rows=[]
             for arm in (self.arm2, self.arm3):
                 online = arm._client.server_is_ready()
-                self.console_logger.info(
-                    f'{arm.arm}: 서버 연결={online}, 이 PC의 작업 결과 대기={arm.busy}, '
-                    f'최근 Feedback={arm.feedback}',
-                )
-            self.console_logger.info('다른 PC에서 시작한 작업은 Pi의 work_watch로 확인하세요.')
+                rows.append(f'{arm_label(arm.arm)}: {state_name(arm.communication)}, 서버 검색 {"확인" if online else "미확인"}, '
+                            f'업무 결과 {"확인 대기" if arm.busy else "대기 없음"}, 최근 진행 {state_name(arm.feedback)}')
+            self.console_logger.info('\n'.join(rows))
             return
+        if command in ('retry','retry_control'):
+            arm_name=next((arm.arm for arm in (self.arm2,self.arm3) if arm.busy),self.active_arm)
+            return getattr(self,arm_name).retry_last(control=command=='retry_control')
         control = CONTROLS.get(command.lower())
         if control:
             # 제어 요청 Result는 원래 작업의 완료 플래그와 분리됩니다.

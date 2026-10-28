@@ -1,0 +1,16 @@
+{
+  "protocol_version": 1,
+  "accepted": true,
+  "code": "ACCEPTED",
+  "detail": "\uC811\uC218 \uC751\uB2F5 \u00B7 \uCD5C\uC885 \uACB0\uACFC\uB294 \uBCC4\uB3C4 \uD655\uC778",
+  "request": {
+    "request_id": "f155106eb55544259a2aaec1e0227d80",
+    "command": "BUILD_LOAD_A",
+    "arm": "arm2",
+    "kind": "JOB",
+    "state": "RUNNING",
+    "detail": "\uB370\uBAA8 \uC791\uC5C5 \uC9C4\uD589 \uC911",
+    "updated_at": "2026-10-26T17:08:44.9309063+00:00",
+    "result_code": "RUNNING"
+  }
+}

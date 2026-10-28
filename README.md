@@ -44,6 +44,7 @@
 | 경로 | 내용 |
 |---|---|
 | `SO101_teach/` | 원본 PC 티칭 GUI, Pi 실행 코드, 모델, 테스트, 예제 데이터 |
+| `SO101_PC_Package/` · `SO101_WpfConsole/` | Ubuntu ROS 중계와 Windows 관제 소스·프로토콜 |
 | `desktop-demo/` | 다운로드 데모 입력 어댑터, 패키징, 실행 검증 |
 | `third-party-licenses/` | 포함된 외부 모델·코드의 라이선스 |
 

@@ -3,6 +3,7 @@ import argparse
 import importlib
 import os
 import threading
+import time
 
 import rclpy
 from rclpy.executors import SingleThreadedExecutor, ExternalShutdownException
@@ -33,16 +34,21 @@ def main(args=None):
     # 모든 Action 요청은 비동기이며 입력은 별도 스레드에서 처리합니다.
     executor = SingleThreadedExecutor()
     try:
-        arm2 = Arm2ActionClient()
+        arm2 = Arm2ActionClient(monitor_jobs=not options.check_connection)
         nodes.append(arm2)
-        arm3 = Arm3ActionClient()
+        arm3 = Arm3ActionClient(monitor_jobs=not options.check_connection)
         nodes.append(arm3)
         if options.check_connection:
-            connected = True
-            for arm in (arm2, arm3):
-                ready = arm._client.wait_for_server(timeout_sec=5)
-                print(f'/{arm.arm}/data: ' + ('연결 확인' if ready else '연결 안 됨'), flush=True)
-                connected = connected and ready
+            for arm in (arm2,arm3):executor.add_node(arm)
+            until=time.monotonic()+8.
+            while time.monotonic()<until:
+                executor.spin_once(timeout_sec=.1)
+                if all(arm._client.server_is_ready() and arm.health.online() for arm in (arm2,arm3)):break
+            connected=True
+            for arm in (arm2,arm3):
+                ready=arm._client.server_is_ready() and arm.health.online()
+                print(f'/{arm.arm}/data: '+('양방향 생존 신호 확인' if ready else '연결 안 됨'))
+                connected=connected and ready
             return 0 if connected else 1
         team = []
         for node_class in team_classes:
@@ -66,7 +72,7 @@ def main(args=None):
         return 0
     finally:
         console.close()
-        print('관제 연결 종료. Pi에서 실행 중인 작업을 취소하거나 정지하지 않습니다.', flush=True)
+        print('관제 연결 종료. 이 관제가 시작한 작업은 생존 신호 만료 시 현재 자세를 유지하며 보류됩니다. 자동 재개하지 않습니다.',flush=True)
         executor.shutdown(timeout_sec=3)
         for node in reversed(nodes):
             node.destroy_node()

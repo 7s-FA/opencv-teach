@@ -6,7 +6,6 @@ import time
 import os
 import tempfile
 import uuid
-import fcntl
 
 
 def record_notice(root, arm, status):
@@ -63,6 +62,7 @@ def clear_paused_job(root, job_lock, timeout=10):
     Success requires both executor and Action reservations to be released.
     Missing sockets alone never prove idle. The caller checks linear completion.
     """
+    import fcntl  # Only the Pi execution/lock path needs Linux locking.
     try:
         state = control_state(root)
     except (FileNotFoundError, ConnectionRefusedError):

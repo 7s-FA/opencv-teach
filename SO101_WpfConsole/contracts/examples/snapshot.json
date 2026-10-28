@@ -1,0 +1,34 @@
+{
+  "protocol_version": 1,
+  "bridge_instance_id": "bb2a1dc943c94fd28169b427250376ea",
+  "session_generation": "941943b0bf3f44328633a4c24f2458e9",
+  "sequence": 3,
+  "demo": true,
+  "bridge_connection": "ONLINE",
+  "observed_at": "2026-10-26T17:08:44.9309228+00:00",
+  "arms": [
+    {
+      "arm": "arm2",
+      "connection": "ONLINE",
+      "job": {
+        "request_id": "f155106eb55544259a2aaec1e0227d80",
+        "command": "BUILD_LOAD_A",
+        "arm": "arm2",
+        "kind": "JOB",
+        "state": "BUILD_DONE",
+        "detail": "\uC870\uB9BD \uB2E8\uACC4 \uC644\uB8CC \u00B7 \uC801\uC7AC \uC9C4\uD589 \uC911 \u00B7 \uC804\uCCB4 \uC644\uB8CC \uC544\uB2D8",
+        "updated_at": "2026-10-26T17:08:44.9309224+00:00",
+        "result_code": "BUILD_DONE"
+      },
+      "control": null
+    },
+    {
+      "arm": "arm3",
+      "connection": "ONLINE",
+      "job": null,
+      "control": null
+    }
+  ],
+  "storage_error": null,
+  "active_arm": "arm2"
+}

@@ -1,22 +1,22 @@
 # SO-101 PC 액션 관제
 
-SO-101 팔2·팔3의 ROS 2 Action 클라이언트다. `BUILD_DONE` 중간 알림과 최종 Result를 구분하고 PREPARE_HOME·CLEAR_ERROR를 지원한다. 팀의 다른 노드는 별도로 준비한다.
+이 폴더는 ROS 2 관제 클라이언트와 Windows 관제용 Ubuntu 중계 소스입니다. 아래 `final-action`은 기존 작업대에 등록한 환경 함수이며 저장소를 받는 것만으로 생성되지는 않습니다. 새 환경에서는 ROS 2·인터페이스·Python 의존성을 준비한 뒤 이 폴더의 `main.py`를 실행합니다.
 
-## 실행 환경
+## 실행
 
-ROS Jazzy와 같은 정의의 `host_pkg/Arm` 인터페이스가 필요하다. 이 폴더에서 다음과 같이 구성할 수 있다. ROS 설치와 Pi 네트워크·장치 구성은 별도이며, 공개 데모는 이 관제를 자동 실행하지 않는다.
+새 터미널에서 실행합니다. 이미 열려 있던 터미널은 먼저 `source ~/.bashrc`로 함수를 갱신합니다.
 
 ```bash
-source /opt/ros/jazzy/setup.bash
-python3 -m pip install -r requirements.txt
-colcon build --base-paths new_package_template/host_pkg
-source install/setup.bash
-export ROS_DOMAIN_ID=40
-python3 main.py --check-connection
-python3 main.py
+final-action
 ```
 
-`--check-connection`은 서버 검색만 수행한다. 실제 작업 명령은 관제 입력에서 전송된다. 기존 작업대의 `final-action`은 로컬 환경 함수이며 이 저장소가 설치하는 명령은 아니다.
+`final-action`은 기존 `final` 환경(ROS Jazzy, SO-101 인터페이스, robot_venv, ROS_DOMAIN_ID=40)을 적용한 뒤 이 폴더의 `main.py`를 실행합니다.
+
+연결 확인만 하려면 다음 명령을 사용합니다. Action Goal이나 모터 명령을 보내지 않습니다.
+
+```bash
+final-action --check-connection
+```
 
 ## 관제 명령
 
@@ -28,31 +28,88 @@ python3 main.py
 | `LOAD_B` | `LOAD_B` | 팔3 B 적재 |
 | `BUILD_LOAD_A` | `BUILD_LOAD_A` | A 조립 후 적재 |
 | `BUILD_LOAD_B` | `BUILD_LOAD_B` | B 조립 후 적재 |
-| `BUILD_SLIDE` | `BUILD_SLIDE` | 리니어 조립 위치 |
+| `BUILD_SLIDE` | `BUILD_SLIDE` | 양팔·카메라·모델 준비 + 리니어 조립 위치 · 완료 후 3분 준비 유지 |
 | `LOAD_SLIDE` | `LOAD_SLIDE` | 리니어 하차 위치 |
 | `PREPARE_HOME` | `PREPARE_HOME` | 두 팔 안전 자세 복귀 후 리니어 하차 위치, 팔 토크 유지 |
 | `EMER_STOP` | `EMER_STOP` | 팔 정지·작업 보류, 리니어는 계속 진행 |
 | `RESTART` | `RESTART` | 보류한 작업 재개 |
 | `RESET` | `RESET` | 작업 취소·두 팔 안전 복귀·토크 OFF |
 | `CLEAR_ERROR` | `CLEAR_ERROR` | 보류 작업 종료·오류 해제, 이동·토크 변경 없음 |
-| `STATUS` | 없음 | 서버 연결과 이 관제의 작업 상태 |
+| `RETRY` | 조회 | 마지막 업무 ID의 처리 상태·결과 확인 |
+| `RETRY_CONTROL` | 조회 | 마지막 제어 요청 ID의 처리 상태·결과 확인 |
+| `STATUS` | 없음 | DDS 서버 발견·양방향 관제 연결·업무 상태 |
 | `HELP` | 없음 | 명령 목록 |
-| `QUIT` | 없음 | 관제만 종료, Pi 작업은 계속됨 |
+| `QUIT` | 없음 | 관제 종료, 생존 신호 만료 시 담당 작업 보류 |
 
-도움말과 명령 표시는 Pi 프로토콜과 같은 대문자 CMD를 사용합니다. 입력은 대소문자를 구분하지 않으며 Pi에는 대문자 CMD를 보냅니다. 기존 `estop` 입력도 `EMER_STOP`으로 전송합니다. 작업 완료는 Action의 실제 Result로 판단하고, 정지·재개·초기화 요청의 결과는 원래 작업 결과와 구분합니다. 로그가 출력되어도 `명령> `와 입력 중인 문장을 유지합니다.
+도움말과 명령 표시는 Pi 프로토콜과 같은 대문자 CMD를 사용합니다. 입력은 대소문자를 구분하지 않으며 Pi에는 대문자 CMD와 업무 ID를 포함한 V2 JSON을 보냅니다. 기존 `estop` 입력도 `EMER_STOP`으로 전송합니다. 작업 완료는 Action의 실제 Result로 판단하고, 정지·재개·초기화 요청의 결과는 원래 작업 결과와 구분합니다. 통신은 팔별 최신 상태만 갱신하고, 입력한 명령은 최근 2개를 최신순으로 표시합니다. 긴 결과는 F2로 이력에 들어가 방향키·PageUp/Down으로 끝까지 확인하고 Esc로 입력창에 돌아옵니다. 진행·결과와 자동 조회는 해당 명령의 표시를 갱신하며 입력 중인 문장을 유지합니다. 화면은 전체 명령 목록 → 연결 상태 → 최근 명령 → 입력창 순서이며, 전체 명령 목록은 기본으로 표시합니다. `HELP` 또는 F1으로 명령 목록에 포커스를 옮겨 방향키·PageUp/Down으로 스크롤하고 Esc로 입력창에 복귀합니다. 작은 터미널에서도 목록은 유지되며, 화면 높이가 부족하면 스크롤로 전체 내용을 확인합니다. 전체 표시 이력과 업무 ID는 `~/.local/state/so101-supervision-client/console.log`에 순환 저장합니다 (`SO101_CLIENT_STATE_DIR` 지정 시 해당 폴더).
 
 `BUILD_LOAD_A/B`의 `BUILD_DONE` Feedback은 조립 단계 완료를 뜻하며, 적재까지 마친 Action Result를 받아야 작업이 끝납니다. `CLEAR_ERROR`는 리니어가 완료 상태이고 보류 작업을 종료한 것을 확인해야 성공합니다. 실행 중인 작업을 재개하거나 팔을 복귀시키지 않습니다. `PREPARE_HOME`은 저장된 두 팔의 안전 자세와 정지한 리니어를 먼저 확인한 뒤 실행하며, 일반 `RESET`과 달리 팔의 토크를 유지합니다.
+
+## 통신 단절·재접속
+
+PC와 Pi가 0.25초마다 challenge/ack 생존 신호를 교환합니다. Pi가 담당 관제의 유효 응답을 3초 동안 확인하지 못하면 작업 중인 팔의 HOLD를 요청하고 작업을 보류합니다. Action 서버가 비정상 종료돼도 실행부는 감시 파이프 단절을 정지 요청으로 처리합니다. 연결 복구만으로 작업을 재개하지 않으며, 양방향 연결이 확인된 뒤 `RESTART`를 명시적으로 입력해야 합니다.
+
+PC가 받은 생존 신호 토큰은 발행 당시의 관제 정지 순번과 실행부 정지 상태에 연결됩니다. 다른 관제 또는 Pi 현장에서 새로 정지한 뒤에는, 그 전에 PC에서 만들어 둔 RESTART/RESET도 거절합니다. 정지 직후 재개·초기화는 새 생존 신호가 확인된 뒤 요청합니다.
+
+EMER_STOP은 PC의 기록 저장보다 먼저 전송합니다. PC 기록 저장이 실패해도 정지 전송과 실제 정지 결과 처리는 계속하며, 저장 오류를 표시하고 기록 저장을 재시도합니다. 일반 이동·재개·초기화는 PC 요청 기록 저장에 성공해야 전송합니다. Pi 실행부도 RESTART/RESET 영수증을 저장한 뒤에만 제어 플래그를 설정하며, 저장 중 들어온 정지 신호를 다시 확인합니다.
+
+작업이 끝난 뒤 Pi의 최종 결과 저장만 실패한 경우에는 확인된 결과를 메모리에 보관합니다. 조회 응답 `STORAGE_PENDING`은 저장 재시도 중임을 뜻하며, 관제는 `UNKNOWN`과 업무 ID를 유지하고 같은 업무를 조회합니다. 저장이 복구되면 실행을 반복하지 않고 원래 결과를 확정합니다. 저장 전에 Pi 서버까지 재시작됐다면 메모리 결과를 추정해 복원하지 않으며, 기존 UNKNOWN/CLEAR_ERROR 절차로 정리합니다.
+
+조회 중 기록 읽기 오류도 `STORAGE_PENDING`으로 처리합니다. 관제는 빈 결과나 유효하지 않은 완료 응답을 확정 실패로 처리하지 않고 같은 ID를 재조회합니다. 접수 기록의 파일 교체 후 `fsync`가 실패해 실행을 허용하지 않은 요청은 실패 결과를 메모리에 보관하고, 저장 복구 후 같은 ID에 `ERROR`를 확정합니다. 파일 생성 전 저장 실패도 같은 방식으로 처리하며, 해당 ID를 다시 보내도 실행하지 않습니다.
+
+Pi에 도착하지 않았던 요청을 처음 조회할 때 미접수 기록을 저장하지 못해도 `STORAGE_PENDING`을 반환합니다. 저장 복구 후 관제가 같은 ID를 자동 조회해 대기를 해제하며, 지연 도착한 원래 실행 요청은 실행하지 않습니다.
+
+작업 종료 전의 생존 확인 토큰으로 생성된 제어 요청은 종료 후 실행하지 않습니다. 유휴 상태의 RESET은 유휴 상태를 확인한 새 토큰이 있어야 실행하며, 종료된 작업에서 생성된 지연 RESET을 새로운 복귀 요청으로 바꾸지 않습니다. 실행부 상태 조회의 시간 초과나 오류는 유휴 상태로 간주하지 않습니다. 일반 업무의 정상적인 연속 실행은 새 토큰을 기다리지 않습니다.
+
+정지마다 실행부의 정지 순번을 갱신합니다. RESTART/RESET은 확인한 정지 순번을 함께 전달하며, 그 뒤 새 정지가 발생했다면 실행부가 이전 요청을 거절합니다. RESET 중에도 생존 신호를 계속 감시하므로 재접속 뒤 다시 단절되면 복귀 동작을 보류합니다. 요청 기록 저장과 정지 감시는 별도 잠금을 사용하고, 감시 스레드에서 디스크 로그를 직접 저장하지 않습니다. 생존 신호와 Goal의 잘못된 토큰 형식은 거절하거나 무시합니다.
+
+Pi에서 직접 제어할 때도 `run_episode.sh restart`·`run_episode.sh reset`을 사용합니다. 이 명령은 실행부의 정지 순번을 확인해 전달합니다. Unix 소켓에 원시 문자열 `restart`·`reset`을 직접 보내는 호출은 순번이 없으므로 거절됩니다. ROS `Arm.action` 정의와 관제 명령어는 바뀌지 않습니다.
+
+현재 리니어 구동에는 검증된 중간 정지 명령이 없으므로 이미 시작한 시간 기반 이동은 끝까지 진행합니다. 이 기능은 소프트웨어 관제 단절 대응이며 하드웨어 비상정지를 대체하지 않습니다.
+
+관제 화면은 통신 단절을 `통신 끊김`, 접수·완료 여부를 확인하지 못한 업무를 `결과 미확인`으로 표시합니다. 내부 코드와 저장 기록의 `COMM_LOST`·`UNKNOWN`은 유지합니다. 응답 제한시간은 접수 5초, 일반 업무 600초, RESET 330초, 그 외 제어·조회 10초입니다. 제한시간 초과를 작업 완료로 처리하거나 장치에 Action 취소를 보내지 않습니다. 연결 복구 후 미확정 업무는 같은 ID로 상태만 조회하며, `PENDING`은 Pi에 접수된 업무가 아직 확정되지 않았음을 뜻합니다. `NOT_FOUND`는 Pi에 접수되지 않은 업무로 확정된 상태입니다.
+
+PC는 `~/.local/state/so101-supervision-client`에 관제 ID와 마지막 업무·제어 ID를 저장합니다. 같은 기록을 두 프로세스가 동시에 사용할 수 없습니다. 테스트용 기록 경로는 `SO101_CLIENT_STATE_DIR`로 분리할 수 있습니다. Pi는 `data/supervision-requests`에 접수·최종 결과를 저장합니다. 불확실한 상태에서 기록을 삭제하면 추적 ID가 사라지므로 기록을 유지하고 `RETRY` 또는 `RETRY_CONTROL`로 확인합니다.
+
+미확정 업무나 제어를 같은 명령으로 다시 입력하면 기존 ID를 조회합니다. `EMER_STOP`은 정지 우선으로 새 요청을 허용합니다. 이미 완료가 확인된 명령을 다시 입력하면 새로운 업무가 됩니다. API에서 같은 업무를 재전송할 때는 `send_goal(command, request_id=<같은 32자리 ID>)`를 사용합니다. 새로운 ROS UUID로 전송하거나 서버를 재시작해도 같은 업무 ID를 다시 실행하지 않습니다.
+
+Pi Action 서버 재시작 당시 진행 중이던 업무는 `UNKNOWN`으로 남겨 자동 재실행을 막습니다. 감시 대상이 사라진 이전 작업에는 RESTART/RESET을 거절합니다. 팔 보류 및 리니어 완료 상태를 확인하고 `CLEAR_ERROR`로 이전 작업을 종료한 뒤, 새 `RESET`으로 안전 복귀합니다. CLEAR_ERROR가 유휴 상태를 확인하면 해당 관제의 서버 재시작 전 미확정 기록을 `CLEARED`로 정리합니다. `RETRY`로 이 상태를 확인하면 이전 업무 대기를 해제합니다. CLEARED는 운영자가 이전 업무를 정리했다는 뜻이며 성공 완료를 뜻하지 않습니다.
+
+`Arm.action` 정의는 그대로이며 `command` 문자열 내부에 V2 JSON(version, command, client_id, request_id, attempt_id, epoch, nonce, operation)을 담습니다. 토픽은 `/workcell/supervision/heartbeat`, `/workcell/supervision/status`입니다. 생존 신호가 없는 기존 단순 문자열 클라이언트는 이동·재개·초기화 요청을 거절합니다. 예외로 문자열 `EMER_STOP`은 계속 정지 요청으로 받을 수 있습니다. 다른 관제도 이 V2 규약으로 갱신해야 합니다.
 
 ## 파일
 
 - `main.py`: 관제 실행과 서버 검색
 - `arm2_node.py`: `/arm2/data`, `/arm3/data` Action 클라이언트
+- `supervision_client.py`: 양방향 생존 신호와 영속 요청 기록
 - `control.py`: 명령 입력과 라우팅
 - `console_ui.py`: 비동기 ROS 로그와 입력 프롬프트 표시
 - `requirements.txt`: 터미널 입력 라이브러리
 - `interfaces/Arm.action`: 현재 인터페이스 정의
 - `new_package_template/host_pkg`: 다른 ROS 워크스페이스에 사용할 인터페이스 패키지
 
-ROS 빌드 결과는 CPU·운영체제별로 생성하며 저장소에 포함하지 않는다. 위 환경은 사용자 PC에서 구성해야 한다.
+이 PC는 `../SO101_teach/integration/ros_ws/install/setup.bash`에 이미 빌드된 인터페이스를 사용합니다. 이번 경로 복구에 ROS 재빌드는 필요하지 않습니다. 다른 PC에서는 ROS Jazzy 환경과 `host_pkg` 인터페이스를 준비하고 `prompt_toolkit`을 해당 Python 환경에 설치해야 합니다.
 
 이 복구본은 SO-101 팔2·팔3 관제 실행 파일을 백업에서 복원하고, 확인된 대문자 CMD·BUILD_SLIDE/LOAD_SLIDE 변경을 적용했습니다. 원래의 별도 팀 모듈은 포함하지 않습니다. `--with-team-nodes`는 해당 원본 파일을 별도로 준비한 경우에만 사용할 수 있습니다.
+
+## Windows WPF 관제
+
+동일한 명령과 요청 기록을 Windows 화면에서 사용할 때는 [WPF 관제 안내](../SO101_WpfConsole/README.md)를 따른다. Ubuntu의 `bridge_main.py`가 HTTPS/WSS와 기존 ROS 클라이언트를 연결한다. 중계는 명시적으로 실행하며, 기존 CLI와 같은 ClientJournal 잠금 때문에 동시에 실운전할 수 없다.
+
+중계 모드에서는 WPF UI가 실제로 응답한 Pi challenge에만 heartbeat를 보낸다. 일반 실행은 기록 저장 후 전송하고, 정지는 별도 우선 대기열로 처리한다. 원래 CLI의 기본 호출 경로와 명령 의미는 유지한다. 중계를 종료한 뒤 `final-action`을 다시 실행하면 같은 ID의 기록을 조회할 수 있다.
+
+기록 저장 중인 요청도 접수 대기로 추적한다. 이때 같은 ID의 자동·수동 조회는 원래 전송 결과를 기다리며, 제어 요청의 저장이 끝나기 전에 다른 일반 명령을 접수하지 않는다. 긴급정지는 저장 대기와 관계없이 처리하고, 정지 이전에 대기하던 일반 명령은 뒤늦게 전송하지 않는다.
+
+일반 요청은 접수 당시의 Pi 연결 확인 정보(epoch·nonce)를 기록 저장 전부터 유지한다. 저장 중 로컬 정지·서버 재시작·연결 복구가 발생해도 새 확인 정보로 예전 명령을 갱신하지 않는다. 상태 조회는 현재 연결 정보를 사용하며, 긴급정지는 저장을 기다리지 않는다.
+
+## PC 협력 명령
+
+`PC_BUILD_LOAD_A`, `PC_BUILD_LOAD_B`는 팔2에서 접수하는 별도 조립→적재 명령이다. 기존 `BUILD_LOAD_A/B`는 변경하지 않았다. PC GPU 준비 중에는 비동기로 상태를 유지하며 정지·통신 단절·세대 변경 시 실행을 보내지 않는다. 명령이 실제 전송된 뒤의 결과가 불명확하면 같은 ID로 조회하며 재실행하지 않는다.
+
+설정과 모델 경로는 형제 폴더 `SO101_teach/data/pc-compute.json`에서 읽는다. 2026-10-26 현재 코드의 저장 영상 비교와 PC GPU·Pi 연결 준비를 재확인한 뒤 사용자 요청으로 PC 협력 실행을 활성화했다. 실물 공정은 검증 중 실행하지 않았다. 설정은 요청마다 읽으므로 중계 재시작은 필요하지 않다. `pc_preparation_seconds`와 `pc_command_total_seconds`는 PC 요청 기록에 저장되며, Pi 내부 작업 시간과 혼동하지 않는다. 모델·라이브러리와 저장 영상 결과는 [티칭 앱 설명](../SO101_teach/README.md#pc-협력-조립적재--2026-10-25)을 따른다.
+
+## 요청 처리 구조 — 2026-10-25
+
+명령 접수는 `_admit_goal`, 영속 기록과 전송은 `_record_and_submit`이 담당한다. PC GPU 준비 완료는 `_send_prepared_goal`로 이어지며, 공개 `send_goal` 재진입과 일회성 `ready` 표식을 사용하지 않는다. 준비가 끝나도 기존 접수 조건과 정지·연결 세대·기한 검사를 다시 통과해야 전송한다. 정지는 저장보다 먼저 보내고, 결과 미확정 요청은 같은 ID로 조회하는 규칙을 유지한다.
+
+중계도 입력 검증·접수 거절 판단·영속 접수를 분리했다. CLI와 중계의 기록 책임 및 통신 경계별 검증은 유지한다. 검증 근거는 `../SO101_teach/verification/complexity-refactor-20261025`에 보관했다.

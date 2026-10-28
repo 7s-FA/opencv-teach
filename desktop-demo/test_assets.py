@@ -38,4 +38,6 @@ class AssetsTest(unittest.TestCase):
             for attr in ('mesh_vert','geom_size','body_pos','body_quat','jnt_axis','body_mass'):
                 np.testing.assert_allclose(getattr(original,attr),getattr(packed,attr),atol=0,rtol=0)
 
+from test_monitor_portability import MonitorImportTests
+
 if __name__=='__main__':unittest.main()
